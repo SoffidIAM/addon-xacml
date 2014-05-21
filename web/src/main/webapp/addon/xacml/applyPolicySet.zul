@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?page title="applyPolicySet" id="applyPolicySet"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?component name="input_dada" macro-uri="/comu/input_dada.zul"?>
+<?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
+
+<zk xmlns:h="http://www.w3.org/1999/xhtml">
+
+<frame title="Enforce XACML rules" saveContent="true" onCreate="loadData()" style="padding: 100px 0 0 10px; width:800px; text-align: center; vertical-align: middle; margin: 0 auto;">
+	<zscript><![CDATA[
+	    import com.soffid.addons.xacml.pep.*;
+	    
+	    
+	    void onCheckEnable ()
+	    {
+		    policySetId.setDisabled(! policySetEnabled.isChecked());
+		    policySetVersion.setDisabled(! policySetEnabled.isChecked());
+	    }
+	    
+		void loadData ()
+		{
+		    com.soffid.addons.xacml.pep.PolicyManager pm = new com.soffid.addons.xacml.pep.PolicyManager();
+		    com.soffid.addons.xacml.pep.PolicyStatus ps = pm.getCurrentPolicy();
+		    tempWarning.setVisible( ps.isTesting());
+		    policySetEnabled.setChecked(ps.isEnabled());
+		    policySetId.setValue(ps.getPolicyId());
+		    policySetVersion.setValue(ps.getPolicyVersion());
+		    onCheckEnable();
+		}
+		
+		void apply ()
+		{
+			PolicyStatus ps = new PolicyStatus ();
+			ps.setTesting(false);
+			ps.setEnabled(policySetEnabled.isChecked());
+			ps.setPolicyId(policySetId.getValue());
+			ps.setPolicyVersion(policySetVersion.getValue());
+			new PolicyManager().apply(ps);
+			loadData();
+		}
+		
+		void applyTest ()
+		{
+			PolicyStatus ps = new PolicyStatus ();
+			ps.setTesting(true);
+			ps.setEnabled(policySetEnabled.isChecked());
+			ps.setPolicyId(policySetId.getValue());
+			ps.setPolicyVersion(policySetVersion.getValue());
+			new PolicyManager().apply(ps);
+			es.caib.zkib.zkiblaf.Missatgebox.avis("A cookie has been sent to your browser to enforce XACML rules for your browser.\nRemove it or restart console to enable default behaviour.\nMind only one user can test XACML policies at a time");
+		}
+	]]>
+	</zscript>
+	<style src="~./styles/estil.css"/>
+	<style src="/css/localSEU.css"/>
+	<hbox widths="30em, *">
+		<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
+		<checkbox id="policySetEnabled" onCheck="onCheckEnable()"></checkbox>
+	</hbox>
+	<label id="tempWarning" value="${c:l('xacml_temporaryEnabledPolicy') }"></label>
+	<separator/>
+	<hbox widths="30em,*">
+		<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
+		<textbox id="policySetId"></textbox>
+	</hbox>
+	<separator/>
+	<hbox widths="30em,*">
+		<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
+		<textbox id="policySetVersion"></textbox>
+	</hbox>
+	<separator/>
+	<hbox widths="30em,*">
+		<label value=""  width="30em" />
+		<button label="${c:l('xacml_applyTest') }" onClick="applyTest()"/>
+		<button label="${c:l('xacml_apply') }" onClick="apply()"/>
+	</hbox>
+	</frame>
+</zk>

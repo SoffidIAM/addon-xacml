@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <!-- ========================= DATASOURCE DEFINITION ========================= -->
+
+    <!-- JNDI DataSource for J2EE environments -->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    	<property name="driverClassName"><value>org.hsqldb.jdbcDriver</value></property>
+    	<property name="url"><value>jdbc:hsqldb:mem:aname</value></property>
+<!-- 
+    	<property name="driverClassName"><value>org.apache.derby.jdbc.EmbeddedDriver</value></property>
+    	<property name="url"><value>jdbc:derby:memory:mydb;create=true</value></property>
+ -->
+     </bean>
+    
+    <!-- ====================== End of DATASOURCE DEFINITION ====================== -->
+
+    <!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
+
+    <!-- (local) Transaction Manager -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory"><ref bean="sessionFactory"/></property>
+        <property name="dataSource"><ref bean="dataSource"/></property>
+    </bean>
+
+    <!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
+
+	<!-- ========================= IDENTITY GENERATOR ========================= -->
+	<bean id="identity-generator-2" class="es.caib.seycon.ng.model.identity.IdentityGeneratorBean">
+		<property name="tableName">
+			<value>SC_SEQUENCE</value>
+		</property>
+		<property name="dataSource"><ref bean="dataSource"/></property>
+		<property name="createTable">
+			<value>true</value>
+		</property>
+	</bean>
+
+
+</beans>

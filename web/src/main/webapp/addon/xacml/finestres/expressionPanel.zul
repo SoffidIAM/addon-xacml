@@ -1,0 +1,1153 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?page title="Expression" id="expressionPanel"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<zk xmlns:h="http://www.w3.org/1999/xhtml">
+<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacml.xml"/>
+<zscript>
+<![CDATA[
+	import com.soffid.iam.addons.xacml.common.Expression;
+	import com.soffid.iam.addons.xacml.common.FunctionEnumeration;
+	import com.soffid.iam.addons.xacml.common.DataType;
+	
+	
+	void cleanWindow()
+	{
+		esquema.visible=false;			
+	}
+	
+	
+	void acceptaDada(Component button){
+		String value = "";
+		String designator = "";
+		String type = "";	
+		String function_name = "";
+		String qual = "";
+		String selector = "";
+		Integer ordre = 0;
+		String id = new String();
+		String var = "";
+		DataType dataType = null;
+		DataType dataTypeDesignator = null;
+		
+		com.soffid.addons.xacml.utils.XACMLExpressionComponent c = pageScope.get("contextComponent");
+		if(button.getId().equals("finishSubject"))
+		{
+			
+			Listitem designatorList = t_subject.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			Listitem l1 = t_subject.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+			if(designatorList != null && designatorList.getValue() != null){
+				designator = designatorList.getValue();
+				if(l1 != null && l1.getValue() != null){
+					type = "subject";
+					dataTypeDesignator = l1.getValue();
+					function_name = "STRING_EQUAL";
+				}
+				else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectSubjectDataType"));
+					return;
+				}
+			}
+			else{				
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectSubject"));
+				return;
+			}
+			
+			
+		}
+		else if(button.getId().equals("finishResource"))
+		{
+			Listitem designatorList = t_resource.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			Listitem l1 = t_resource.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+			if(designatorList != null && designatorList.getValue() != null && !designatorList.getValue().trim().isEmpty()){
+				designator = designatorList.getValue();
+				if(l1 != null && l1.getValue() != null){
+					type = "resource";
+					dataTypeDesignator = l1.getValue();
+					function_name = "STRING_EQUAL";
+				}
+				else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectResourceDataType"));
+					return;
+				}
+			}
+			else{				
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectResource"));
+				return;
+			}
+		}
+		else if(button.getId().equals("finishAction"))
+		{
+			Listitem designatorList = t_action.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			Listitem l1 = t_action.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+			if(designatorList != null && designatorList.getValue() != null){
+				designator = designatorList.getValue();
+				if(l1 != null && l1.getValue() != null){
+					type = "action";
+					function_name = "STRING_EQUAL";
+					dataTypeDesignator = l1.getValue();
+				}
+				else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectActionDataType"));
+					return;
+				}
+			}
+			else{				
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectAction"));
+				return;
+			}
+		}
+		else if(button.getId().equals("finishEnvironment"))
+		{
+			Listitem designatorList = t_environment.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			Listitem l1 = t_environment.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+			if(designatorList != null && designatorList.getValue() != null){
+				designator = designatorList.getValue();
+				if(l1 != null && l1.getValue() != null){
+					type = "environment";
+					function_name = "STRING_EQUAL";
+					dataTypeDesignator = l1.getValue();
+				}
+				else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectEnvironmentDataType"));
+					return;
+				}
+			}
+			else{				
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectEnvironment"));
+				return;
+			}
+		}	
+		else if(button.getId().equals("finishFunction"))
+		{
+			Listitem sybTypeList = t_function.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			if(sybTypeList != null && sybTypeList.getValue() != null && !sybTypeList.getValue().trim().isEmpty())
+			{
+				String subType = sybTypeList.getValue();
+				Listitem nameList = t_function.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+				if(nameList != null && nameList.getValue() != null && !nameList.getValue().trim().isEmpty()){
+					String name = nameList.getValue();
+					Listbox l3 = t_function.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+					int i = l3.getSelectedIndex();
+					String qualifier = new String();
+					if (t_function.getFellow("q").isVisible()){
+						Listitem l = l3.getSelectedItem();
+						if(l != null && l.getValue() != null && !l.getValue().trim().isEmpty() && i!=0)
+							qualifier = l.getValue();
+						else
+						{
+							Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectQualifier"));
+							return;
+						}	
+					}
+					function_name = c.composaName(name, qualifier);
+					qual = qualifier;
+					type = "function_" + subType;
+					if(c.getOrder() == 0)
+					{
+						if(!c.getDataPath().equals("/expression"))
+						{
+							Component pare = c.getParent();
+							while(!(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+							{
+								pare = pare.getParent();
+								if(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent)
+								{
+									String datap = pare.getDataPath();
+									if(!datap.equals("/expression"))
+										pare = pare.getParent();
+								}
+							}
+							ordre = pare.getSubexpression().size() + 1;
+						}
+						else
+							ordre = 1;
+					}
+				}
+				else
+				{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectFuntion"));
+					return;
+				}
+			}
+			else
+			{
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectFuntionType"));
+				return;
+			}
+		}
+		else if (button.getId().equals("finishFunctionName"))
+		{
+			type = "name";
+			Listitem l1 = t_function_name.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			if(l1 != null && l1.getValue() != null && !l1.getValue().trim().isEmpty())
+				function_name = l1.getValue();
+			else{
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectFuntionName"));
+				return;
+			}
+		}
+		else if(button.getId().equals("finishSelector"))
+		{
+			type = "attributeSelector";
+			function_name = "STRING_EQUAL";
+			selector = t_selector.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
+		}
+		else if(button.getId().equals("finishValue"))
+		{
+			value = t_value.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
+			Listitem l1 = t_value.getChildren().get(0).getChildren().get(1).getChildren().get(5).getSelectedItem();
+			if(value != null && !value.trim().isEmpty()){
+				if(l1 != null && l1.getValue() != null){
+					dataType = l1.getValue();
+					type = "attributeValue";
+					function_name = "STRING_EQUAL";
+				}
+				else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectValueDataType"));
+					return;
+				}
+			}
+			else{				
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.EnterValue"));
+				return;
+			}
+		}
+		else if(button.getId().equals("finishVariable"))
+		{
+			Listitem l1 = t_variable.getChildren().get(0).getChildren().get(1).getChildren().get(2).getSelectedItem();
+			if(l1 != null){
+				var = l1.getValue();
+				if(var != null && !var.isEmpty()){
+					type = "variable";
+					function_name = "STRING_EQUAL";
+					value = var;
+				}else{
+					Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectVariable"));
+					return;
+				}
+			}
+			else{
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SelectVariable"));
+				return;
+			}
+		}
+		//Assignam els valors si l'expressió ja existia i no era subExpressió(depen d'una variable)
+		if(c.getType() != null)
+		{
+			
+			if(type != null)
+			{
+				c.setType(type);
+			}
+			if(value != null)
+			{
+				c.setAttributeValue(value);
+			}
+			if(designator != null)
+			{
+				c.setDesignator(designator);
+			}
+			if(function_name != null && !function_name.isEmpty())
+			{
+				c.setName(com.soffid.iam.addons.xacml.common.FunctionEnumeration.fromString(function_name));
+			}
+			if(qual != null && !qual.isEmpty())
+			{
+				c.setDesignator(qual); //Guardam el qualifier aquí pq no es guarda a tots els function name
+			}
+			if(selector != null)
+			{
+				c.setSelector(selector);
+			}
+			if(ordre > 0)
+			{
+				c.setOrder(ordre);
+			}
+			if(var != null)
+			{
+				c.setVariable(var);
+			}
+			if(dataType != null)
+			{
+				c.setDataTypeAttributeValue(dataType);
+			}
+			if(dataTypeDesignator != null)
+			{
+				c.setDataTypeAttributeDesignator(dataTypeDesignator);
+			}
+		}
+		//Si l'expressió no existia, ve d'un argument d'un altre expressio (tipus void)
+		//s'ha de crear nova i assignar com a subexpressió
+		else if(c.getType() == null)
+		{
+		
+			com.soffid.iam.addons.xacml.common.Expression exp = new com.soffid.iam.addons.xacml.common.Expression();
+			exp.setAttributeValue(value);
+			exp.setExpressionType(type);
+			if(dataTypeDesignator != null)
+				exp.setDataTypeAttributeDesignator(dataTypeDesignator);
+			if(dataType != null)
+				exp.setDataTypeAttributeValue(dataType);
+			if(designator != null && !designator.isEmpty()) 
+				exp.setAttributeDesignator(designator);
+			else if(qual != null && !qual.isEmpty())
+				exp.setAttributeDesignator(qual);
+			if(var != null && !var.isEmpty())
+				exp.setVariableId(var);
+			
+			exp.setName(com.soffid.iam.addons.xacml.common.FunctionEnumeration.fromString(function_name));  //Function tipus true
+			exp.setAttributeSelector(selector);
+			Component co = c.getParent();
+			
+			while(!(co instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent)){
+				co = co.getParent();
+			}
+			
+			com.soffid.addons.xacml.utils.XACMLExpressionComponent parentComponent = (com.soffid.addons.xacml.utils.XACMLExpressionComponent) co;
+			if(parentComponent.getSubexpression() != null && !parentComponent.getSubexpression().isEmpty())
+			{
+				exp.setOrder(parentComponent.getSubexpression().size() + 1);
+			}
+			else
+			{
+				exp.setOrder(1);
+			}
+			
+			if(parentComponent.getSubexpression() == null){
+				parentComponent.setSubexpression(new java.util.LinkedList());
+			}
+			parentComponent.getSubexpression().add(exp);
+			parentComponent.markAsModified();
+		}
+		
+		cleanWindow();
+	}
+	
+	//Funció que crea dinàmicament el listbox de functions segons el subtipus de funció que s'hagi seleccionat
+	void selectSubType(Listbox listbox)
+	{
+		String value = (String ) listbox.getSelectedItem().getValue();
+		
+		Listbox listacrear = esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+				.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+		
+		esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+				.getChildren().get(0).getChildren().get(1).getChildren().get(8).setVisible(false);
+		
+		int i = listacrear.getItemCount();
+		if(i>1)
+		{
+			for(int j=1;j<i;j++)
+			{
+				listacrear.removeItemAt(1);
+			}
+		}
+		
+		Label subtype = esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+				.getChildren().get(0).getChildren().get(1).getChildren().get(4);
+		esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+		.getChildren().get(0).getChildren().get(1).getChildren().get(7).setVisible(false);
+		
+		if(value.equals("Comparison"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Equal"),"EQUAL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.GreaterThan"),"GREATER_THAN");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.GreaterThanOrEqual"),"GREATER_THAN_OR_EQUAL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.LessThan"),"LESS_THAN");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.LessThanOrEqual"),"LESS_THAN_OR_EQUAL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.TimeInRange"),"TIME_IN_RANGE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.RegexpMatch"),"REGEXP_MATCH");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Match"),"MATCH");
+		}
+		else if(value.equals("Arithmetic"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Add"),"ADD");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Subtract"),"SUBTRACT");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Multiply"),"MULTIPLY");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Divide"),"DIVIDE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Mod"),"MOD");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Abs"),"ABS");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Round"),"ROUND");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Floor"),"FLOOR");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AddDayTimeDuration"),"ADD_DAYTIMEDURATION");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AddYearMonthDuration"),"ADD_YEARMONTHDURATION");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SubstractDayTimeDuration"),"SUBTRACT_DAYTIMEDURATION");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SubstractYearMonthDuration"),"SUBTRACT_YEARMONTHDURATION");
+		}
+		else if(value.equals("Conversions"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.StringNormalizeSpace"),"STRING_NORMALIZE_SPACE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.StringNormalizeToLowerCase"),"STRING_NORMALIZE_TO_LOWER_CASE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.DoubleToInteger"),"DOUBLE_TO_INTEGER");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.IntegerToDouble"),"INTEGER_TO_DOUBLE");
+		}
+		else if(value.equals("Boolean"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.And"),"AND");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Or"),"OR");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.NOf"),"N_OF");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Not"),"NOT");
+		}
+		else if(value.equals("String"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.StringConcatenate"),"STRING_CONCATENATE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.UrlStringConcatenate"),"URL_STRING_CONCATENATE");
+		}
+		else if(value.equals("Bag"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.OneAndOnly"),"ONE_AND_ONLY");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.BagSize"),"BAG_SIZE");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.IsIn"),"IS_IN");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Bag"),"BAG");
+		}
+		else if(value.equals("Set"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Intersection"),"INTERSECTION");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AtLeastOneMemberOf"),"AT_LEAST_ONE_MEMBER_OF");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Union"),"UNION");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Subset"),"SUBSET");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.SetEquals"),"SET_EQUALS");
+		}
+		else if(value.equals("Higher"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AnyOf"),"ANY_OF");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AllOf"),"ALL_OF");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AnyOfAny"),"ANY_OF_ANY");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AllOfAny"),"ALL_OF_ANY");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AnyOfAll"),"ANY_OF_ALL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.AllOfAll"),"ALL_OF_ALL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.Map"),"MAP");
+		}
+		else if(value.equals("Xpath"))
+		{
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.XpathNodeCount"),"XPATH_NODE_COUNT");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.XpathNodeEqual"),"XPATH_NODE_EQUAL");
+			listacrear.appendItem(org.zkoss.util.resource.Labels.getLabel("xacml_expressionPanel.XpathNodeMatch"),"XPATH_NODE_MATCH");
+		}
+		
+		listacrear.setVisible(true);
+		subtype.setVisible(true);
+	}
+	
+	//Donada un funció construim el listbox amb els qualificadors corresponents i el mostram
+	void selectQuantifier(Listbox listbox, com.soffid.addons.xacml.utils.XACMLExpressionComponent c){
+		String value = (String ) listbox.getSelectedItem().getValue();
+		Listbox listacrear = esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+				.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+		
+		Label qualifier = esquema.getFellow("dades").getFellow("form").getFellow("panels").getFellow("t_function")
+				.getChildren().get(0).getChildren().get(1).getChildren().get(7);
+		c.creaQualifierListbox(listacrear, value);
+		
+		int i = listacrear.getItemCount();
+		if(i>0)
+		{
+			listacrear.setVisible(true);
+			qualifier.setVisible(true);
+		}
+		else
+		{
+			listacrear.setVisible(false);
+			qualifier.setVisible(false);
+		}
+	}
+	
+	void selectQuantifier(Listbox listbox){
+		Component c = pageScope.get("contextComponent");
+		while(!(c instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+			c = c.getParent();
+		selectQuantifier(listbox, c);
+	}
+	
+	void creaLlistaVariables(com.soffid.addons.xacml.utils.XACMLExpressionComponent c, Tabbox tb, String variableId)
+	{
+		Component grid = c.getParent().getParent().getParent().getParent().getParent();
+		if(!grid.getId().equals("gridVariable")){
+			//grid = grid.getRoot().getFellow("gridVariable");
+			//alert("Son variables" + grid.getId());
+			Component othergrid = grid.getParent();
+			while(!(othergrid instanceof Grid)){
+				//alert(othergrid);
+				othergrid = othergrid.getParent();
+			}
+			othergrid = othergrid.getParent();
+			while(!(othergrid instanceof Row)){
+				//alert(othergrid);
+				othergrid = othergrid.getParent();
+			}
+			Row previousrow = (Row) othergrid;
+			grid = previousrow.getGrid();
+			//alert(othergrid);
+			grid = grid.getFellow("gridVariable");
+			//alert("Fi " + grid.getId());
+		}
+		List listavariables = grid.getRows().getChildren();
+		int i = listavariables.size();
+		Tabpanel tvariable = tb.getFellow("t_variable");
+		Listbox listafinal = tvariable.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+
+		//Borrarem de la llista de variables (o condicions) el valors previs
+		int number = listafinal.getChildren().size();
+		if(number > 1)
+		{
+			for(int j=0; j< number - 1; j++)
+			{
+				listafinal.removeItemAt(1);
+			}	
+		}
+		//Posarem a la llista de variables els valors que corresponen
+		for(int j=0; j<i; j++)
+		{
+			listafinal.appendItem(listavariables.get(j).getChildren().get(1).getChildren().get(0).getChildren().get(2).getValue(),
+					listavariables.get(j).getChildren().get(1).getChildren().get(0).getChildren().get(2).getValue());
+		}
+		if(variableId != null && !variableId.isEmpty())
+			c.setElementList(listafinal, variableId);
+	}
+	
+	void seleccionaPanel(Tabbox tb, String type, com.soffid.addons.xacml.utils.XACMLExpressionComponent c, String function_name,
+			String selector, String  value, String designator, DataType dataType, DataType dataTypeDesignator)
+	{
+		//Borram les assignacions als camps que hi hagi d'execucions anteriors
+		Tabpanel tp = tb.getFellow("t_function_name");
+		Listbox l2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		l2.setSelectedIndex(0);
+		tp = tb.getFellow("t_selector");
+		tp.getChildren().get(0).getChildren().get(1).getChildren().get(2).setValue("-Enter a value-");
+		tp = tb.getFellow("t_value");
+		tp.getChildren().get(0).getChildren().get(1).getChildren().get(2).setValue("-Enter a value-");
+		tp = tb.getFellow("t_subject");
+		Listbox l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		l.setSelectedIndex(0);
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+		l.setSelectedIndex(0);
+		tp = tb.getFellow("t_resource");
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		l.setSelectedIndex(0);
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+		l.setSelectedIndex(0);
+		tp = tb.getFellow("t_action");
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		l.setSelectedIndex(0);
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+		l.setSelectedIndex(0);
+		tp = tb.getFellow("t_environment");
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		l.setSelectedIndex(0);
+		l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+		l.setSelectedIndex(0);
+			
+		if(type.equals("name"))
+		{
+			Tabpanel tp = tb.getFellow("t_function_name");
+			Listbox l2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			c.setElementList(l2, function_name);
+			tb.setSelectedIndex(1);
+			borraFuncions(tb);
+		}
+		else if(type.equals("attributeSelector"))
+		{
+			Tabpanel tp = tb.getFellow("t_selector");
+			tp.getChildren().get(0).getChildren().get(1).getChildren().get(2).setValue(selector);
+			tb.setSelectedIndex(2);
+			borraFuncions(tb);
+		}
+		else if(type.equals("attributeValue"))
+		{
+			Tabpanel tp = tb.getFellow("t_value");
+			tp.getChildren().get(0).getChildren().get(1).getChildren().get(2).setValue(value);
+			if(dataType != null){
+				l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementListDataType(l, dataType);
+			}
+			tb.setSelectedIndex(3);
+			borraFuncions(tb);
+		}
+		else if(type.equals("variable"))
+		{	//S'han de mostrar totes les variables del target
+			tb.setSelectedIndex(4);
+			borraFuncions(tb);
+		}
+		else if(type.equals("subject"))
+		{
+			Tabpanel tp = tb.getFellow("t_subject");
+			Listbox l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			c.setElementList(l, designator);
+			if(dataTypeDesignator != null){
+				l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementListDataType(l, dataTypeDesignator);
+			}
+			tb.setSelectedIndex(5);
+			borraFuncions(tb);
+		}
+		else if(type.equals("resource"))
+		{
+			Tabpanel tp = tb.getFellow("t_resource");
+			Listbox l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			c.setElementList(l, designator);
+			if(dataTypeDesignator != null){
+				l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementListDataType(l, dataTypeDesignator);
+			}
+			tb.setSelectedIndex(6);
+			borraFuncions(tb);
+		}
+		else if(type.equals("action"))
+		{
+			Tabpanel tp = tb.getFellow("t_action");
+			Listbox l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			c.setElementList(l, designator);
+			if(dataTypeDesignator != null){
+				l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementListDataType(l, dataTypeDesignator);
+			}
+			tb.setSelectedIndex(7);
+			borraFuncions(tb);
+		}
+		else if(type.equals("environment"))
+		{
+			Tabpanel tp = tb.getFellow("t_environment");
+			Listbox l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			c.setElementList(l, designator);
+			if(dataTypeDesignator != null){
+				l = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementListDataType(l, dataTypeDesignator);
+			}
+			tb.setSelectedIndex(8);
+			borraFuncions(tb);
+		}
+		else if(type.startsWith("function_"))
+		{
+			Tabpanel tp = tb.getFellow("t_function");
+			String qualifier = designator;
+			Listbox listbox = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			
+			//Si l'expressió és de tipus function el primer listbox contendrà el subtipus de la funció
+			//El segon i el tercer es creen dinàmicament, segons el subtipus mostrem els tipus de funcions que té
+			//Segons el tipus de funció mostrem els qualificadors si en té
+			if(type.equals("function_Xpath"))
+			{
+				listbox.setSelectedIndex(9);
+				selectSubType(listbox);
+				Listbox l2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(l2, function_name);
+			}
+			else if(type.equals("function_Higher"))
+			{
+				listbox.setSelectedIndex(8);
+				selectSubType(listbox);
+				Listbox l2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(l2, function_name);
+			}
+			else if (type.equals("function_Set"))
+			{
+				listbox.setSelectedIndex(7);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(list2, function_name.substring(5));
+				selectQuantifier(list2, c);
+				Listbox list3 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+				c.setElementList(list3, qualifier);
+			}
+			else if (type.equals("function_Bag"))
+			{
+				listbox.setSelectedIndex(6);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(list2, function_name.substring(5));
+				selectQuantifier(list2, c);
+				Listbox list3 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+				c.setElementList(list3, qualifier);
+			}
+			else if (type.equals("function_String"))
+			{
+				listbox.setSelectedIndex(5);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(list2, function_name);
+			}
+			else if (type.equals("function_Boolean"))
+			{
+				listbox.setSelectedIndex(4);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(list2, function_name);
+			}
+			else if (type.equals("function_Conversions"))
+			{
+				listbox.setSelectedIndex(3);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				c.setElementList(list2, function_name);
+			}
+			else if (type.equals("function_Arithmetic"))
+			{
+				listbox.setSelectedIndex(2);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				if(function_name.equals("INTEGER_ADD") || function_name.equals("DOUBLE_ADD"))
+				{
+					list2.setSelectedIndex(1);	
+				}
+				else if(function_name.equals("INTEGER_SUBTRACT") || function_name.equals("DOUBLE_SUBTRACT"))
+				{
+					list2.setSelectedIndex(2);	
+				}
+				else if(function_name.contains("MULTIPLY"))
+				{
+					list2.setSelectedIndex(3);	
+				}
+				else if(function_name.contains("DIVIDE"))
+				{
+					list2.setSelectedIndex(4);	
+				}
+				else if(function_name.contains("MOD"))
+				{
+					list2.setSelectedIndex(5);	
+				}
+				else if(function_name.contains("ABS"))
+				{
+					list2.setSelectedIndex(6);	
+				}
+				else if(function_name.contains("ROUND"))
+				{
+					list2.setSelectedIndex(7);	
+				}
+				else if(function_name.contains("FLOOR"))
+				{
+					list2.setSelectedIndex(8);	
+				}
+				else if(function_name.contains("ADD_DAYTIME"))
+				{
+					list2.setSelectedIndex(9);	
+				}
+				else if(function_name.contains("ADD_YEARMONTH"))
+				{
+					list2.setSelectedIndex(10);	
+				}
+				else if(function_name.contains("SUBTRACT_DAYTIME"))
+				{
+					list2.setSelectedIndex(11);	
+				}
+				else if(function_name.contains("SUBTRACT_YEARMONTH"))
+				{
+					list2.setSelectedIndex(12);	
+				}
+				selectQuantifier(list2, c);
+				Listbox list3 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+				c.setElementList(list3, qualifier);
+			}
+			else if (type.equals("function_Comparison"))
+			{
+				listbox.setSelectedIndex(1);
+				selectSubType(listbox);
+				Listbox list2 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(5);
+				if(function_name.contains("GREATER_THAN_OR_EQUAL"))
+				{
+					list2.setSelectedIndex(3);	
+				}
+				else if(function_name.contains("GREATER_THAN"))
+				{
+					list2.setSelectedIndex(2);	
+				}
+				else if(function_name.contains("LESS_THAN_OR_EQUAL"))
+				{
+					list2.setSelectedIndex(5);	
+				}
+				else if(function_name.contains("LESS_THAN"))
+				{
+					list2.setSelectedIndex(4);	
+				}
+				else if(function_name.contains("EQUAL"))
+				{
+					list2.setSelectedIndex(1);	
+				}
+				else if(function_name.equals("TIME_IN_RANGE"))
+				{
+					list2.setSelectedIndex(6);	
+				}
+				else if(function_name.contains("REGEXP_MATCH"))
+				{
+					list2.setSelectedIndex(7);	
+				}
+				else if(function_name.contains("MATCH"))
+				{
+					list2.setSelectedIndex(8);	
+				}
+				selectQuantifier(list2, c);
+				Listbox list3 = tp.getChildren().get(0).getChildren().get(1).getChildren().get(8);
+				c.setElementList(list3, qualifier);
+			}
+			tb.setSelectedIndex(0);	
+		}
+	}
+	
+	void borraFuncions(Tabbox tb)
+	{
+		Tabpanel tp = tb.getFellow("t_function");
+		Listbox listbox = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+		listbox.setSelectedIndex(0);
+		Hbox h = tp.getChildren().get(0).getChildren().get(1);
+		int i = h.getChildren().size();
+		h.getChildren().get(4).setVisible(false);
+		h.getChildren().get(5).setVisible(false);
+		h.getChildren().get(7).setVisible(false);
+		h.getChildren().get(8).setVisible(false);
+	}
+	
+	
+	void setDataTypeExpression(Textbox t){
+		Hbox h = t.getParent();
+		h.getChildren().get(5).setSelectedIndex(1);
+	}
+	
+	void setDataTypeExpression(Listbox l){
+		Hbox h = l.getParent();
+		int i = l.getSelectedIndex();
+		if(i > 0)
+			h.getChildren().get(5).setSelectedIndex(1);
+	}
+	
+]]>
+</zscript>
+<window closable="true" id="esquema" position="center, center" sizable="true" title="${c:l('xacml_expressionPanel.Titol')}" visible="false" width="850px">
+	<attribute name="onInicia"><![CDATA[
+		pageScope.put("contextComponent", event.data);
+			if(self.mode.compareToIgnoreCase("highlighted") != 0)
+			{
+				self.setMode("highlighted");
+			}
+			else
+			{
+				self.visible = true;
+			}	
+		Tabbox tb = esquema.getFellow("dades").getFellow("form").getFellow("panels");
+		Component comp = pageScope.get("contextComponent");
+		String datap = comp.getDataPath();
+		Boolean subExp = true;
+		if(datap.equals("/expression"))
+			subExp = false;
+		com.soffid.addons.xacml.utils.XACMLExpressionComponent c = comp;
+		//Recuperam els valors de l'expressió (Sempre recupera els del pare encara que sigui una subExpressió!!!)
+		String type = c.getType();
+		String value = c.getAttributeValue();
+		String designator = c.getDesignator();
+		String selector = c.getSelector();
+		DataType dataType = c.getDataTypeAttributeValue();
+		DataType dataTypeDesignator = c.getDataTypeAttributeDesignator();
+		String function_name = null;
+		if(c.getName() != null)
+			function_name = c.getName().toString();
+		String variableId = c.getVariable();
+		if(type != null && !subExp)
+		{	
+			//Dins la pipella 'variables' posarem una llista amb totes les variables o condicions del target o rule
+			creaLlistaVariables(c, tb, variableId);
+			//Segons de quin tipus sigui l'expressió mostrarem la pipella corresponent i els valors que té
+			seleccionaPanel(tb, type, c, function_name, selector, value, designator, dataType, dataTypeDesignator);
+		}
+		else if(type != null && subExp)
+		{
+			Component pare = c.getParent();
+			while(!(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+			{
+				pare = pare.getParent();
+				if(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent)
+				{
+					datap = pare.getDataPath();
+					if(!datap.equals("/expression"))
+						pare = pare.getParent();
+				}
+			}
+			creaLlistaVariables(pare, tb, variableId);
+			seleccionaPanel(tb, type, c, function_name, selector, value, designator, dataType, dataTypeDesignator);
+		}
+		else
+		{
+			Component pare = c.getParent();
+			while(!(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+			{
+				pare = pare.getParent();
+				if(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent)
+				{
+					datap = pare.getDataPath();
+					if(!datap.equals("/expression"))
+						pare = pare.getParent();
+				}
+			}
+			creaLlistaVariables(pare, tb, variableId);
+			Tabpanel tp = tb.getFellow("t_function");
+			listbox = tp.getChildren().get(0).getChildren().get(1).getChildren().get(2);
+			listbox.setSelectedIndex(0);
+			seleccionaPanel(tb, "", c, "", "", "", "", null, null);
+			borraFuncions(tb);
+			tb.setSelectedIndex(0);
+		}
+	]]></attribute>
+	
+	<attribute name="onClose">
+		cleanWindow();
+		event.stopPropagation();
+	</attribute>
+	
+	<detalls id="dades" width="99%" style="border:0px">
+		<form id="form" width="100%">
+			<tabbox id="panels" width="99%">
+				<tabs>											
+					<tab id="function" label="${c:l('xacml_expressionPanel.Function')}"/>
+					<tab id="function_name" label="${c:l('xacml_expressionPanel.FunctionName')}"/>
+					<tab id="selector" label="${c:l('xacml_expressionPanel.Selector')}"/>
+					<tab id="value" label="${c:l('xacml_expressionPanel.Value')}"/>
+					<tab id="variable" label="${c:l('xacml_expressionPanel.Variable')}"/>
+					<tab id="subject" label="${c:l('xacml_expressionPanel.Subject')}"/>
+					<tab id="resource" label="${c:l('xacml_expressionPanel.Resource')}"/>
+					<tab id="action" label="${c:l('xacml_expressionPanel.Action')}"/>
+					<tab id="environment" label="${c:l('xacml_expressionPanel.Environment')}"/>
+				</tabs>
+				<tabpanels>									
+					<tabpanel id="t_function">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 12%, 12%, 5%, 12%, 12%, 5%, 12%, *">
+								<separator />
+								<label value="${c:l('xacml_expressionPanel.FunctionType')}"/>
+								<listbox onSelect="selectSubType(self)" style="font-size: 10px" width="155px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_expressionPanel.Comparison')}" value="Comparison"/>
+									<listitem label="${c:l('xacml_expressionPanel.Arithmetic')}" value="Arithmetic"/>
+									<listitem label="${c:l('xacml_expressionPanel.Conversions')}" value="Conversions"/>
+									<listitem label="${c:l('xacml_expressionPanel.BooleanOperators')}" value="Boolean"/>
+									<listitem label="${c:l('xacml_expressionPanel.StringFunctions')}" value="String"/>
+									<listitem label="${c:l('xacml_expressionPanel.BagFunctions')}" value="Bag"/>
+									<listitem label="${c:l('xacml_expressionPanel.SetFunctions')}" value="Set"/>
+									<listitem label="${c:l('xacml_expressionPanel.HigherOrderBagFunctions')}" value="Higher"/>
+									<listitem label="${c:l('xacml_expressionPanel.Xpath')}" value="Xpath"/>
+								</listbox>
+								<separator />
+								<label value="${c:l('xacml_expressionPanel.FunctionSubType')}" visible="false"/>
+								<listbox onSelect="selectQuantifier(self)" style="font-size: 10px" width="155px" visible="false">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+								</listbox>
+								<separator />
+								<label id="q" value="${c:l('xacml_expressionPanel.Qualifier')}" visible="false"/>
+								<listbox style="font-size: 10px" width="155px" visible="false">
+								</listbox>
+							</hbox>
+						</vbox>
+						<separator />
+						<div align="center">
+							<button id="finishFunction" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_function_name">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 10%, *">
+								<separator />
+								<label value="${c:l('xacml_expressionPanel.FunctionName')}"/>
+								<listbox style="font-size: 10px" width="155px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_expressionPanel.AllOf')}" value="ALL_OF"/>
+									<listitem label="${c:l('xacml_expressionPanel.AnyOf')}" value="ANY_OF"/>
+									<listitem label="${c:l('xacml_expressionPanel.AnyOfAny')}" value="ANY_OF_ANY"/>
+									<listitem label="${c:l('xacml_expressionPanel.AllOfAny')}" value="ALL_OF_ANY"/>
+									<listitem label="${c:l('xacml_expressionPanel.AnyOfAll')}" value="ANY_OF_ALL"/>
+									<listitem label="${c:l('xacml_expressionPanel.AllOfAll')}" value="ALL_OF_ALL"/>
+									<listitem label="${c:l('xacml_expressionPanel.Map')}" value="MAP"/>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishFunctionName" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_selector">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 12%, *">
+								<separator />
+								<label value="${c:l('xacml_policySet.AttributeSelector')}"/>
+								<textbox constraint="no empty"/>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishSelector" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_value">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 10%, 20%, 5%, 10%, *">
+								<separator />
+								<label value="${c:l('xacml_expressionPanel.Value')}"/>
+								<textbox constraint="no empty"/>
+								<separator />
+								<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
+								<listbox mold="select" style="font-size: 10px" dataPath="/model:/dataType">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishValue" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_variable">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 10%, *">
+								<separator />
+								<label value="${c:l('xacml_expressionPanel.Variable')}"/>
+								<listbox mold="select" onSelect="" style="font-size: 10px" width="85px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishVariable" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_subject">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 14%, 25%, 5%, 14%, *">
+								<separator/>
+								<label value="${c:l('xacml_policySet.SubjectAttribute')}"/>
+								<listbox mold="select" style="font-size: 10px" width="85px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_policySet.User')}" value="urn:com:soffid:xacml:subject:user"/>
+									<listitem label="${c:l('xacml_policySet.SubjectId')}" value="urn:oasis:names:tc:xacml:1.0:subject:subject-id"/>
+									<listitem label="${c:l('xacml_policySet.Roles')}" value="urn:oasis:names:tc:xacml:2.0:subject:role"/>
+									<listitem label="${c:l('xacml_policySet.Groups')}" value="urn:com:soffid:xacml:subject:group"/>
+									<listitem label="${c:l('xacml_policySet.PrimaryGroup')}" value="urn:com:soffid:xacml:subject:primaryGroup"/>
+									<listitem label="${c:l('xacml_policySet.SubjectIdQualifier')}" value="urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"/>
+									<listitem label="${c:l('xacml_policySet.IPaddress')}" value="urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"/>
+								</listbox>
+								<separator />
+								<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
+								<listbox mold="select" style="font-size: 10px" dataPath="/model:/dataType">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishSubject" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>	
+					</tabpanel>
+					<tabpanel id="t_resource">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 14%, 25%, 5%, 14%, *">
+								<separator/>
+								<label value="${c:l('xacml_policySet.ResourceAttribute')}"/>
+								<listbox mold="select" style="font-size: 10px" width="85px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_policySet.Url')}" value="urn:oasis:names:tc:xacml:1.0:resource:resource-location"/>
+								</listbox>
+								<separator />
+								<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
+								<listbox mold="select" style="font-size: 10px" dataPath="/model:/dataType">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishResource" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>
+					</tabpanel>
+					<tabpanel id="t_action">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 14%, 25%, 5%, 14%, *">
+								<separator/>
+								<label value="${c:l('xacml_policySet.ActionAttribute')}"/>
+								<listbox mold="select" style="font-size: 10px" width="85px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_policySet.Method')}" value="urn:com:soffid:xacml:action:method"/>
+								</listbox>
+								<separator />
+								<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
+								<listbox mold="select" style="font-size: 10px" dataPath="/model:/dataType">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishAction" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>
+					</tabpanel>
+					<tabpanel id="t_environment">
+						<vbox width="100%">
+							<separator />
+							<hbox width="100%" widths="5%, 14%, 25%, 5%, 14%, *">
+								<separator/>
+								<label value="${c:l('xacml_policySet.EnvironmentAttribute')}"/>
+								<listbox mold="select" style="font-size: 10px" width="85px">
+									<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
+									<listitem label="${c:l('xacml_policySet.Country')}" value="urn:com:soffid:xacml:environment:country"/>
+									<listitem label="${c:l('xacml_policySet.CurrentTime')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-time"/>
+									<listitem label="${c:l('xacml_policySet.CurrentDate')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-date"/>
+									<listitem label="${c:l('xacml_policySet.CurrentDateTime')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-dateTime"/>
+								</listbox>
+								<separator />
+								<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
+								<listbox mold="select" style="font-size: 10px" dataPath="/model:/dataType">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+							</hbox>
+						</vbox>
+						<div align="center">
+							<button id="finishEnvironment" label="${c:l('xacml_seleccioPolicy.OK')}">
+								<attribute name="onClick">
+									acceptaDada(self);
+								</attribute>
+							</button>
+						</div>
+					</tabpanel>
+				</tabpanels>
+			</tabbox>
+		</form>
+	</detalls>
+</window>
+</zk>

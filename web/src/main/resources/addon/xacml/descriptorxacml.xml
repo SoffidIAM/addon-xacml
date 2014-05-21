@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<zkib-model>
+
+	<datanode name="world">	
+		<finder name="policySet" type="policySet">
+			<ejb-finder
+				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				method="findMasterPolicySet" if="${queryEnabled}">
+			</ejb-finder>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicySet">
+			</new-instance-bean>
+		</finder>
+	</datanode>
+	
+	<datanode name="root">
+		<finder name="world" type="world">
+			<script-finder>
+				return new  Object();
+			</script-finder>
+		</finder>
+		<finder name="type" type="type">
+			<script-finder>
+			<![CDATA[
+				import com.soffid.iam.addons.xacml.common.*;
+				list = new java.util.LinkedList();
+				for (l: PolicyCombiningAlgorithm.literals())
+				{
+					list.add (l);
+				}
+				return list;
+			]]>
+			</script-finder>
+		</finder>
+		<finder name="typeEffect" type="typeEffect">
+			<script-finder>
+				import com.soffid.iam.addons.xacml.common.*;
+				list = new java.util.LinkedList();
+				list.add (new String(""));
+				for (l: EffectTypeEnumeration.literals())
+				{
+					list.add (l);
+				}
+				return list;
+			</script-finder>
+		</finder>
+		<finder name="matchId" type="matchId">
+			<script-finder>
+				import com.soffid.iam.addons.xacml.common.*;
+				list = new java.util.LinkedList();
+				list.add (new String(""));
+				for (l: MatchIdEnumeration.literals())
+				{
+					list.add (l);
+				}
+				return list;
+			</script-finder>
+		</finder>
+		<finder name="dataType" type="dataType">
+			<script-finder>
+				import com.soffid.iam.addons.xacml.common.*;
+				list = new java.util.LinkedList();
+				list.add (new String(""));
+				for (l: DataType.literals())
+				{
+					list.add (l);
+				}
+				return list;
+			</script-finder>
+		</finder>
+	</datanode>
+	
+	<datanode name="type" transient="true">
+		<custom-attribute name="literal">
+			if (instance.length() == 0)
+				return "";
+			else
+			 	return org.zkoss.util.resource.Labels.getLabel("policyCombiningAlgorithmType."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			if (instance.length() == 0)
+				return null;
+			else
+				return com.soffid.iam.addons.xacml.common.PolicyCombiningAlgorithm.fromString(instance);
+		</custom-attribute>
+	</datanode>
+	
+	<datanode name="typeEffect" transient="true">
+		<custom-attribute name="literal">
+			if (instance.length() == 0)
+				return "";
+			else
+			 	return org.zkoss.util.resource.Labels.getLabel("effectTypeEnumerationType."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			if (instance.length() == 0)
+				return null;
+			else
+				return com.soffid.iam.addons.xacml.common.EffectTypeEnumeration.fromString(instance);
+		</custom-attribute>
+
+	</datanode>
+	
+	<datanode name="policySet">
+	 	<finder name="policySet" type="policySet">
+			<ejb-finder
+				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				method="findChildrenPolicySet" if="${queryEnabled}">
+				<parameter value="${instance.id}"/>
+			</ejb-finder>	
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicySet">
+				<bean-attribute name="parentPolicySet" value="${instance.id}"/>
+			</new-instance-bean>
+		</finder>
+		<finder name="policy" type="policy">
+			<ejb-finder
+				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				method="findPolicyChildrenPolicySet" if="${queryEnabled}">
+				<parameter value="${instance.id}"/>
+			</ejb-finder>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Policy">
+				<bean-attribute name="policySetId" value="${instance.id}"/>
+			</new-instance-bean>
+		</finder>
+		<finder name="policySetIdRef" type="policySetIdRef">
+			<collection-finder collection="${instance.policySetIdReference}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicySetIdReference"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="policyIdRef" type="policyIdRef">
+			<collection-finder collection="${instance.policyIdReference}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicyIdReference"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="target" type="target" refreshAfterCommit="true">
+			<collection-finder collection="${instance.target}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
+			</new-instance-bean>
+		</finder>
+		<ejb-handler
+			jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService">
+			<insert-method method="create" returnBean="true">
+				<parameter value="${instance}" />
+			</insert-method>
+			<delete-method method="delete">
+				<parameter value="${instance}" />
+			</delete-method>
+			<update-method method="update">
+				<parameter value="${instance}" />
+			</update-method>
+		</ejb-handler>
+		<script-handler>
+			<insert-script>
+				policies = self.getListModel("policy");
+				java.util.Iterator it = policies.iterator();
+				while (it.hasNext())
+				{
+					dataNode = it.next();
+					dataNode.getInstance().setPolicySetId(instance.getId());
+				}
+			</insert-script>
+			<update-script>
+				return null;
+			</update-script>
+			<delete-script>
+				return null;
+			</delete-script>
+		</script-handler>
+		<custom-attribute name="etiqueta" depends="version">
+				return instance.policySetId + " (" + instance.version + ")";
+		</custom-attribute>
+		<validator>
+			<attribute-validator expr="${instance.policySetId}" notNull="true" friendlyName="xacml.PolicySetIdNotNull"/>
+		</validator>
+	</datanode>
+
+	<datanode name="policy">	
+		<finder name="target" type="target" refreshAfterCommit="true">
+			<collection-finder collection="${instance.target}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
+			</new-instance-bean>
+		</finder>
+		<ejb-handler
+			jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService">
+			<insert-method method="create" returnBean="true">
+				<parameter value="${instance}" />
+			</insert-method>
+			<delete-method method="delete">
+				<parameter value="${instance}" />
+			</delete-method>
+			<update-method method="update">
+				<parameter value="${instance}" />
+			</update-method>
+		</ejb-handler>
+		<finder name="variableDefinition" type="variableDefinition" refreshAfterCommit="true">
+			<collection-finder collection="${instance.variableDefinition}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.VariableDefinition"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="rule" type="rule">
+			<collection-finder collection="${instance.rule}"/>
+			<new-instance-script>
+				 obj = new com.soffid.iam.addons.xacml.common.Rule();
+				 obj.setTarget(new java.util.LinkedList());
+				 obj.setCondicion(new java.util.LinkedList());
+				 return obj;
+			</new-instance-script>
+		</finder>
+		<custom-attribute name="etiqueta">
+				return instance.policyId + " (" + instance.version + ")";
+		</custom-attribute>
+	</datanode>
+	
+	<datanode name="policySetIdRef">
+		<collection-handler collection="${instance.policySetIdReference}"/>
+	</datanode>
+	
+	<datanode name="policyIdRef">
+		<collection-handler collection="${instance.policyIdReference}"/>
+	</datanode>
+	
+	<datanode name="target">
+		<collection-handler collection="${instance.target}"/>
+		<finder name="subjectMatch" type="subjectMatch">
+			<collection-finder collection="${instance.subjectMatch}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.SubjectMatch"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="resourceMatch" type="resourceMatch">
+			<collection-finder collection="${instance.resourceMatch}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.ResourceMatch"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="actionMatch" type="actionMatch">
+			<collection-finder collection="${instance.actionMatch}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.ActionMatch"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="environmentMatch" type="environmentMatch">
+			<collection-finder collection="${instance.environmentMatch}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.EnvironmentMatch"> 
+			</new-instance-bean>
+		</finder>
+	</datanode>
+	
+	<datanode name="subjectMatch">
+		<collection-handler collection="${instance.subjectMatch}"/>
+		<validator>
+			<attribute-validator expr="${instance.matchId}" notNull="true" friendlyName="xacml.FunctionSubjectNotNull"/>
+			<attribute-validator expr="${instance.attributeValue}" notNull="true" friendlyName="xacml.AttributeValueSubjectNotNull"/>
+			<attribute-validator expr="${instance.dataTypeSubjectDesignator}" notNull="true" friendlyName="xacml.DataTypeSubjectDesignatorNotNull"/>
+			<attribute-validator expr="${instance.dataTypeAttributeValue}" notNull="true" friendlyName="xacml.DataTypeValueSubjectNotNull"/>
+			<script-validator>
+			<![CDATA[
+				if((instance.attributeSelector == null || instance.attributeSelector.trim().isEmpty()) && 
+					(instance.subjectAttributeDesignator == null || instance.subjectAttributeDesignator.trim().isEmpty()))
+					throw new RuntimeException(org.zkoss.util.resource.Labels.getLabel("xacml.DesignatorOrSelectorNotNull"));
+			]]>
+			</script-validator>
+		</validator>
+	</datanode>
+	
+	<datanode name="resourceMatch">
+		<collection-handler collection="${instance.resourceMatch}"/>
+		<validator>
+			<attribute-validator expr="${instance.matchId}" notNull="true" friendlyName="xacml.FunctionResourceNotNull"/>
+			<attribute-validator expr="${instance.attributeValue}" notNull="true" friendlyName="xacml.AttributeValueResourceNotNull"/>
+			<attribute-validator expr="${instance.dataTypeResourceDesignator}" notNull="true" friendlyName="xacml.DataTypeResourceDesignatorNotNull"/>
+			<attribute-validator expr="${instance.dataTypeAttributeValue}" notNull="true" friendlyName="xacml.DataTypeValueResourceNotNull"/>
+			<script-validator>
+			<![CDATA[
+				if((instance.attributeSelector == null || instance.attributeSelector.trim().isEmpty()) && 
+					(instance.ResourceAttributeDesignator == null || instance.resourceAttributeDesignator.trim().isEmpty()))
+					throw new RuntimeException(org.zkoss.util.resource.Labels.getLabel("xacml.DesignatorOrSelectorNotNull2"));
+			]]>
+			</script-validator>
+		</validator>
+	</datanode>
+	
+	<datanode name="actionMatch">
+		<collection-handler collection="${instance.actionMatch}"/>
+		<validator>
+			<attribute-validator expr="${instance.matchId}" notNull="true" friendlyName="xacml.FunctionActionNotNull"/>
+			<attribute-validator expr="${instance.attributeValue}" notNull="true" friendlyName="xacml.AttributeValueActionNotNull"/>
+			<attribute-validator expr="${instance.dataTypeActionDesignator}" notNull="true" friendlyName="xacml.DataTypeActionDesignatorNotNull"/>
+			<attribute-validator expr="${instance.dataTypeAttributeValue}" notNull="true" friendlyName="xacml.DataTypeValueActionNotNull"/>
+			<script-validator>
+			<![CDATA[
+				if((instance.attributeSelector == null || instance.attributeSelector.trim().isEmpty()) && 
+					(instance.actionAttributeDesignator == null || instance.actionAttributeDesignator.trim().isEmpty()))
+					throw new RuntimeException(org.zkoss.util.resource.Labels.getLabel("xacml.DesignatorOrSelectorNotNull3"));
+			]]>
+			</script-validator>
+		</validator>
+	</datanode>
+	
+	<datanode name="environmentMatch">
+		<collection-handler collection="${instance.environmentMatch}"/>
+		<validator>
+			<attribute-validator expr="${instance.matchId}" notNull="true" friendlyName="xacml.FunctionEnvironmentNotNull"/>
+			<attribute-validator expr="${instance.attributeValue}" notNull="true" friendlyName="xacml.AttributeValueEnvironmentNotNull"/>
+			<attribute-validator expr="${instance.dataTypeEnvironmentDesignator}" notNull="true" friendlyName="xacml.DataTypeEnvironmentDesignatorNotNull"/>
+			<attribute-validator expr="${instance.dataTypeAttributeValue}" notNull="true" friendlyName="xacml.DataTypeValueEnvironmentNotNull"/>
+			<script-validator>
+			<![CDATA[
+				if((instance.attributeSelector == null || instance.attributeSelector.trim().isEmpty()) && 
+					(instance.environmentAttributeDesignator == null || instance.environmentAttributeDesignator.trim().isEmpty()))
+					throw new RuntimeException(org.zkoss.util.resource.Labels.getLabel("xacml.DesignatorOrSelectorNotNull4"));
+			]]>
+			</script-validator>
+		</validator>
+	</datanode>
+	
+	<datanode name="matchId" transient="true">
+		<custom-attribute name="literal">
+			if (instance.length() == 0)
+				return "";
+			else
+			 	return org.zkoss.util.resource.Labels.getLabel("matchIdType."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			if (instance.length() == 0)
+				return null;
+			else
+				return com.soffid.iam.addons.xacml.common.MatchIdEnumeration.fromString(instance);
+		</custom-attribute>
+	</datanode>
+	
+	<datanode name="dataType" transient="true">
+		<custom-attribute name="literal">
+			if (instance.length() == 0)
+				return "";
+			else
+			 	return org.zkoss.util.resource.Labels.getLabel("dataType."+instance);
+		</custom-attribute>
+		<custom-attribute name="value">
+			if (instance.length() == 0)
+				return null;
+			else
+				return com.soffid.iam.addons.xacml.common.DataType.fromString(instance);
+		</custom-attribute>
+	</datanode>
+	
+	<datanode name="rule">
+		<collection-handler collection="${instance.rule}"/>
+		<finder name="target" type="target">
+			<collection-finder collection="${instance.target}"/>
+			<new-instance-script>
+				 target = new com.soffid.iam.addons.xacml.common.Target();
+ 				 target.setActionMatch(new java.util.LinkedList()); 
+ 				 target.setEnvironmentMatch(new java.util.LinkedList()); 
+ 			     target.setResourceMatch(new java.util.LinkedList()); 
+ 			     target.setSubjectMatch(new java.util.LinkedList()); 
+				 return target;
+			</new-instance-script>
+		</finder>
+		<finder name="condicion" type="condicion" refreshAfterCommit="true">
+			<collection-finder collection="${instance.condicion}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Condition"> 
+			</new-instance-bean>
+		</finder>
+		<validator>
+			<attribute-validator expr="${instance.ruleId}" notNull="true" friendlyName="xacml.RuleIdNotNull"/>
+			<attribute-validator expr="${instance.effectType}" notNull="true" friendlyName="xacml.EffectTypeNotNull"/>
+		</validator>
+	</datanode>
+	
+	<datanode name="variableDefinition">
+		<collection-handler collection="${instance.variableDefinition}"/>
+		<validator>
+			<attribute-validator expr="${instance.variableId}" notNull="true" friendlyName="xacml.VariableIdNotNull"/>
+		</validator>
+	</datanode>
+	
+	<datanode name="condicion">
+		<collection-handler collection="${instance.condicion}"/>
+		<validator>
+			<attribute-validator expr="${instance.conditionId}" notNull="true" friendlyName="xacml.ConditionIdNotNull"/>
+		</validator>
+	</datanode>
+	
+</zkib-model>
