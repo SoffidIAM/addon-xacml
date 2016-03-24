@@ -1,0 +1,1053 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?page title="policySet" id="policySet"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?component name="input_dada" macro-uri="/comu/input_dada.zul"?>
+<?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
+<?component name="targetSubjects" macro-uri="targetSubject.zul"?>
+
+<zk xmlns:h="http://www.w3.org/1999/xhtml">
+<frame saveContent="true">
+	<style src="~./styles/estil.css"/>
+	<style src="/css/localSEU.css"/>
+	<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacml.xml"
+		onCommit="onRefrescaArbreIntern(true);" onChange="showCancelButton()"/>
+	
+	<zscript src="/comu/netejaCriteris.zul"/>
+	
+	<zscript>
+	<![CDATA[
+		int fileres = es.caib.seycon.ng.web.Custom.FILERES_ESQUEMA;
+		boolean arrel = false;
+		try {es.caib.zkib.zkiblaf.Application.setTitle(org.zkoss.util.resource.Labels.getLabel("policySet.Titol"));} catch (Exception ex){}
+		
+		import com.soffid.iam.addons.xacml.common.*;
+		import com.soffid.addons.xacml.utils.*;
+		import org.zkoss.zk.ui.event.EventListener;
+		
+		void showDetall () 
+		{
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected.getLevel() > 0)
+				esquema.showFormulari();
+			else
+				esquema.hideFormulari();
+		}
+		
+		
+		void showLista ()  
+		{
+			  esquema.getFellow("lista").getFellow("treebox").clearSelection();
+		}
+		
+		
+		void select () 
+		{
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected != null && selected.value != null &&
+				selected.getLevel () > 0)
+				{
+					esquema.showFormulari();
+				} 
+		}
+		
+		
+		void refrescaArbre() {
+			model.getJXPathContext().getValue("/world").refresh();
+			treebox.dataPath = "/model:/";
+			// Amaguem tot:
+			b_esborrar = esquema.getFellow("lista").getFellow("b_esborrar");
+			Component vbox_ps = esquema.getFellow("dades").getFellow("form").getFellow("v_ps");
+			Component vbox_po = esquema.getFellow("dades").getFellow("form").getFellow("v_po");
+			Component vbox_reference = esquema.getFellow("dades").getFellow("form").getFellow("v_reference");
+			Component vbox_arrelps = esquema.getFellow("dades").getFellow("form").getFellow("v_arrelps");
+			b_esborrar.setDisabled(true);
+			vbox_ps.setVisible(false);
+			vbox_po.setVisible(false);
+			vbox_reference.setVisible(false);
+			vbox_arrelps.setVisible(false);
+			esquema.hideFormulari();
+		}
+		
+		
+		void refrescaArbreComprova() {
+			if (esquema.isCommitPending()) {
+				Missatgebox.avis (org.zkoss.util.resource.Labels.getLabel("policySet.RefrescaArbreMissatge"));
+				return;
+			}
+			refrescaArbre();
+		}
+		
+		
+		void createPolicy(){
+			Component vbox_po = esquema.getFellow("dades").getFellow("form").getFellow("v_po");
+			vbox_po.setVisible(true);
+			esquema.showFormulari();
+		}
+		
+		
+		void createPolicySet(){
+			try{
+				Object obj = esquema.getFellow("lista").getFellow("treebox").getSelectedItem().getValue().getInstance();
+				if(obj instanceof PolicySet)//PolicySet seleccionada
+					Events.postEvent("onInicia",desktop.getPage("creacioPolicy").getFellow("esquemaPolicy"), lista );
+				else{
+					arrel = true;
+					//Per posar l'ordre contam a l'arbre quants policySet penjant de l'arrel hi ha
+					int number = 0;
+					es.caib.zkib.binder.BindContext bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+							treebox.getSelectedItem());
+					Iterator it = bindCtx.getDataSource().getJXPathContext().iteratePointers(bindCtx.getXPath()+"/policySet");
+					while (it.hasNext()) {
+						es.caib.zkib.jxpath.Pointer p = it.next();
+						es.caib.zkib.datamodel.DataNode dn = p.getValue();
+						if (dn != null && !dn.isDeleted())
+							number ++;
+					}
+					
+					treebox.addNew("/policySet");
+					es.caib.zkib.binder.BindContext bindCtx2 = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+							treebox.getSelectedItem());
+					es.caib.zkib.datasource.XPathUtils.setValue(bindCtx2, "@order", number + 1); 
+				}
+			}catch(Exception e){
+				System.out.println("Error creating Policy set: " + e);
+			}
+		}		
+		
+		
+		void onCreateNewPolicies(Object []obj){
+			int i = obj.length;
+			
+			Component arbre = esquema.getFellow("lista").getFellow("treebox");
+			PolicySet actual = arbre.getSelectedItem().getValue().getInstance();
+			es.caib.zkib.binder.BindContext bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+					arbre.getSelectedItem());
+			
+			int number = com.soffid.addons.xacml.utils.Sort.calculaOrdre(bindCtx, actual);
+			
+			if(obj[i-1].equals("policySet")){
+				Long parent = actual.getId();
+				treebox.addNew("/policySet");
+				bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						treebox.getSelectedItem());
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@policySetId", obj[0].toString().replace(" ", ""));
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@description", obj[1]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@version", obj[2]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@policyCombiningAlgId", obj[3]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@order", number + 1);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@parentPolicySet", parent);
+				
+			}else if(obj[i-1].equals("policy")){
+				treebox.addNew("/policy");
+				bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						treebox.getSelectedItem());
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@policyId", obj[0].toString().replace(" ", ""));
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@description", obj[1]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@version", obj[2]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@ruleCombiningAlgId", obj[3]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@order", number + 1); 
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@policySetId", actual.getId());
+				
+			}else if(obj[i-1].equals("policySetIdRef")){
+				Long idrefPolicySet = actual.getId();
+				treebox.addNew("/policySetIdRef");
+				bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						treebox.getSelectedItem());
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@idReferenceTypeValue", obj[0].toString().replace(" ", ""));
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@earliestVersion", obj[1]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@latestVersion", obj[2]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@version", obj[3]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@order", number + 1);
+				
+			}else if(obj[i-1].equals("policyIdRef")){
+				Long idrefPolicy = actual.getId();
+				treebox.addNew("/policyIdRef");
+				bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						treebox.getSelectedItem());
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@idReferenceTypeValue", obj[0].toString().replace(" ", ""));
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@earliestVersion", obj[1]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@latestVersion", obj[2]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@version", obj[3]);
+				es.caib.zkib.datasource.XPathUtils.setValue(bindCtx, "@order", number + 1);
+			}
+		}
+		
+		
+		void recalculaOrdre()
+		{
+			Component arbre = esquema.getFellow("lista").getFellow("treebox");
+			Object obj = arbre.getSelectedItem().getValue().getInstance();
+			if(obj instanceof PolicySet || obj instanceof Policy || obj instanceof PolicySetIdReference || obj
+					instanceof PolicyIdReference)
+			{
+				Treeitem parent = arbre.getSelectedItem().getParent().getParent();
+
+				Treechildren children = parent.getTreechildren();
+				List brothers = children.getChildren();
+				int order = 1;
+				for (int i = 0; i < brothers.size(); i ++)
+				{
+					Treeitem item = brothers.get(i);
+					if (item != arbre.getSelectedItem())
+					{
+						if (item.getValue().getInstance().getOrder() != order) 
+						{
+							item.getValue().getInstance().setOrder(order);
+							brothers.get(i).getValue().update();
+						}
+						order ++;
+					}
+				}	
+			}
+		}
+		
+		
+		void createNew(Component grid){
+			es.caib.zkib.binder.BindContext ctx = 
+					es.caib.zkib.datasource.XPathUtils.getComponentContext(grid);
+			es.caib.zkib.datasource.XPathUtils.getValue(ctx,".").newInstance();
+			int last = grid.getRows().getChildren().size();
+			Component lastPanel = grid.getRows().getChildren().get(last-1);
+			lastPanel.getChildren().get(1).getChildren().get(0).getChildren().get(0)
+				.setSrc("~./img/fletxa-baix.gif");
+			lastPanel.getChildren().get(1).getChildren().get(1).setVisible(true);
+		}
+		
+		
+		void createNewRule(Component grid){
+			es.caib.zkib.binder.BindContext ctx = 
+					es.caib.zkib.datasource.XPathUtils.getComponentContext(grid);
+			es.caib.zkib.datasource.XPathUtils.getValue(ctx,".").newInstance();
+			
+			//CALCUL DE L'ORDRE (Orden els rules només dins cada policy per nombre de rules que hi ha).
+			int number = grid.getRows().getChildren().size();
+			ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(grid.getRows().getChildren().get(number-1));
+			es.caib.zkib.datasource.XPathUtils.setValue(ctx, "@order", number);
+			es.caib.zkib.datasource.XPathUtils.setValue(ctx, "@policyId", po_detall_tipus.getFellow("dada").getValue());
+			int last = grid.getRows().getChildren().size();
+			Component lastPanel = grid.getRows().getChildren().get(last - 1);
+			lastPanel.getChildren().get(1).getChildren().get(0).getChildren().get(0)
+				.setSrc("~./img/fletxa-baix.gif");
+			lastPanel.getChildren().get(1).getChildren().get(1).setVisible(true);
+			String result = es.caib.zkib.datasource.XPathUtils.createPath (
+					ctx.getDataSource(),
+					ctx.getXPath()+"/target");
+		}
+		
+		
+		void removeDataRow(Component r){
+			es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils
+					.getComponentContext(r.getParent());
+			
+			Missatgebox.confirmaOK_CANCEL(org.zkoss.util.resource.Labels.getLabel("policySet.ConfirmDelete"),
+					org.zkoss.util.resource.Labels.getLabel("policySet.Delete"), new EventListener() {
+				public void onEvent(Event evt) {
+					if ("onOK".equals(evt.getName())) {
+						es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(),
+								ctx.getXPath());
+					}
+				}
+			});
+		}
+		
+		void removeSubExpression(Image rem){
+			com.soffid.addons.xacml.utils.XACMLExpressionComponent c = rem.getParent().getChildren().get(1);
+			es.caib.zkib.binder.BindContext ctx = es.caib.zkib.datasource.XPathUtils
+					.getComponentContext(c);
+			Integer ordre = c.getOrder();
+			Missatgebox.confirmaOK_CANCEL(org.zkoss.util.resource.Labels.getLabel("policySet.ConfirmDelete"),
+					org.zkoss.util.resource.Labels.getLabel("policySet.Delete"), new EventListener() {
+					public void onEvent(Event evt) {
+						if ("onOK".equals(evt.getName())) {
+							es.caib.zkib.datasource.XPathUtils.removePath(ctx.getDataSource(),
+									ctx.getXPath());
+							Component pare = c.getParent();
+							while(!(pare instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+							{
+								pare = pare.getParent();
+								if (pare == null) return;
+							}
+							com.soffid.addons.xacml.utils.XACMLExpressionComponent p = pare;
+							p.drawExpression();
+							p.markAsModified();
+							com.soffid.addons.xacml.utils.Sort.modifyOrderSubExpression(p, ordre);
+						}
+					}
+				});
+		}
+		
+		
+		void createNewExpression(Component grid){
+			
+			es.caib.zkib.binder.BindContext ctx = 
+					es.caib.zkib.datasource.XPathUtils.getComponentContext(grid);
+			es.caib.zkib.datasource.XPathUtils.getValue(ctx,".").newInstance();
+			int number = grid.getRows().getChildren().size();
+			ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(grid.getRows().getChildren().get(number-1));
+			com.soffid.iam.addons.xacml.common.Expression exp = new com.soffid.iam.addons.xacml.common.Expression();
+			
+			String usuari = Executions.getCurrent().getUserPrincipal().getName();
+			exp.setAttributeValue(usuari); //Passar el codi d'usuari
+			exp.setDataTypeAttributeValue(DataType.STRING_TYPE);
+			exp.setExpressionType("subject");
+			exp.setAttributeDesignator("urn:oasis:names:tc:xacml:1.0:subject:subject-id");
+			exp.setDataTypeAttributeDesignator(DataType.STRING_TYPE);
+			exp.setOrder(1);
+			exp.setName(com.soffid.iam.addons.xacml.common.FunctionEnumeration.fromString(java.lang.String.valueOf("STRING_EQUAL")));  //Function tipus true
+			es.caib.zkib.datasource.XPathUtils.setValue(ctx,"@expression", exp);
+			number = grid.getRows().getChildren().size();
+			ctx = es.caib.zkib.datasource.XPathUtils.getComponentContext(grid.getRows().getChildren().get(number-1));
+			
+			Component lastPanel = grid.getRows().getChildren().get(number-1);
+			lastPanel.getChildren().get(1).getChildren().get(0).getChildren().get(0)
+				.setSrc("~./img/fletxa-baix.gif");
+			lastPanel.getChildren().get(1).getChildren().get(1).setVisible(true);
+		}
+		
+		void createNewExpressionCondition(Component r){
+			Component pare = r.getParent().getParent();
+			Component grid = pare.getChildren().get(6).getChildren().get(0);
+			
+			createNewExpression(grid);
+		}
+		
+		
+		void selectVersion(Radio r){
+			String valor = r.getValue();
+			if(valor.equals("range")){
+				version.setValue("");
+				version.setDisabled(true);
+				rangeVersion.setDisabled(false);
+				rangeVersion2.setDisabled(false);
+			}else if(valor.equals("anyVersion")){
+				version.setValue("");
+				rangeVersion.setValue("");
+				rangeVersion2.setValue("");
+				version.setDisabled(true);
+				rangeVersion.setDisabled(true);
+				rangeVersion2.setDisabled(true);
+			}else{
+				version.setDisabled(false);
+				rangeVersion.setValue("");
+				rangeVersion2.setValue("");
+				rangeVersion.setDisabled(true);
+				rangeVersion2.setDisabled(true);
+			}
+		}
+		
+		
+		void selectAttributeType(Radio r){
+			Radiogroup rg = r.getRadiogroup();
+			int i = rg.getSelectedIndex();
+			Hbox h = rg.getParent();
+			Hbox designator = h.getChildren().get(0).getChildren().get(0).getChildren().get(0);
+			Hbox selector = h.getChildren().get(0).getChildren().get(0).getChildren().get(1);
+			if(i==0){
+				selector.getChildren().get(2).setValue("");
+				selector.getChildren().get(2).setVisible(false);
+				selector.getChildren().get(4).setVisible(false);
+				selector.getChildren().get(5).setVisible(false);
+				selector.getChildren().get(6).setVisible(false);
+				designator.getChildren().get(2).setVisible(true);
+				designator.getChildren().get(4).setVisible(true);
+				designator.getChildren().get(5).setVisible(true);
+				designator.getChildren().get(6).setVisible(true);
+				designator.getChildren().get(2).setSelectedIndex(1);
+				selector.setWidths("8%, *");
+				designator.setWidths("8%, 22%, 30%, 10%, 15%, *");
+			}else{
+				designator.getChildren().get(2).setSelectedIndex(0);
+				designator.getChildren().get(2).setVisible(false);
+				designator.getChildren().get(4).setVisible(false);
+				designator.getChildren().get(5).setVisible(false);
+				designator.getChildren().get(6).setVisible(false);
+				selector.getChildren().get(2).setVisible(true);
+				selector.getChildren().get(4).setVisible(true);
+				selector.getChildren().get(5).setVisible(true);
+				selector.getChildren().get(6).setVisible(true);
+				designator.setWidths("8%, *");
+				selector.setWidths("8%, 22%, 30%, 10%, 15%, *");
+			}
+		}
+		
+		
+		void setDataType(Listbox l){
+			Hbox h = l.getParent();
+			h.getChildren().get(5).setSelectedIndex(1);
+			Vbox v = h.getParent();
+			v.getChildren().get(5).getChildren().get(6).setSelectedIndex(1);
+		}
+		
+		
+		void createNewSubExpression(Component image)
+		{
+			Component comp = image.getParent();
+			while(!(comp instanceof com.soffid.addons.xacml.utils.XACMLExpressionComponent))
+				comp = comp.getParent();
+			com.soffid.addons.xacml.utils.XACMLExpressionComponent c = comp;
+			
+			com.soffid.iam.addons.xacml.common.Expression exp = new com.soffid.iam.addons.xacml.common.Expression();
+			String usuari = Executions.getCurrent().getUserPrincipal().getName();
+			exp.setAttributeValue(usuari); //Passar el codi d'usuari
+			exp.setDataTypeAttributeValue(DataType.STRING_TYPE);
+			exp.setExpressionType("subject");
+			exp.setAttributeDesignator("urn:oasis:names:tc:xacml:1.0:subject:subject-id");
+			exp.setDataTypeAttributeDesignator(DataType.STRING_TYPE);
+			exp.setName(com.soffid.iam.addons.xacml.common.FunctionEnumeration.fromString(java.lang.String.valueOf("STRING_EQUAL")));  //Function tipus true
+			int i = c.getSubexpression().size();
+			exp.setOrder(i + 1);
+			c.getSubexpression().add(exp);
+			c.drawExpression();  //???NO funciona
+			c.markAsModified();
+		}
+		
+		
+		void addNewVersion()
+		{
+			Component arbre = esquema.getFellow("lista").getFellow("treebox");
+			Object obj = arbre.getSelectedItem().getValue().getInstance();
+			es.caib.zkib.binder.BindContext bindCtx = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+					arbre.getSelectedItem());
+			Treeitem parent = arbre.getSelectedItem().getParent().getParent();
+			arbre.setSelectedItem(parent);
+			
+			if (obj instanceof PolicySet)
+			{
+				es.caib.zkib.binder.BindContext bindCtxNou = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						arbre.getSelectedItem());
+				String newPath = com.soffid.addons.xacml.utils.Duplicator.duplicatePolicySet(bindCtx.getDataSource()
+						, bindCtx.getXPath(), bindCtxNou.getXPath());
+			}
+			else
+			{ 
+				es.caib.zkib.binder.BindContext bindCtxNou = es.caib.zkib.datasource.XPathUtils.getComponentContext(
+						arbre.getSelectedItem());
+				String newPath = com.soffid.addons.xacml.utils.Duplicator.duplicatePolicy(bindCtx.getDataSource()
+						, bindCtx.getXPath(), bindCtxNou.getXPath());
+			}
+		}
+		
+		void importPolicySet(){
+			org.zkoss.util.media.Media m = org.zkoss.zul.Fileupload.get();
+			if(m!=null){
+	        	org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
+	        	org.dom4j.Document document;
+	        	java.io.InputStream in;
+				if (m.inMemory())
+				{
+					if (m.isBinary())
+						in = new java.io.ByteArrayInputStream(m.getByteData());
+					else
+						in = new java.io.ByteArrayInputStream(m.getStringData().getBytes());
+				}
+				else
+				{
+					if (m.isBinary())
+						in = m.getStreamData();
+					else
+						in = m.getReaderData();
+				}
+				javax.naming.Context context = new javax.naming.InitialContext();
+				policySetHome = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
+				policySetService = policySetHome.create();
+				policySetService.importXACMLPolicySet(in);
+				refrescaArbre();
+			}
+		}
+		
+		void noEmpty(Textbox tb){
+			String value = tb.getValue();
+			if(value == null || value.isEmpty()){
+				Hbox hb = tb.getParent();
+				Radio r = hb.getChildren().get(0);
+				if(r.isChecked()){
+					 Radiogroup rg = r.getRadiogroup();
+					 rg.setSelectedIndex(2);
+				}
+			}
+		}
+		
+		void onRefrescaArbreIntern(boolean checkCommit)
+		{
+			String xpath_arbre  = null;
+			String xpath_arbre_intern = null;
+			
+			// Check pending changes
+			if (checkCommit && esquema.isCommitPending())
+			{
+				Missatgebox.avis (org.zkoss.util.resource
+						.Labels.getLabel("xacml_policySet"));
+				return;
+			}
+			
+			treebox = esquema.getFellow("lista").getFellow("treebox");
+			
+			if (treebox.getSelectedItem() != null)
+			{
+				xpath_arbre = treebox.getSelectedItem().getValue().getXPath();
+			}
+			
+			// Refresquem el contingut
+			model.getJXPathContext().getValue("/").refresh();
+			treebox.setDataPath("/model:/");
+			
+			// I tornem a obrir les branques als dos arbres
+			if (xpath_arbre != null)
+			{
+				treebox.obreBrancaByXpath(xpath_arbre);
+			}
+			
+			hiddeButtons();
+		}
+		
+		void showCancelButton()
+		{
+			b_cancel = esquema.getFellow("lista").getFellow("b_cancel");
+			b_cancel.setVisible(true);
+		}
+		
+		void hiddeButtons()
+		{
+			btcommit = esquema.getFellow("lista").getFellow("btcommit");
+			b_cancel = esquema.getFellow("lista").getFellow("b_cancel");
+			
+			btcommit.setVisible(false);
+			b_cancel.setVisible(false);
+		}
+	]]>
+	</zscript>
+	
+ 	<esquema ample="${amplaria}"  datamodel="/model" id="esquema" onHideFormulari="showLista()" senseCriteris="true">
+ 	
+ 		<criteris height="${queryWindowMin}" id="queryWindow" onOK="search()" width="${amplaria}">
+ 			<vbox align="right" width="100%">
+				<label onClick="" sclass="label_link" value="Esborra"/>
+			</vbox>	
+		</criteris>
+	
+		<navegador id="lista" width="${amplaria}">
+			<attribute name="onAddPolicy">
+				onCreateNewPolicies(event.data);
+			</attribute>
+			
+			<toolbar style="border-top:0.1px solid white;">
+				<toolbarbutton id="b_inserir_ps" image="~./img/list-add.gif"
+					label="${c:l('xacml_policySet.AddNew')}" onClick="createPolicySet()"/>
+				<deletetreebutton id="b_esborrar" acces="true" disabled="true"
+					potEsborrarBranquesAmbFills="false" onClick="recalculaOrdre()"
+					tree="/esquema/lista/treebox"/>
+				<commitbutton id="btcommit" datamodel="/model" />
+
+				<toolbarbutton id="b_cancel" image="~./img/document-undo.gif"
+					visible="${false}"
+					label="${c:l('xacml_policySet.zul.CancelChanges')}"
+					onClick="onRefrescaArbreIntern(false);" />
+				<toolbarbutton image="~./img/reload-petit16b.png"
+					label="${c:l('xacml_policySet.Refresh')}"
+					onClick="refrescaArbreComprova()"/>
+				<toolbarbutton image="/img/upload-little.png"
+					label="${c:l('xacml_policySet.Import')}" onClick="importPolicySet();"/> 
+			</toolbar>
+			
+	 		<tree autocommit="false" dataPath="/model:/" fixedLayout="true" height="96%" id="treebox" 
+	 				onClick="showDetall()" onSelect="select()" pageSize="19" rows="${fileres}">
+		 		<treecols>
+					<treecol label="${c:l('xacml_policySet.Tree')}"/>
+				</treecols>
+				<treeitemfinder bind="." open="false" path="/world">
+					<treerow>
+						<treecellimage label="World" image="/img/world.png"/>
+					</treerow>
+				</treeitemfinder>
+				<treeitemfinder bind="." open="false" path="/policySet" onOpen="com.soffid.addons.xacml.utils.Sort.ordena(self); ">
+					<treerow>
+						<treecellimage bind="@etiqueta" image="/addon/xacml/img/policySet2.png"/>
+					</treerow>
+				</treeitemfinder>
+				<treeitemfinder bind="." open="false" path="/policy">
+					<treerow>
+						<treecellimage bind="etiqueta" image="/addon/xacml/img/policy2.png"/>
+					</treerow>
+				</treeitemfinder>
+				<treeitemfinder bind="." open="false" path="/policySetIdRef">
+					<treerow>
+						<treecellimage bind="@idReferenceTypeValue" image="/addon/xacml/img/target2.png"/>
+					</treerow>
+				</treeitemfinder>
+				<treeitemfinder bind="." open="false" path="/policyIdRef">
+					<treerow>
+						<treecellimage bind="@idReferenceTypeValue" image="/addon/xacml/img/rule2.png"/>
+					</treerow>
+				</treeitemfinder>
+			</tree>
+		</navegador>
+		<detalls id="dades">
+			<zscript>
+				<![CDATA[
+				void onChangeDades()
+					{
+						try {	
+							es.caib.zkib.datasource.DataSource ds = form.getDataSource(); 
+							es.caib.zkib.jxpath.JXPathContext ctx =  ds.getJXPathContext(); 
+							Object registre = ctx.getValue("/");						
+							
+							b_inserir_ps = esquema.getFellow("lista").getFellow("b_inserir_ps");
+							b_esborrar = esquema.getFellow("lista").getFellow("b_esborrar");
+							Component vbox_ps = esquema.getFellow("dades").getFellow("form").getFellow("v_ps");
+							Component vbox_po = esquema.getFellow("dades").getFellow("form").getFellow("v_po");
+							Component vbox_reference = esquema.getFellow("dades").getFellow("form").getFellow("v_reference");
+							Component vbox_arrelps = esquema.getFellow("dades").getFellow("form").getFellow("v_arrelps");
+							
+							form.getFellow("detall_policySet").getFellow("dada").setDisabled(!registre.isNew());
+							form.getFellow("detall_version").setDisabled(!registre.isNew());
+							form.getFellow("po_detall_policy").getFellow("dada").setDisabled(!registre.isNew());
+							form.getFellow("id_detall").getFellow("dada").setDisabled(!registre.isNew());
+							form.getFellow("detall_versionpolicy").getFellow("dada").setDisabled(!registre.isNew());
+							
+							treebox = esquema.getFellow("lista").getFellow("treebox");
+							Object obj = registre.getInstance();
+							
+							if ((obj instanceof PolicySet) && !arrel) {
+								b_inserir_ps.setDisabled(false);
+								b_esborrar.setDisabled(false);
+								vbox_ps.setVisible(true);
+								vbox_po.setVisible(false);
+								vbox_reference.setVisible(false);
+								vbox_arrelps.setVisible(false);
+								showDetall();
+							}else if(obj instanceof Policy){
+								b_inserir_ps.setDisabled(true);
+								b_esborrar.setDisabled(false);
+								vbox_ps.setVisible(false);
+								vbox_po.setVisible(true);
+								vbox_reference.setVisible(false);
+								vbox_arrelps.setVisible(false);
+								showDetall();
+							}else if(obj instanceof IdReference){
+								b_inserir_ps.setDisabled(true); 
+								b_esborrar.setDisabled(false);
+								vbox_ps.setVisible(false);
+								vbox_po.setVisible(false);
+								vbox_reference.setVisible(true);
+								vbox_arrelps.setVisible(false);
+								String versio = vbox_reference.getFellow("version").getValue();
+								String range = vbox_reference.getFellow("rangeVersion").getValue();
+								if(versio != null && !versio.equals("")){
+									vbox_reference.getFellow("radio_version").setSelectedIndex(0);
+									vbox_reference.getFellow("version").setDisabled(false);
+									vbox_reference.getFellow("rangeVersion").setDisabled(true);
+									vbox_reference.getFellow("rangeVersion2").setDisabled(true);
+								}else if(range != null && !range.equals("")){
+									vbox_reference.getFellow("radio_version").setSelectedIndex(1);
+									vbox_reference.getFellow("version").setDisabled(true);
+									vbox_reference.getFellow("rangeVersion").setDisabled(false);
+									vbox_reference.getFellow("rangeVersion2").setDisabled(false);
+								} else{
+									vbox_reference.getFellow("radio_version").setSelectedIndex(2);
+									vbox_reference.getFellow("version").setDisabled(true);
+									vbox_reference.getFellow("rangeVersion").setDisabled(true);
+									vbox_reference.getFellow("rangeVersion2").setDisabled(true);
+								}
+								showDetall();
+							}else if(arrel){
+								if(registre.isNew())
+								{
+									vbox_arrelps.getFellow("ps_vers").setValue("1");
+									Listbox l = vbox_arrelps.getFellow("lbPolicyCombiningAlgorithm2");
+									l.setSelectedIndex(0);
+								}
+								//vbox_ps.setVisible(false);
+								vbox_ps.setVisible(true);
+								vbox_po.setVisible(false);
+								vbox_reference.setVisible(false);
+								//vbox_arrelps.setVisible(true);
+								vbox_arrelps.setVisible(false);
+								arrel=false;
+								showDetall();
+							}else{
+								b_inserir_ps.setDisabled(false); 
+								b_esborrar.setDisabled(true);
+								vbox_ps.setVisible(false);
+								vbox_po.setVisible(false);
+								vbox_reference.setVisible(false);
+								vbox_arrelps.setVisible(false);
+								showDetall();
+							}
+							
+						}catch (Exception e) {
+							form.getFellow("detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
+							e.printStackTrace();				
+						}catch (es.caib.zkib.jxpath.JXPathNotFoundException e) {
+							// No active record
+							form.getFellow("detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
+							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
+						}
+					}
+				
+				]]>	
+			</zscript>
+			
+			<form dataPath="/esquema/lista/treebox:/." id="form" onChangeXPath="onChangeDades()" width="100%">
+				<attribute name="onActualitza">
+				</attribute>
+			 	<vbox id="v_ps" visible="false" width="99%" widths="5%, *">
+			 		<hbox width="100%" widths="93%, 2%, *" >
+						<label sclass="etiquetaxacml" value="${c:l('xacml_policySet.PolicySetManagement')}" width="100%"/>
+						<imageclic id="exportData" src="~./img/exporta.gif" use="com.soffid.addons.xacml.utils.ExportData"/>
+						<label value="${c:l('policySet.Export')}"/>
+					</hbox>
+					<grid>
+						<rows>
+							<row visible="false">
+								<input_etiqueta value="Policy Set"/>
+								<input_dada bind="@tipus" id="detall_tipus" value="PS" width_custom="99%"/>
+								<input_dada bind="@id"/>
+							</row> 								
+							<row>
+								<hbox widths="20%, 40%, 14%, 7%,*" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.PolicySetID')}"/>
+									<input_dada bind="@policySetId" id="detall_policySet" maxim="50" width_custom="100%"/>
+									<separator/>
+									<input_etiqueta value="${c:l('xacml_policySet.Version')}"/>
+									<vbox>
+										<textbox bind="@version" id="detall_version" maxlength="25" onChange=""/>
+										<hbox>
+											<label value="${c:l('xacml_policySet.AddNewVersion')} "/>
+											<imageclic id="addVersion" src="~./img/list-add.gif">
+												<attribute name="onClick">
+													addNewVersion();
+												</attribute>
+											</imageclic>
+										</hbox>
+									</vbox>
+								</hbox>
+							</row>
+							<row>
+								<hbox widths="20%, *" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.Description')}"/>
+									<input_dada bind="@description" id="descripcio" maxim="50" width_custom="99%"/>
+								</hbox>
+							</row>
+							<row>
+								<hbox widths="20%, 40%, *" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.CombAlgorithm')}"/>
+									<listbox id="lbPolicyCombiningAlgorithm" bind="@policyCombiningAlgId" mold="select" dataPath="/model:/type" width="100%">
+										<dataitem bind="@value">
+											<listcell bind="@literal"/>
+										</dataitem>
+									</listbox>
+									<separator/>
+								</hbox>
+							</row>
+							<row>
+								<vbox>
+									<separator />
+									<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Target')}"/>
+								</vbox>
+							</row>
+							<row>
+								<grid dataPath="target" fixedLayout="true" sclass="fonsBlanc">
+									<datarow>
+										<targetSubjects sclass="fonsBlanc"/>
+									</datarow>
+								</grid>
+							</row>
+						</rows>
+					</grid>
+				</vbox>
+				<vbox id="v_po" visible="false" width="99%">
+					<hbox width="100%" widths="93%, 2%, *" >
+						<label sclass="etiquetaxacml" value="${c:l('policySet.lblPolicy')}" width="100%"/>
+						<imageclic id="exportDataPolicy" src="~./img/exporta.gif" use="com.soffid.addons.xacml.utils.ExportData"/>
+						<label value="${c:l('policySet.Export')}"/>
+					</hbox>
+				 	<grid>
+						<rows>
+							<row visible="false">
+								<input_etiqueta value="Policy"/>
+								<input_dada bind="@id" id="po_detall_tipus" width_custom="99%"/>
+							</row>								
+							<row>
+								<hbox widths="20%, 40%, 14%, 7%,*" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.PolicySetID')}"/>
+									<input_dada bind="@policyId" id="po_detall_policy" maxim="50" width_custom="100%"/>
+									<separator/>
+									<input_etiqueta value="${c:l('xacml_policySet.Version')}"/>
+									<vbox>
+										<input_dada bind="@version" id="detall_versionpolicy" maxim="25"/>
+										<hbox>
+											<label value="${c:l('xacml_policySet.AddNewVersion')} "/>
+											<imageclic id="addVersionPolicy" src="~./img/list-add.gif">
+												<attribute name="onClick">
+													addNewVersion();
+												</attribute>
+											</imageclic>
+										</hbox>
+									</vbox>
+								</hbox>
+							</row>
+							<row>
+								<hbox widths="20%, *" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.Description')}"/>
+									<input_dada bind="@description" id="po_descripcio" maxim="50" width_custom="99%"/>
+								</hbox>
+							</row>
+							<row>
+								<hbox widths="20%, 40%, *" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.RuleComb')}"/>
+									<listbox id="lbRuleCombiningAlgorithm" bind="@ruleCombiningAlgId" mold="select" dataPath="/model:/type" width="100%">
+										<dataitem bind="@value">
+											<listcell bind="@literal"/>
+										</dataitem>
+									</listbox>
+									<separator/>
+								</hbox>
+							</row>
+							<row>
+								<vbox>
+									<separator />
+									<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Target')}"/>
+								</vbox>
+							</row>
+							<row>
+								<grid dataPath="target" fixedLayout="true" sclass="fonsBlanc">
+									<datarow>
+										<vbox sclass="fonsBlanc">
+											<targetSubjects sclass="fonsBlanc"/>
+											<separator />
+										</vbox>
+									</datarow>
+								</grid>
+							</row>
+							<row>
+								<vbox sclass="fonsBlanc">
+									<hbox widths="20%, 3%, *" width="100%" sclass="fonsBlanc">
+										<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Variables')}"/>
+										<imageclic id="addVarPO" src="~./img/list-add.gif">
+											<attribute name="onClick">
+												createNewExpression(gridVariable);
+											</attribute>
+										</imageclic>
+										<label value="${c:l('xacml_policySet.AddNew')} "/>
+									</hbox>
+									<hbox width="100%" sclass="fonsBlanc">
+										<grid dataPath="/variableDefinition" id="gridVariable" fixedLayout="true" sclass="xacmlgrid2" width="100%">
+											<columns sclass="senseBorder2">
+												<column width="5%"/>
+												<column width="*"/>
+											</columns>
+											<datarow sclass="senseBorder2">
+												<label value=""/>
+												<vbox width="100%" sclass="senseBorder2">
+													<hbox width="100%" widths="5%, 1%, 20%, 1%, 1%, *" sclass="senseBorder2">
+														<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
+														</imageclic>
+														<separator/>
+														<textbox bind="@variableId" constraint="no empty"/>
+														<label value="*"/>
+														<separator/>
+														<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
+														</imageclic>
+													</hbox>	
+													<separator/>
+													<hbox visible="false" width="100%" sclass="senseBorder2">
+														<!-- XACMLEXPRESSIONCOMPONENT -->
+														<box width='90%' mold="vertical" visible="true" dataPath="/expression" use="com.soffid.addons.xacml.utils.XACMLExpressionComponent"/>
+													</hbox>
+												</vbox>
+											</datarow>
+										</grid>
+									</hbox>
+								</vbox>
+							</row>
+							<row>
+ 								<vbox sclass="fonsBlanc">
+									<hbox widths="20%, 3%, *" width="100%" sclass="fonsBlanc">
+										<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Rules')}"/>
+										<imageclic id="addRulePO" src="~./img/list-add.gif">
+											<attribute name="onClick">
+												createNewRule(gridRule);
+											</attribute>
+										</imageclic>
+										<label value="${c:l('xacml_policySet.AddNew')} "/>
+									</hbox>
+									<hbox width="100%" sclass="fonsBlanc">
+										<grid dataPath="/rule" id="gridRule" fixedLayout="true" sclass="xacmlgrid3" width="100%">
+											<columns>
+												<column width="5%"/>
+												<column width="*"/>
+											</columns>
+											<datarow sclass="senseBorder2">
+												<label value=""/>
+												<vbox width="100%" sclass="senseBorder2">
+													<hbox width="100%" widths="5%, 1%, 20%, 1%, *" sclass="senseBorder2">
+														<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
+														</imageclic>
+														<separator/>
+														<label bind="@ruleId" style="font-size: 14px; font-weight: bold;"/>
+														<separator/>
+														<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
+														</imageclic>
+													</hbox>	
+													<hbox visible="false" width="100%" sclass="senseBorder2">	
+														<vbox sclass="senseBorder2">				
+															<hbox widths="20%, 20%, , 1%, 34%, 7%,*" width="100%">
+																<input_etiqueta value="${c:l('xacml_policySet.Rule')}" widht="99%"/>
+																<input_dada bind="@ruleId" maxim="50" width_custom="99%" mascara="no empty"/>
+																<label value="*"/>
+																<separator/>
+																<input_etiqueta value="${c:l('xacml_policySet.Effect')}" widht="99%"/>
+																<listbox bind="@effectType" mold="select" style="font-size: 10px" dataPath="/model:/typeEffect">
+																	<dataitem bind="@value">
+																		<listcell bind="@literal"/>
+																	</dataitem>
+																</listbox>
+																<label value="*"/>
+															</hbox>
+															<hbox widths="20%, *" width="100%">
+																<input_etiqueta value="${c:l('xacml_policySet.Description')}" widht="99%"/>
+																<input_dada bind="@description" maxim="50" width_custom="99%"/>
+															</hbox>
+															<separator />
+															<hbox>
+																<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Target')}"/>
+															</hbox>
+															<grid dataPath="target" fixedLayout="true" sclass="fonsBlanc">
+																<datarow>
+																	<vbox sclass="fonsBlanc">
+																		<targetSubjects sclass="fonsBlanc"/>
+																		<separator />														
+																	</vbox>
+																 </datarow>
+															</grid>
+															<hbox widths="20%, 3%, *" width="100%">
+																<label sclass="etiquetaxacml2" value="${c:l('xacml_policySet.Condition')}"/>
+																<imageclic id="addConPO" src="~./img/list-add.gif">
+																	<attribute name="onClick">
+																		createNewExpressionCondition(self);
+																	</attribute>
+																</imageclic>
+																<label value="${c:l('xacml_policySet.AddNew')} "/>
+															</hbox>
+															<hbox width="100%">
+																<grid dataPath="/condicion" id="gridCondicion" fixedLayout="true" sclass="xacmlgrid2" width="100%">
+																	<columns sclass="senseBorder2">
+																		<column width="5%"/>
+																		<column width="*"/>
+																	</columns>
+																	<datarow sclass="senseBorder2">
+																		<label value=""/>
+																		<vbox width="100%" sclass="senseBorder2">
+																			<hbox width="100%" widths="5%, 1%, 20%, 1%, 1%, *" sclass="senseBorder2">
+																				<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
+																				</imageclic>
+																				<separator/>
+																				<textbox bind="@conditionId" constraint="no empty"/>
+																				<label value="*"/>
+																				<separator/>
+																				<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
+																				</imageclic>
+																			</hbox>	
+																			<hbox visible="false" width="100%" sclass="senseBorder2">
+																				<!-- XACMLEXPRESSIONCOMPONENT -->
+																				<box width='90%' mold="vertical" visible="true" dataPath="/expression" use="com.soffid.addons.xacml.utils.XACMLExpressionComponent"/>
+																			</hbox>
+																		</vbox>
+																	</datarow>
+																</grid>
+															</hbox>
+														</vbox>
+													</hbox>	
+												</vbox>
+											</datarow>
+										</grid>
+									</hbox>
+								</vbox>
+							</row>
+						</rows>
+					</grid>
+				</vbox>
+				<vbox id="v_reference" visible="false" width="99%">
+					<label sclass="etiquetaxacml" value="${c:l('xacml_policySet.IDReference')}"/>
+				 	<grid>
+						<rows>
+							<row visible="false">
+								<input_etiqueta value="Policy Set Id Reference"/>
+								<input_dada bind="@tipus" id="id_detall_tipus" value="ID" width_custom="99%"/>
+							</row>							
+							<row>
+								<hbox widths="15%, *" width="100%">
+									<input_etiqueta value="${c:l('xacml_policySet.PolicySetID')}" width_custom="100%"/>
+									<input_dada bind="@idReferenceTypeValue" id="id_detall" maxim="50" width_custom="80%"/>
+								</hbox>
+							</row>
+							<row>
+								<radiogroup id="radio_version">
+									<vbox width="100%">
+										<hbox widths="15%, *" width="100%">
+											<radio label="${c:l('xacml_policySet.version2')}" value="version" onCheck="selectVersion(self)"/>
+											<textbox bind="@version" id="version" visible="true" disabled="false" onChange="noEmpty(self)" maxlength="25"/>
+										</hbox>
+										<hbox widths="15%, 20%, *" width="100%">
+											<radio label="${c:l('xacml_policySet.VersionRange')}" value="range" onCheck="selectVersion(self)"/>
+											<textbox bind="@earliestVersion" id="rangeVersion" visible="true" disabled="true" onChange="noEmpty(self)" maxlength="25"/>
+											<textbox bind="@latestVersion" id="rangeVersion2" visible="true" disabled="true" onChange="noEmpty(self)" maxlength="25"/>
+										</hbox>
+										<hbox>
+											<radio label="${c:l('xacml_policySet.AnyVersion')}" value="anyVersion" onCheck="selectVersion(self)"/>
+										</hbox>
+									</vbox>
+								</radiogroup>
+							</row>
+						</rows>	
+					</grid>
+				</vbox>
+				<vbox id="v_arrelps" visible="false" width="99%">
+					<label sclass="etiqueta" value="${c:l('xacml_policySet.Create')}"/>
+					<grid>
+						<rows>
+							<row visible="false">
+								<input_etiqueta value="${c:l('xacml_policySet.PolicySetNew')}"/>
+								<input_dada bind="@tipus" id="id_new_ps" value="NewPS" width_custom="99%"/>
+							</row>
+							<row>
+								<input_etiqueta value="${c:l('xacml_policySet.PolicySetID')} "/>
+								<input_dada bind="@policySetId" id="ps_id" maxim="25" mascara="no empty" width_custom="99%"/>
+								<label value="*" />
+							</row>
+							<row>
+								<input_etiqueta value="${c:l('xacml_policySet.Description')} "/>
+								<input_dada bind="@description" id="ps_desc" maxim="50" width_custom="99%"/>
+								<label value="" />
+							</row>
+							<row>
+								<input_etiqueta value="${c:l('xacml_policySet.Version')} "/>
+								<textbox bind="@version" id="ps_vers" width="99%" maxlength="25"/>
+								<label value="" />
+							</row>
+							<row>
+								<input_etiqueta value="${c:l('xacml_policySet.CombAlgorithm')} "/>
+								<listbox id="lbPolicyCombiningAlgorithm2" bind="@policyCombiningAlgId" mold="select" dataPath="/model:/type">
+									<dataitem bind="@value">
+										<listcell bind="@literal"/>
+									</dataitem>
+								</listbox>
+								<label value="*" />
+							</row>
+						</rows>
+					</grid>
+				</vbox>
+			</form>
+		</detalls>
+	</esquema>
+	</frame>
+	<include src="/addon/xacml/finestres/seleccio_policy.zul"/>
+	<include src="/addon/xacml/finestres/expressionPanel.zul"/>
+	<include id="policySetNewInclude"/>
+</zk>

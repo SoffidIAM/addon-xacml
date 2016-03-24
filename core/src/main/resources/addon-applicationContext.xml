@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<!-- ========================= Interceptors ========================= -->
+	<bean id="autoritzacioServiceInterceptor-xacml" class="com.soffid.iam.addons.xacml.interceptor.AutoritzacioServiceInterceptor" singleton="true">
+		<property name="policySetService"><ref bean="xacml-policySetService"/></property>
+		<lookup-method name="getAutoritzacioService" bean="autoritzacioService"/>
+	</bean>
+
+	<!-- ========================= End of Interceptor DEFINITIONS ========================= -->
+
+</beans>

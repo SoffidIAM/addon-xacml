@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<SoffidIAMPlugin xmlns="http://www.soffid.com/schema/iam-plugin-v1"> 
+	<name>Soffid Identity XACML</name>
+	<version>${pom.version}</version>
+	<core name="XACML common classes" resource="xacml-common-${pom.version}.jar"/>
+	<core name="XACML core classes" resource="xacml-core-${pom.version}.jar"/>
+	<web name="XACML web files" resource="xacml-web-${pom.version}.war"/>
+	<core name="JBoss XACML component" resource="jboss-xacml-2.0.9.Final.jar"/>
+	<core name="JBoss Sun-XACML component" resource="jboss-sunxacml-2.0.9.Final.jar"/>
+	<core name="JBoss Picketbox commons component" resource="picketbox-commons-1.0.0.final.jar"/>
+</SoffidIAMPlugin>

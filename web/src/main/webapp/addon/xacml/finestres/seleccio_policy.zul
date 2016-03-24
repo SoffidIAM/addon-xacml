@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?page id="creacioPolicy" title="New Policies"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<zk xmlns:h="http://www.w3.org/1999/xhtml">
+<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacml.xml"/>
+<zscript>
+<![CDATA[
+	void cleanWindow(){
+		esquemaPolicy.visible=false;
+	}
+	
+	void onActualitza (Object []dadesPagina){
+		int i = dadesPagina.length;
+		String tipus = esquemaPolicy.getFellow("dades").getFellow("form").getFellow("tipusCreate").getSelectedItem().getValue();
+		dadesPagina[i-1] = tipus;
+		Events.postEvent("onAddPolicy", (Component) pageScope.get("contextComponent"), dadesPagina);
+		cleanWindow();
+		}
+]]>
+</zscript>
+<window closable="true" id="esquemaPolicy" position="center, center" sizable="true" title="${c:l('xacml_seleccioPolicy.Titol')}" visible="false" width="400px">
+	<attribute name="onInicia"><![CDATA[
+		pageScope.put("contextComponent", event.data);
+			if(self.mode.compareToIgnoreCase("highlighted") != 0){
+				self.setMode("highlighted");
+			}else{
+				self.visible = true;
+			}	
+	]]></attribute>
+	
+	<attribute name="onClose">
+		cleanWindow();
+		event.stopPropagation();
+	</attribute>
+	<detalls id="dades" width="99%" style="border:0px">
+		<form id="form" width="100%">
+			<label id="tipus" style="font-weight:bold;" value="${c:l('xacml_seleccioPolicy.Tipus')}"/>
+			<radiogroup id="tipusCreate">
+				<grid sclass="" width="100%">
+					<rows>
+						<row>
+							<radio label="${c:l('xacml_seleccioPolicy.PolicySet')}" selected="true" value="policySet"/>
+						</row>
+						<row>
+							<radio label="${c:l('xacml_seleccioPolicy.Policy')}" value="policy"/>
+						</row>
+						<row>
+							<radio label="${c:l('xacml_seleccioPolicy.PolicySetIdRef')}" value="policySetIdRef"/>
+						</row>
+						<row>
+							<radio label="${c:l('xacml_seleccioPolicy.PolicyIdRef')}" value="policyIdRef"/>
+						</row>
+					</rows>
+				</grid>
+			</radiogroup>
+		</form>
+	</detalls>
+	<div align="center">
+		<button id="finishButton" label="${c:l('xacml_seleccioPolicy.OK')}" onActualitza="onActualitza(event.data);">
+			<attribute name="onClick">
+			<![CDATA[
+				String tipusSelect = dades.getFellow("form").getFellow("tipusCreate").getSelectedItem().getValue();
+				desktop.getPage("policySet").getFellow("policySetNewInclude").setSrc(null);
+				desktop.getPage("policySet").getFellow("policySetNewInclude").setSrc("/addon/xacml/finestres/policySetNew.zul?param1=" + tipusSelect);
+				]]>
+			</attribute>
+		</button>
+	</div>	
+</window>
+</zk>
