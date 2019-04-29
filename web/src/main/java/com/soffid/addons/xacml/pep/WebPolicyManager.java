@@ -1,10 +1,8 @@
 package com.soffid.addons.xacml.pep;
 
-import java.util.Collection;
 import java.util.Random;
 
 import javax.ejb.CreateException;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -15,14 +13,7 @@ import org.zkoss.zk.ui.Path;
 import org.zkoss.zul.Box;
 import org.zkoss.zul.Label;
 
-import com.soffid.iam.addons.xacml.common.PolicySet;
-import com.soffid.iam.addons.xacml.common.PolicySetCriteria;
-import com.soffid.iam.addons.xacml.service.ejb.PolicySetService;
-import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
-
-import es.caib.seycon.ng.comu.Configuracio;
 import es.caib.seycon.ng.exception.InternalErrorException;
-import es.caib.seycon.ng.servei.ejb.ConfiguracioServiceHome;
 
 public class WebPolicyManager {
 	public final String COOKIE_NAME = "Soffid-XACML-PolicySet-Test"; //$NON-NLS-1$
@@ -122,7 +113,7 @@ public class WebPolicyManager {
 					.append (pc.getWebPolicy().getPolicyVersion())
 					.append (" ");
 			if (pc.getRolePolicy().isEnabled())
-				b.append ("Dinaymic role Policy Set ") //$NON-NLS-1$
+				b.append ("Dynamic role Policy Set ") //$NON-NLS-1$
 					.append (pc.getRolePolicy().getPolicyId())
 					.append (": ")
 					.append (pc.getRolePolicy().getPolicyVersion())
@@ -133,7 +124,19 @@ public class WebPolicyManager {
 					.append (": ")
 					.append (pc.getAuthPolicy().getPolicyVersion())
 					.append (" ");
-			label.setValue(b.toString());
+/*			if (pc.getExternalPolicy().isEnabled())
+				b.append ("Extenal Policy Set ") //$NON-NLS-1$
+					.append (pc.getExternalPolicy().getPolicyId())
+					.append (": ")
+					.append (pc.getExternalPolicy().getPolicyVersion())
+					.append (" ");
+			if (pc.getVaultPolicy().isEnabled())
+				b.append ("Password vault Policy Set ") //$NON-NLS-1$
+					.append (pc.getVaultPolicy().getPolicyId())
+					.append (": ")
+					.append (pc.getVaultPolicy().getPolicyVersion())
+					.append (" ");
+*/			label.setValue(b.toString());
 		}
 		else
 			box.setVisible(false);

@@ -64,8 +64,7 @@ public class ExportData extends ImageClic implements AfterCompose {
 		else
 			pol = (Policy) selected.getInstance();
 		
-		PolicySetServiceHome pssh = (PolicySetServiceHome) new InitialContext().lookup(PolicySetServiceHome.JNDI_NAME);
-		PolicySetService pss = pssh.create();
+		PolicySetService pss = (PolicySetService) new InitialContext().lookup(PolicySetServiceHome.JNDI_NAME);
 	 
 		try {
 			xmltemp = File.createTempFile("xmltemp", ".xml"); //Crea un fichero temporal tipo xml

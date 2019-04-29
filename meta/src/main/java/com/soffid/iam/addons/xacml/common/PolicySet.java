@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class PolicySet {
+public class PolicySet {
 
 	public java.lang.String policySetId;
 

@@ -1,3 +1,4 @@
+
 package com.soffid.addons.xacml.pep;
 
 import java.io.IOException;
@@ -55,11 +56,8 @@ public class XACMLFilter implements Filter {
 		policyManager  = new WebPolicyManager ();
 		try {
 			InitialContext ctx = new InitialContext ();
-			PolicySetServiceHome home = (PolicySetServiceHome) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
-			policySetService = home.create();
+			policySetService = (PolicySetService) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
 		} catch (NamingException e) {
-			throw new ServletException (e);
-		} catch (CreateException e) {
 			throw new ServletException (e);
 		}
 	}

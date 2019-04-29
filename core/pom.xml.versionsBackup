@@ -1,13 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.addon.xacml</groupId>
-		<version>2.0.0-SNAPSHOT</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>xacml-core</artifactId>
+	<packaging>ejb</packaging>
 	<name>xacml Core Business Tier</name>
 
 	<build>
@@ -143,28 +143,6 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>1.2</version>
-				<executions>
-					<execution>
-						<id>afefeixdeps</id>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<artifactSet>
-								<includes>
-									<include>com.auth0:java-jwt</include>
-									<include>com.auth0:jwks-rsa</include>
-								</includes>								
-							</artifactSet>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -269,24 +247,25 @@
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-core</artifactId>
-			<version>2.5.0</version>
+			<version>2.0.0-SNAPSHOT</version>
+			<type>ejb</type>
 		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.console</groupId>
-			<artifactId>iam-tomee</artifactId>
-			<version>2.5.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.soffid.iam.console</groupId>
-			<artifactId>iam-core</artifactId>
-			<version>2.5.0</version>
-			<scope>test</scope>
-			<classifier>test-jar</classifier>
-		</dependency>
+                <dependency>
+                        <groupId>com.soffid.iam.console</groupId>
+                        <artifactId>iam-core</artifactId>
+                        <version>2.0.0-SNAPSHOT</version>
+                        <scope>test</scope>
+                        <classifier>test-jar</classifier>
+                </dependency>
 		<dependency>
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-common</artifactId>
-			<version>2.5.0</version>
+			<version>2.0.0-SNAPSHOT</version>
+			<type>ejb</type>
+		</dependency>
+		<dependency>
+			<groupId>jboss</groupId>
+			<artifactId>jboss-j2ee</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>bouncycastle</groupId>
@@ -335,28 +314,6 @@
 			<artifactId>zkdb</artifactId>
 			<version>1.12</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>7.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>7.0.30</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-		    <groupId>com.auth0</groupId>
-		    <artifactId>java-jwt</artifactId>
-		    <version>3.8.0</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.auth0</groupId>
-		    <artifactId>jwks-rsa</artifactId>
-		    <version>0.8.0</version>
 		</dependency>
 	</dependencies>
 </project>

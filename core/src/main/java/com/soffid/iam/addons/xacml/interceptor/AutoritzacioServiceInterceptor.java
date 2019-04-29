@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -24,9 +22,6 @@ import org.jboss.security.xacml.factories.RequestResponseContextFactory;
 import org.jboss.security.xacml.interfaces.RequestContext;
 import org.jboss.security.xacml.interfaces.ResponseContext;
 import org.jboss.security.xacml.interfaces.XACMLConstants;
-import org.jboss.security.xacml.sunxacml.PDPConfig;
-import org.jboss.security.xacml.sunxacml.attr.AnyURIAttribute;
-import org.jboss.security.xacml.sunxacml.attr.AttributeValue;
 import org.jboss.security.xacml.sunxacml.attr.DateAttribute;
 import org.jboss.security.xacml.sunxacml.attr.DateTimeAttribute;
 import org.jboss.security.xacml.sunxacml.attr.IPv4AddressAttribute;
@@ -37,10 +32,7 @@ import org.jboss.security.xacml.sunxacml.ctx.Attribute;
 import org.jboss.security.xacml.sunxacml.ctx.RequestCtx;
 import org.jboss.security.xacml.sunxacml.ctx.ResponseCtx;
 import org.jboss.security.xacml.sunxacml.ctx.Result;
-import org.jboss.security.xacml.sunxacml.ctx.Status;
 import org.jboss.security.xacml.sunxacml.ctx.Subject;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.zkoss.zk.ui.Execution;
 import org.zkoss.zk.ui.Executions;
 
@@ -51,9 +43,8 @@ import com.soffid.iam.addons.xacml.service.PolicySetService;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyDocument;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidXPathBean;
-import com.soffid.iam.model.security.SecurityScopeEntity;
-import com.soffid.iam.utils.SoffidAuthorization;
 import com.soffid.iam.utils.Security;
+import com.soffid.iam.utils.SoffidAuthorization;
 
 import es.caib.seycon.ng.comu.AutoritzacioRol;
 import es.caib.seycon.ng.comu.ValorDomini;
@@ -162,7 +153,7 @@ public class AutoritzacioServiceInterceptor implements MethodInterceptor
 	}
 
 	public Object invoke(MethodInvocation mi) throws Throwable {
-		if (Security.isDisableAllSecurityForEver())
+		if (Security.isSyncServer())
 			return mi.proceed();
 		
 		PepConfiguration cfg = new PolicyManager().getCurrentPolicy();

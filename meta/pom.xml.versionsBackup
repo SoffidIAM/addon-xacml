@@ -1,10 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>root</artifactId>
 		<groupId>com.soffid.iam.addon.xacml</groupId>
-		<version>2.0.0-SNAPSHOT</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>meta</artifactId>
@@ -19,7 +17,7 @@
 			<plugin>
 				<groupId>com.soffid.tools</groupId>
 				<artifactId>mda-maven-plugin</artifactId>
-				<version>2.0.42</version>
+				<version>2.0.26-SNAPSHOT</version>
 				<executions>
 					<execution>
 						<goals>
@@ -27,10 +25,10 @@
 						</goals>
 						<phase>package</phase>
 						<configuration>
-							<targetServer>tomee</targetServer>
-							<translate>true</translate>
+							<translate>false</translate>
 							<translateEntities>true</translateEntities>
 							<pluginName>xacml</pluginName>
+							<generateDoc>true</generateDoc>
 						</configuration>
 					</execution>
 				</executions>
@@ -47,7 +45,7 @@
 		</plugins>
 	</build>
 	<dependencies>
-		<dependency>
+		<dependency> 
 			<groupId>com.soffid.iam.console</groupId>
 			<artifactId>iam-meta</artifactId>
 			<version>${console.version}</version>

@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class PDPConfiguration {
+public class PDPConfiguration {
 
 	@Nullable
 	public java.util.Collection<com.soffid.iam.addons.xacml.common.PDPPolicySetReference> policies;

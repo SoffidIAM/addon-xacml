@@ -25,18 +25,25 @@
 		
 		void showDetall () 
 		{
+			
 			Tree tx = esquema.getFellow("lista").getFellow("treebox");
 			Treeitem selected = tx.getSelectedItem();
 			if (selected.getLevel() > 0)
 				esquema.showFormulari();
-			else
+			else 
+			{
 				esquema.hideFormulari();
+			}
 		}
 		
 		
 		void showLista ()  
 		{
-			  esquema.getFellow("lista").getFellow("treebox").clearSelection();
+			
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected != null && selected.getLevel() > 0)
+				  esquema.getFellow("lista").getFellow("treebox").clearSelection();
 		}
 		
 		
@@ -449,8 +456,7 @@
 						in = m.getReaderData();
 				}
 				javax.naming.Context context = new javax.naming.InitialContext();
-				policySetHome = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
-				policySetService = policySetHome.create();
+				policySetService = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
 				policySetService.importXACMLPolicySet(in);
 				refrescaArbre();
 			}
@@ -551,7 +557,7 @@
 			</toolbar>
 			
 	 		<tree autocommit="false" dataPath="/model:/" fixedLayout="true" height="96%" id="treebox" 
-	 				onClick="showDetall()" onSelect="select()" pageSize="19" rows="${fileres}">
+	 				onClick="showDetall()" onSelect="select()" rows="${fileres}">
 		 		<treecols>
 					<treecol label="${c:l('xacml_policySet.Tree')}"/>
 				</treecols>
@@ -591,7 +597,6 @@
 							es.caib.zkib.datasource.DataSource ds = form.getDataSource(); 
 							es.caib.zkib.jxpath.JXPathContext ctx =  ds.getJXPathContext(); 
 							Object registre = ctx.getValue("/");						
-							
 							b_inserir_ps = esquema.getFellow("lista").getFellow("b_inserir_ps");
 							b_esborrar = esquema.getFellow("lista").getFellow("b_esborrar");
 							Component vbox_ps = esquema.getFellow("dades").getFellow("form").getFellow("v_ps");
@@ -680,20 +685,22 @@
 							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
-							e.printStackTrace();				
+							System.out.println("onChangeDadesError");
+//							e.printStackTrace();				
 						}catch (es.caib.zkib.jxpath.JXPathNotFoundException e) {
 							// No active record
 							form.getFellow("detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
+							System.out.println("onChangeDadesError");
 						}
 					}
 				
 				]]>	
 			</zscript>
 			
-			<form dataPath="/esquema/lista/treebox:/." id="form" onChangeXPath="onChangeDades()" width="100%">
+			<form dataPath="/esquema/lista/treebox:/." id="form" onChangeXPath="onChangeDades()" width="90%">
 				<attribute name="onActualitza">
 				</attribute>
 			 	<vbox id="v_ps" visible="false" width="99%" widths="5%, *">

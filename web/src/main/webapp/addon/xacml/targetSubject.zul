@@ -222,6 +222,8 @@
 													<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
 													<listitem label="${c:l('xacml_policySet.Url')}" value="urn:oasis:names:tc:xacml:1.0:resource:resource-location"/>
 													<listitem label="${c:l('xacml_policySet.SoffidObject')}" value="com:soffid:iam:xacml:1.0:resource:soffid-object"/>
+													<listitem label="${c:l('xacml_policySet.AccountName')}" value="urn:com:soffid:xacml:subject:account"/>
+													<listitem label="${c:l('xacml_policySet.SystemName')}" value="urn:com:soffid:xacml:subject:system"/>
 												</listbox>
 												<separator />
 												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>

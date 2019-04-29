@@ -15,6 +15,7 @@ import com.soffid.iam.addons.xacml.common.PDPPolicySetReference;
 import com.soffid.iam.addons.xacml.common.PolicySet;
 import com.soffid.iam.addons.xacml.common.PolicySetCriteria;
 import com.soffid.iam.addons.xacml.service.PolicySetService;
+import com.soffid.iam.utils.ConfigurationCache;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 
@@ -61,7 +62,7 @@ public class PDPPool extends AbstractPool<JBossPDP> {
 		setMaxSize(5);
 		this.config = config;
 		this.policySetService = policySetService;
-		String s = System.getProperty ("soffid.xacml.pool.minSize");
+		String s = ConfigurationCache.getProperty ("soffid.xacml.pool.minSize");
 		try {
 			if (s != null)
 				setMinSize(Integer.parseInt(s));
@@ -72,7 +73,7 @@ public class PDPPool extends AbstractPool<JBossPDP> {
 					e);
 		}
 
-		s = System.getProperty ("soffid.xacml.pool.maxSize");
+		s = ConfigurationCache.getProperty ("soffid.xacml.pool.maxSize");
 		try {
 			if (s != null)
 				setMaxSize(Integer.parseInt(s));

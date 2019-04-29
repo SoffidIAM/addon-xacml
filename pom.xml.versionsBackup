@@ -10,7 +10,7 @@
 	<artifactId>root</artifactId>
 	<packaging>pom</packaging>
 	<name>xacml</name>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<description>SOFFID IAM xacml addon</description>
 	<prerequisites>
 		<maven>2.0.1</maven>
@@ -24,6 +24,9 @@
 		</developer>
 	</developers>
 	<scm>
+		<connection>scm:git:ssh://git@stash.dev.lab:7999/IAM/console.git</connection>
+		<developerConnection>scm:git:ssh://git@stash.dev.lab:7999/IAM/console.git</developerConnection>
+	  <tag>HEAD</tag>
   </scm>
 	<build>
 		<defaultGoal>install</defaultGoal>
@@ -147,6 +150,12 @@
 				<scope>provided</scope>
 			</dependency>
 			<dependency>
+				<groupId>jboss</groupId>
+				<artifactId>jboss-j2ee</artifactId>
+				<version>3.2.8-5</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate</artifactId>
 				<version>3.2.7.ga</version>
@@ -245,6 +254,6 @@
 	</dependencyManagement>
 	<properties>
 		<!-- posem ací les dependències dels workflows -->
-		<console.version>2.5.0</console.version>
+		<console.version>1.5.12</console.version>
 	</properties>
 </project>

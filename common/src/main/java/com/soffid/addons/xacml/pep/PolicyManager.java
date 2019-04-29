@@ -11,6 +11,7 @@ import com.soffid.iam.addons.xacml.common.PolicySet;
 import com.soffid.iam.addons.xacml.common.PolicySetCriteria;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetService;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
+import com.soffid.iam.utils.ConfigurationCache;
 
 import es.caib.seycon.ng.comu.Configuracio;
 import es.caib.seycon.ng.exception.InternalErrorException;
@@ -30,6 +31,14 @@ public class PolicyManager {
 	private static final String CONFIG_XACML_AUTH_POLICY_SET_ID = "soffid.xacml.auth.policySetId"; //$NON-NLS-1$
 	private static final String CONFIG_XACML_AUTH_ENABLE = "soffid.xacml.auth.enable"; //$NON-NLS-1$
 
+	private static final String CONFIG_XACML_EXTERNAL_POLICY_SET_VERSION = "soffid.xacml.external.policySetVersion"; //$NON-NLS-1$
+	private static final String CONFIG_XACML_EXTERNAL_POLICY_SET_ID = "soffid.xacml.external.policySetId"; //$NON-NLS-1$
+	private static final String CONFIG_XACML_EXTERNAL_ENABLE = "soffid.xacml.external.enable"; //$NON-NLS-1$
+
+	private static final String CONFIG_XACML_VAULT_POLICY_SET_VERSION = "soffid.xacml.vault.policySetVersion"; //$NON-NLS-1$
+	private static final String CONFIG_XACML_VAULT_POLICY_SET_ID = "soffid.xacml.vault.policySetId"; //$NON-NLS-1$
+	private static final String CONFIG_XACML_VAULT_ENABLE = "soffid.xacml.vault.enable"; //$NON-NLS-1$
+
 	public final String COOKIE_NAME = "Soffid-XACML-PolicySet-Test"; //$NON-NLS-1$
 	private static String random = null;
 
@@ -46,10 +55,14 @@ public class PolicyManager {
 		pm.getWebPolicy().setEnabled(false);
 		pm.getRolePolicy().setEnabled(false);
 		pm.getAuthPolicy().setEnabled(false);
+		pm.getVaultPolicy().setEnabled(false);
+		pm.getExternalPolicy().setEnabled(false);
 
 		configure(pm.getWebPolicy(), CONFIG_XACML_WEB_ENABLE, CONFIG_XACML_WEB_POLICY_SET_ID, CONFIG_XACML_WEB_POLICY_SET_VERSION);
 		configure(pm.getRolePolicy(), CONFIG_XACML_ROLE_ENABLE, CONFIG_XACML_ROLE_POLICY_SET_ID, CONFIG_XACML_ROLE_POLICY_SET_VERSION);
 		configure(pm.getAuthPolicy(), CONFIG_XACML_AUTH_ENABLE, CONFIG_XACML_AUTH_POLICY_SET_ID, CONFIG_XACML_AUTH_POLICY_SET_VERSION);
+		configure(pm.getExternalPolicy(), CONFIG_XACML_EXTERNAL_ENABLE, CONFIG_XACML_EXTERNAL_POLICY_SET_ID, CONFIG_XACML_EXTERNAL_POLICY_SET_VERSION);
+		configure(pm.getVaultPolicy(), CONFIG_XACML_VAULT_ENABLE, CONFIG_XACML_VAULT_POLICY_SET_ID, CONFIG_XACML_VAULT_POLICY_SET_VERSION);
 
 		currentPolicy = pm;
 		
@@ -57,14 +70,14 @@ public class PolicyManager {
 	}
 
 	private void configure(PolicyStatus ps, String policyEnableProperty, String policySetProperty, String policyVersionProperty) {
-		String config = System.getProperty(policySetProperty);
+		String config = ConfigurationCache.getProperty(policySetProperty);
 		if (config != null && config.length() > 0) {
 			ps.setPolicyId(config);
-			config = System.getProperty(policyVersionProperty);
+			config = ConfigurationCache.getProperty(policyVersionProperty);
 			if (config != null && config.length() > 0)
 				ps.setPolicyVersion(config);
 		}
-		config = System.getProperty(policyEnableProperty);
+		config = ConfigurationCache.getProperty(policyEnableProperty);
 		if (config != null && config.equals("true")) { //$NON-NLS-1$
 			ps.setEnabled(true);
 		}
@@ -117,10 +130,8 @@ public class PolicyManager {
 	
 	public void apply(PepConfiguration pc) throws InternalErrorException, NamingException, CreateException {
 		InitialContext ctx = new InitialContext ();
-		PolicySetServiceHome pshome = (PolicySetServiceHome) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
-		PolicySetService policySetService = pshome.create();
-		ConfiguracioServiceHome home = (ConfiguracioServiceHome) new javax.naming.InitialContext().lookup(ConfiguracioServiceHome.JNDI_NAME);
-		ConfiguracioService configuracioService = home.create();
+		PolicySetService policySetService = (PolicySetService) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
+		ConfiguracioService configuracioService = (ConfiguracioService) ctx.lookup(ConfiguracioServiceHome.JNDI_NAME);
 
 		if (!pc.isTesting()) {
 			applyPolicyStatus(pc.getWebPolicy(), configuracioService, policySetService, 
@@ -129,6 +140,10 @@ public class PolicyManager {
 					CONFIG_XACML_ROLE_ENABLE, CONFIG_XACML_ROLE_POLICY_SET_ID, CONFIG_XACML_ROLE_POLICY_SET_VERSION);
 			applyPolicyStatus(pc.getAuthPolicy(), configuracioService, policySetService, 
 					CONFIG_XACML_AUTH_ENABLE, CONFIG_XACML_AUTH_POLICY_SET_ID, CONFIG_XACML_AUTH_POLICY_SET_VERSION);
+			applyPolicyStatus(pc.getExternalPolicy(), configuracioService, policySetService, 
+					CONFIG_XACML_EXTERNAL_ENABLE, CONFIG_XACML_EXTERNAL_POLICY_SET_ID, CONFIG_XACML_EXTERNAL_POLICY_SET_VERSION);
+			applyPolicyStatus(pc.getVaultPolicy(), configuracioService, policySetService, 
+					CONFIG_XACML_VAULT_ENABLE, CONFIG_XACML_VAULT_POLICY_SET_ID, CONFIG_XACML_VAULT_POLICY_SET_VERSION);
 
 			currentPolicy = null;
 		}

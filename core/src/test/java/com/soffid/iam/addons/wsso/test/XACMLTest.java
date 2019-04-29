@@ -43,6 +43,7 @@ import com.soffid.iam.addons.xacml.sync.web.XACMLPolicyServlet;
 import com.soffid.iam.utils.Security;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
+import es.caib.seycon.ng.test.AbstractTest;
 
 public class XACMLTest extends AbstractTest
 {

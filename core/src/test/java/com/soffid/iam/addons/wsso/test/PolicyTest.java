@@ -20,6 +20,7 @@ import com.soffid.iam.addons.xacml.service.PolicySetService;
 import com.soffid.iam.utils.Security;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
+import es.caib.seycon.ng.test.AbstractTest;
 
 
 public class PolicyTest extends AbstractTest
@@ -29,12 +30,15 @@ public class PolicyTest extends AbstractTest
 	@Override
 	protected void setUp() throws Exception
 	{
+		System.out.println("Policy set setup");
 		super.setUp();
 		pss = (PolicySetService) context.getBean(PolicySetService.SERVICE_NAME);
+		System.out.println("Policy set end setup");
 	}
 	
 	public void testPolicySet() throws InternalErrorException
 	{
+		System.out.println("Policy set test start");
 		Security.nestedLogin("Test", new String[] { 
 				Security.AUTO_AUTHORIZATION_ALL });
 		try {

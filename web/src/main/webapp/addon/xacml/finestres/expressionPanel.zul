@@ -230,10 +230,12 @@
 				return;
 			}
 		}
+		System.out.println("Position A");
 		//Assignam els valors si l'expressió ja existia i no era subExpressió(depen d'una variable)
 		if(c.getType() != null)
 		{
 			
+			System.out.println("Position A != null");
 			if(type != null)
 			{
 				c.setType(type);
@@ -279,6 +281,7 @@
 		//s'ha de crear nova i assignar com a subexpressió
 		else if(c.getType() == null)
 		{
+			System.out.println("Position A == null");
 		
 			com.soffid.iam.addons.xacml.common.Expression exp = new com.soffid.iam.addons.xacml.common.Expression();
 			exp.setAttributeValue(value);
@@ -315,10 +318,14 @@
 			if(parentComponent.getSubexpression() == null){
 				parentComponent.setSubexpression(new java.util.LinkedList());
 			}
+			
+			//c.markAsModified();
 			parentComponent.getSubexpression().add(exp);
 			parentComponent.markAsModified();
+			parentComponent.drawExpression();
 		}
-		
+		System.out.println("Position B");
+		c.drawExpression();
 		cleanWindow();
 	}
 	
@@ -812,6 +819,7 @@
 <window closable="true" id="esquema" position="center, center" sizable="true" title="${c:l('xacml_expressionPanel.Titol')}" visible="false" width="850px">
 	<attribute name="onInicia"><![CDATA[
 		pageScope.put("contextComponent", event.data);
+		System.out.println ("Context = "+event.data);
 			if(self.mode.compareToIgnoreCase("highlighted") != 0)
 			{
 				self.setMode("highlighted");

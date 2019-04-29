@@ -590,6 +590,13 @@ public class XACMLExpressionComponent extends Form implements BindContext, XPath
 				{			
 					if(functionType[i][0].equals(n))
 					{
+						// Add subexpressionso
+						if ( functionType[i][2].equals("S"))
+							minSubexpressions ( subExpressionCol, 1 );
+						if ( functionType[i][2].startsWith("T"))
+							minSubexpressions ( subExpressionCol, 2 );
+						if ( functionType[i][2].startsWith("3"))
+							minSubexpressions ( subExpressionCol, 3 );
 						typeString = n.replace('_', ' ');
 						result = result + functionType[i][1];
 						if(functionType[i][2].equals("S"))
@@ -741,6 +748,25 @@ public class XACMLExpressionComponent extends Form implements BindContext, XPath
 	}
 	
 	
+	private void minSubexpressions(Collection<Expression> subExpressionCol, int i) {
+		if (subExpressionCol == null)
+			return;
+		while (subExpressionCol.size() < i)
+		{
+			com.soffid.iam.addons.xacml.common.Expression exp = new com.soffid.iam.addons.xacml.common.Expression();
+			String usuari = Executions.getCurrent().getUserPrincipal().getName();
+			exp.setAttributeValue(usuari); //Passar el codi d'usuari
+			exp.setDataTypeAttributeValue(DataType.STRING_TYPE);
+			exp.setExpressionType("subject");
+			exp.setAttributeDesignator("urn:oasis:names:tc:xacml:1.0:subject:subject-id");
+			exp.setDataTypeAttributeDesignator(DataType.STRING_TYPE);
+			exp.setName(com.soffid.iam.addons.xacml.common.FunctionEnumeration.fromString(java.lang.String.valueOf("STRING_EQUAL")));  //Function tipus true
+			exp.setOrder( subExpressionCol.size() + 1);
+			
+			subExpressionCol.add(exp);
+		}
+	}
+
 	//Geters i seters per recuperar i assignar valors als binders des del zuls
 	public void setOrder(int order)
 	{

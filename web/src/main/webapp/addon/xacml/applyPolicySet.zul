@@ -36,6 +36,16 @@
 			ap.setDisabled(!ac.isChecked()); av.setDisabled(!ac.isChecked());
 		}
 		
+		void onCheckExternal ()
+		{
+			ep.setDisabled(!ec.isChecked()); ev.setDisabled(!ec.isChecked());
+		}
+		
+		void onCheckVault ()
+		{
+			vp.setDisabled(!vc.isChecked()); vv.setDisabled(!vc.isChecked());
+		}
+		
 		void applyTest ()
 		{
 			PepConfiguration config =  model.getJXPathContext().getValue("/config[1]").getInstance();
@@ -102,6 +112,67 @@
 			</hbox>
 		</div>
 	
+		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
+			<zscript><![CDATA[
+			    String url = "";
+				for ( com.soffid.iam.api.Server server: com.soffid.iam.EJBLocator.getDispatcherService().findAllServers())
+				{
+					if (server.getType() == es.caib.seycon.ng.comu.ServerType.MASTERSERVER)
+					{
+						url = "( "+server.getUrl()+"/XACML/pep )";
+						break;						
+					}
+				}
+			]]>
+			</zscript>
+			<label value="External Policy Enforcement Point ${url }" style=""/>
+			<hbox widths="30em, *">
+				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
+				<checkbox id="ec" bind="/externalPolicy/enabled" onCheck="onCheckExternal() "></checkbox>
+			</hbox>
+			<separator/>
+			<hbox widths="30em,*">
+				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
+				<textbox id="ep" bind="/externalPolicy/policyId"></textbox>
+			</hbox>
+			<separator/>
+			<hbox widths="30em,*">
+				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
+				<textbox id="ev" bind="/externalPolicy/policyVersion"></textbox>
+			</hbox>
+		</div>
+	
+		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
+			<zscript><![CDATA[
+			    String url = "";
+				for ( com.soffid.iam.api.Server server: com.soffid.iam.EJBLocator.getDispatcherService().findAllServers())
+				{
+					if (server.getType() == es.caib.seycon.ng.comu.ServerType.MASTERSERVER)
+					{
+						url = "( "+server.getUrl()+"/XACML/vault )";
+						break;						
+					}
+				}
+			]]>
+			</zscript>
+			<label value="Password vault Policy Enforcement Point ${url }" style=""/>
+			<hbox widths="30em, *">
+				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
+				<checkbox id="vc" bind="/vaultPolicy/enabled" onCheck="onCheckVault() "></checkbox>
+			</hbox>
+			<separator/>
+			<hbox widths="30em,*">
+				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
+				<textbox id="vp" bind="/vaultPolicy/policyId"></textbox>
+			</hbox>
+			<separator/>
+			<hbox widths="30em,*">
+				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
+				<textbox id="vv" bind="/vaultPolicy/policyVersion"></textbox>
+			</hbox>
+		</div>
+	
+
 		<separator/>
 		<hbox widths="30em,*">
 			<label value=""  width="30em" />
