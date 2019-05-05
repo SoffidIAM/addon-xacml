@@ -21,8 +21,8 @@
 			<roles>
 				<role>Developer</role>
 			</roles>
-		</developer>
 	</developers>
+		</developer>
          <licenses>
             <license>
               <name>GNU GPL Version 3.0</name>
