@@ -24,34 +24,47 @@ package com.soffid.iam.addons.xacml.service;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.jboss.security.xacml.interfaces.XACMLConstants;
 import org.jboss.security.xacml.locators.AttributeLocator;
 import org.jboss.security.xacml.sunxacml.EvaluationCtx;
 import org.jboss.security.xacml.sunxacml.attr.AttributeDesignator;
+import org.jboss.security.xacml.sunxacml.attr.AttributeValue;
 import org.jboss.security.xacml.sunxacml.attr.BagAttribute;
+import org.jboss.security.xacml.sunxacml.attr.Base64BinaryAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DateAttribute;
 import org.jboss.security.xacml.sunxacml.attr.StringAttribute;
 import org.jboss.security.xacml.sunxacml.cond.EvaluationResult;
 import org.jboss.security.xacml.sunxacml.ctx.Status;
 import org.jboss.security.xacml.sunxacml.finder.AttributeFinderModule;
+import org.w3c.dom.Node;
 
-import es.caib.seycon.ng.ServiceLocator;
-import es.caib.seycon.ng.comu.Account;
-import es.caib.seycon.ng.comu.RolGrant;
-import es.caib.seycon.ng.comu.UserAccount;
-import es.caib.seycon.ng.comu.Usuari;
-import es.caib.seycon.ng.comu.UsuariGrup;
+import com.soffid.iam.ServiceLocator;
+import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
+import com.soffid.iam.api.Account;
+import com.soffid.iam.api.GroupUser;
+import com.soffid.iam.api.RoleGrant;
+import com.soffid.iam.api.User;
+import com.soffid.iam.api.UserAccount;
+import com.soffid.iam.service.AccountService;
+import com.soffid.iam.service.ApplicationService;
+import com.soffid.iam.service.GroupService;
+import com.soffid.iam.service.InternalPasswordService;
+import com.soffid.iam.service.UserService;
+import com.soffid.iam.utils.Security;
+
 import es.caib.seycon.ng.exception.InternalErrorException;
-import es.caib.seycon.ng.servei.AccountService;
-import es.caib.seycon.ng.servei.AplicacioService;
-import es.caib.seycon.ng.servei.GrupService;
-import es.caib.seycon.ng.servei.InternalPasswordService;
-import es.caib.seycon.ng.servei.UsuariService;
-import es.caib.seycon.ng.utils.Security;
+import es.caib.zkib.jxpath.JXPathContext;
+import es.caib.zkib.jxpath.JXPathContextFactory;
+import es.caib.zkib.jxpath.Pointer;
 
 //$Id: TestRoleAttributeFinderModule.java 58115 2006-11-04 08:42:14Z scott.stark@jboss.org $
 
@@ -76,6 +89,7 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 	public static final String ROLE_IDENTIFIER = "urn:oasis:names:tc:xacml:2.0:subject:role";
 	public static final String GROUP_IDENTIFIER = "urn:com:soffid:xacml:subject:groups";
 	public static final String PRIMARY_GROUP_IDENTIFIER = "urn:com:soffid:xacml:subject:primaryGroup";
+	public static final String CUSTOM_ATTRIBUTE_PREFIX = "urn:com:soffid:xacml:subject:user:att:";
 
 	// subject-id standard identifier
 	private static URI SUBJECT_IDENTIFIER_URI = null;
@@ -146,7 +160,8 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 				&& !attributeId.toString().equals(GROUP_IDENTIFIER)
 				&& !attributeId.toString().equals(USER_IDENTIFIER)
 				&& !attributeId.toString().equals(SUBJECT_IDENTIFIER)
-				&& !attributeId.toString().equals(ACCOUNT_IDENTIFIER))
+				&& !attributeId.toString().equals(ACCOUNT_IDENTIFIER)
+				&& !attributeId.toString().startsWith(CUSTOM_ATTRIBUTE_PREFIX))
 			return new EvaluationResult(
 					BagAttribute.createEmptyBag(attributeType));
 
@@ -232,15 +247,15 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 			URI attributeType, URI attributeId) throws InternalErrorException {
 		BagAttribute returnBag = null;
 
-		UsuariService usuariService = ServiceLocator.instance()
-				.getUsuariService();
+		UserService usuariService = ServiceLocator.instance()
+				.getUserService();
 		AccountService accountService = ServiceLocator.instance()
 				.getAccountService();
-		AplicacioService aplicacioService = ServiceLocator.instance()
-				.getAplicacioService();
+		ApplicationService aplicacioService = ServiceLocator.instance()
+				.getApplicationService();
 		InternalPasswordService ips = ServiceLocator.instance()
 				.getInternalPasswordService();
-		GrupService grupService = ServiceLocator.instance().getGrupService();
+		GroupService grupService = ServiceLocator.instance().getGroupService();
 		String defaultDomain = ips.getDefaultDispatcher();
 		
 		Account account = accountService.findAccount(accountName, domain);
@@ -251,37 +266,37 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 		
 		Set set = new HashSet();
 		if (attributeId.toString().equals(ROLE_IDENTIFIER)) {
-			Collection<RolGrant> grants;
+			Collection<RoleGrant> grants;
 			if (userName == null)
-				grants = aplicacioService.findEffectiveRolGrantByAccount(account.getId());
+				grants = aplicacioService.findEffectiveRoleGrantByAccount(account.getId());
 			else
 			{
-				Usuari usuari = usuariService.findUsuariByCodiUsuari(userName);
-				grants = aplicacioService.findEffectiveRolGrantByUser(usuari.getId());
+				User usuari = usuariService.findUserByUserName(userName);
+				grants = aplicacioService.findEffectiveRoleGrantByUser(usuari.getId());
 			}
-			for (RolGrant rg : grants) {
-				set.add(new StringAttribute(rg.getRolName() + "@"
-						+ rg.getDispatcher()));
-				if (defaultDomain.equals(rg.getDispatcher()))
-					set.add(new StringAttribute(rg.getRolName()));
+			for (RoleGrant rg : grants) {
+				set.add(new StringAttribute(rg.getRoleName() + "@"
+						+ rg.getSystem()));
+				if (defaultDomain.equals(rg.getSystem()))
+					set.add(new StringAttribute(rg.getRoleName()));
 				if (rg.getDomainValue() != null
 						&& !rg.getDomainValue().isEmpty()) {
-					set.add(new StringAttribute(rg.getRolName() + "/"
+					set.add(new StringAttribute(rg.getRoleName() + "/"
 							+ rg.getDomainValue() + "@"
-							+ rg.getDispatcher()));
-					if (defaultDomain.equals(rg.getDispatcher()))
-						set.add(new StringAttribute(rg.getRolName() + "/"
+							+ rg.getSystem()));
+					if (defaultDomain.equals(rg.getSystem()))
+						set.add(new StringAttribute(rg.getRoleName() + "/"
 								+ rg.getDomainValue()));
 				}
 			}
 		} else if (attributeId.toString().equals(GROUP_IDENTIFIER) && userName != null) {
-			for (UsuariGrup grup : grupService
-					.findUsuariGrupsByCodiUsuari(userName)) {
-				set.add(new StringAttribute(grup.getCodiGrup()));
+			for (GroupUser grup : grupService
+					.findUsersGroupByUserName(userName)) {
+				set.add(new StringAttribute(grup.getGroup()));
 			}
 		} else if (attributeId.toString().equals(PRIMARY_GROUP_IDENTIFIER) && userName != null) {
-			Usuari usuari = usuariService.findUsuariByCodiUsuari(userName);
-			set.add (new StringAttribute(usuari.getCodiGrupPrimari()));
+			User usuari = usuariService.findUserByUserName(userName);
+			set.add (new StringAttribute(usuari.getPrimaryGroup()));
 		} else if (attributeId.toString().equals(SUBJECT_IDENTIFIER) ||
 				attributeId.toString().equals(ACCOUNT_IDENTIFIER)) {
 			set.add (new StringAttribute(accountName));
@@ -290,7 +305,112 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 			set.add (new StringAttribute(domain));
 		} else if (attributeId.toString().equals(USER_IDENTIFIER) && userName != null) {
 			set.add (new StringAttribute(userName));
+		} else if (attributeId.toString().startsWith(CUSTOM_ATTRIBUTE_PREFIX) && userName != null)
+		{
+			String metaData = attributeId.toString().substring(CUSTOM_ATTRIBUTE_PREFIX.length()+1);
+			Map<String, Object> atts = usuariService.findUserAttributes(userName);
+			Object v = atts.get(metaData);
+			if (userName != null && v == null)
+			{
+				atts = usuariService.findUserAttributes(userName);
+				v = atts.get(metaData);
+			}
+			if (v != null)
+			{
+				if (v instanceof Collection)
+				{
+					for (Object vv: (Collection) v)
+					{
+						addValue (set, vv);
+					}
+				}
+				else
+					addValue (set, v);
+			}
 		}
 		return new BagAttribute(attributeType, set);
+	}
+
+	private void addValue(Set set, Object v) {
+		if (v instanceof Date)
+			set.add (new DateAttribute((Date) v));
+		else if (v instanceof Calendar)
+			set.add (new DateAttribute(((Calendar) v).getTime()));
+		else if (v instanceof byte[])
+			set.add (new Base64BinaryAttribute((byte[])v));
+		else
+			set.add (new StringAttribute(v.toString()));
+	}
+
+	public EvaluationResult findAttribute(String contextPath,
+            Node namespaceNode,
+            URI attributeType,
+            EvaluationCtx context,
+            String xpathVersion) {
+    	
+    	Node node = context.getRequestRoot();
+    	if (! (node instanceof SoffidDummyElement))
+            return new EvaluationResult(BagAttribute.createEmptyBag(attributeType));
+    	
+    	SoffidDummyElement sdn = (SoffidDummyElement) node;
+    	
+    	JXPathContext xpCtx = JXPathContextFactory.newInstance().
+    			newContext(null, sdn.getUnderlyingObject());
+    	
+    	StringBuffer newPath = new StringBuffer();
+    	boolean bs = false;
+    	boolean quote = false;
+    	boolean apos = false;
+    	boolean slash = false;
+    	for ( int i = 0; i < contextPath.length(); i++)
+    	{
+    		char ch = contextPath.charAt(i);
+    		if (bs) {
+    			bs = false;
+    		} else if (ch == '\\') {
+    			bs = true;
+    		} else if (slash) {
+    			ch = Character.toLowerCase(ch);
+    			slash = false;
+    		} else if (quote) {
+    			quote = ch != '\"';
+    		} else if (apos) {
+    			apos = ch != '\'';
+    		} else if (ch == '\"') {
+    			quote = true;
+    		} else if (ch == '\'') {
+    			apos = true;
+    		} else if (ch == '/') {
+    			slash = true;
+    		}
+			newPath.append (ch);
+    	}
+    	
+
+    	try {
+			Set<AttributeValue> set = new HashSet<AttributeValue>();
+	    	for (Iterator it = xpCtx.iteratePointers(newPath.toString()); it.hasNext();)
+	    	{
+	    		Pointer p = (Pointer) it.next();
+	    		Object obj = p.getValue();
+	    		if (obj != null)
+	    		{
+	    			if (obj instanceof Date)
+	    				set.add (new DateAttribute((Date) obj));
+	    			else if (obj instanceof byte[])
+	    				set.add (new Base64BinaryAttribute((byte[]) obj));
+	    			else if (obj instanceof Calendar)
+	    				set.add (new DateAttribute(((Calendar) obj).getTime()));
+	    			else 
+	    				set.add (new StringAttribute(obj.toString()));
+	    		}
+	    	}
+	    	return new EvaluationResult(new BagAttribute(attributeType, set));
+    	} catch (Exception e) {
+    		return new EvaluationResult (
+    				new Status(
+    						Collections.singletonList(Status.STATUS_PROCESSING_ERROR),
+    						e.toString()));
+    	}
 	}
 }

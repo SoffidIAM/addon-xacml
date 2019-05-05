@@ -6,7 +6,11 @@
 	<core name="XACML common classes" resource="xacml-common-${pom.version}.jar"/>
 	<core name="XACML core classes" resource="xacml-core-${pom.version}.jar"/>
 	<web name="XACML web files" resource="xacml-web-${pom.version}.war"/>
+	<core name="Soffid JXPath component" resource="jxpath-1.3.1.jar"/>
 	<core name="JBoss XACML component" resource="jboss-xacml-2.0.9.Final.jar"/>
 	<core name="JBoss Sun-XACML component" resource="jboss-sunxacml-2.0.9.Final.jar"/>
 	<core name="JBoss Picketbox commons component" resource="picketbox-commons-1.0.0.final.jar"/>
+	<core name="Jackson CORE" resource="jackson-core-2.9.2.jar"/>
+	<core name="Jackson Databind" resource="jackson-databind-2.9.8.jar"/>
+	<core name="Jackson Annotations" resource="jackson-annotations-2.9.0.jar"/>
 </SoffidIAMPlugin>

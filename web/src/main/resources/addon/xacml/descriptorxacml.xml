@@ -5,14 +5,19 @@
 	<datanode name="world">	
 		<finder name="policySet" type="policySet">
 			<ejb-finder
-				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService"
 				method="findMasterPolicySet" if="${queryEnabled}">
 			</ejb-finder>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicySet">
 			</new-instance-bean>
 		</finder>
+
 	</datanode>
 	
+	<datanode name="metadata">
+		<custom-attribute name="name">return instance[0]</custom-attribute>
+		<custom-attribute name="value">return instance[1]</custom-attribute>
+	</datanode>
 	<datanode name="root">
 		<finder name="world" type="world">
 			<script-finder>
@@ -22,6 +27,7 @@
 		<finder name="type" type="type">
 			<script-finder>
 			<![CDATA[
+			{
 				import com.soffid.iam.addons.xacml.common.*;
 				list = new java.util.LinkedList();
 				for (l: PolicyCombiningAlgorithm.literals())
@@ -29,6 +35,7 @@
 					list.add (l);
 				}
 				return list;
+			}
 			]]>
 			</script-finder>
 		</finder>
@@ -46,6 +53,7 @@
 		</finder>
 		<finder name="matchId" type="matchId">
 			<script-finder>
+			{
 				import com.soffid.iam.addons.xacml.common.*;
 				list = new java.util.LinkedList();
 				list.add (new String(""));
@@ -54,10 +62,12 @@
 					list.add (l);
 				}
 				return list;
+			}
 			</script-finder>
 		</finder>
 		<finder name="dataType" type="dataType">
 			<script-finder>
+			{
 				import com.soffid.iam.addons.xacml.common.*;
 				list = new java.util.LinkedList();
 				list.add (new String(""));
@@ -66,6 +76,31 @@
 					list.add (l);
 				}
 				return list;
+			}
+			</script-finder>
+		</finder>
+		<finder name="metadata" type="metadata">
+			<script-finder>
+			{
+				import org.zkoss.util.resource.Labels;
+				java.util.List l = new java.util.LinkedList ();
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Select"), ""});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.User"), "urn:com:soffid:xacml:subject:user"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.SubjectId"), "urn:oasis:names:tc:xacml:1.0:subject:subject-id"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Roles"), "urn:oasis:names:tc:xacml:2.0:subject:role"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Groups"), "urn:com:soffid:xacml:subject:group"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.PrimaryGroup"), "urn:com:soffid:xacml:subject:primaryGroup"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.SubjectIdQualifier"), "urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.IPaddress"), "urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdIssuer"), "urn:com:soffid:oidc:iss"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdAudience"), "urn:com:soffid:oidc:aud"});
+				ejb = new javax.naming.InitialContext(). lookup ("java:comp/env/ejb/DadesAddicionalsEJB");
+				for ( es.caib.seycon.ng.comu.TipusDada tipusDada: ejb.findTipusDadesByCodi("%"))
+				{
+					l.add (new String [] { tipusDada.getLabel(), "urn:com:soffid:xacml:subject:user:att:"+tipusDada.getCodi()});
+				}
+				return l;
+			}
 			</script-finder>
 		</finder>
 	</datanode>
@@ -104,7 +139,7 @@
 	<datanode name="policySet">
 	 	<finder name="policySet" type="policySet">
 			<ejb-finder
-				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService"
 				method="findChildrenPolicySet" if="${queryEnabled}">
 				<parameter value="${instance.id}"/>
 			</ejb-finder>	
@@ -114,7 +149,7 @@
 		</finder>
 		<finder name="policy" type="policy">
 			<ejb-finder
-				jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService"
+				jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService"
 				method="findPolicyChildrenPolicySet" if="${queryEnabled}">
 				<parameter value="${instance.id}"/>
 			</ejb-finder>
@@ -138,7 +173,7 @@
 			</new-instance-bean>
 		</finder>
 		<ejb-handler
-			jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService">
+			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService">
 			<insert-method method="create" returnBean="true">
 				<parameter value="${instance}" />
 			</insert-method>
@@ -181,7 +216,7 @@
 			</new-instance-bean>
 		</finder>
 		<ejb-handler
-			jndi="soffid/ejb/com.soffid.iam.addons.xacml.service.PolicySetService">
+			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService">
 			<insert-method method="create" returnBean="true">
 				<parameter value="${instance}" />
 			</insert-method>

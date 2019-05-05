@@ -25,20 +25,34 @@
 		
 		void showDetall () 
 		{
-			esquema.showFormulari();
+			
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected.getLevel() > 0)
+				esquema.showFormulari();
+			else 
+			{
+				esquema.hideFormulari();
+			}
 		}
 		
 		
 		void showLista ()  
 		{
-			  esquema.getFellow("lista").getFellow("treebox").clearSelection();
+			
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected != null && selected.getLevel() > 0)
+				  esquema.getFellow("lista").getFellow("treebox").clearSelection();
 		}
 		
 		
 		void select () 
 		{
-			if (esquema.getFellow("lista").getFellow("treebox").selectedItem != null && 
-				esquema.getFellow("lista").getFellow("treebox").selectedItem.value != null)
+			Tree tx = esquema.getFellow("lista").getFellow("treebox");
+			Treeitem selected = tx.getSelectedItem();
+			if (selected != null && selected.value != null &&
+				selected.getLevel () > 0)
 				{
 					esquema.showFormulari();
 				} 
@@ -442,8 +456,7 @@
 						in = m.getReaderData();
 				}
 				javax.naming.Context context = new javax.naming.InitialContext();
-				policySetHome = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
-				policySetService = policySetHome.create();
+				policySetService = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
 				policySetService.importXACMLPolicySet(in);
 				refrescaArbre();
 			}
@@ -544,14 +557,13 @@
 			</toolbar>
 			
 	 		<tree autocommit="false" dataPath="/model:/" fixedLayout="true" height="96%" id="treebox" 
-	 				onClick="showDetall()" onSelect="select()" pageSize="19" rows="${fileres}">
+	 				onClick="showDetall()" onSelect="select()" rows="${fileres}">
 		 		<treecols>
 					<treecol label="${c:l('xacml_policySet.Tree')}"/>
 				</treecols>
 				<treeitemfinder bind="." open="false" path="/world">
 					<treerow>
 						<treecellimage label="World" image="/img/world.png"/>
-						<treecell/>
 					</treerow>
 				</treeitemfinder>
 				<treeitemfinder bind="." open="false" path="/policySet" onOpen="com.soffid.addons.xacml.utils.Sort.ordena(self); ">
@@ -585,7 +597,6 @@
 							es.caib.zkib.datasource.DataSource ds = form.getDataSource(); 
 							es.caib.zkib.jxpath.JXPathContext ctx =  ds.getJXPathContext(); 
 							Object registre = ctx.getValue("/");						
-							
 							b_inserir_ps = esquema.getFellow("lista").getFellow("b_inserir_ps");
 							b_esborrar = esquema.getFellow("lista").getFellow("b_esborrar");
 							Component vbox_ps = esquema.getFellow("dades").getFellow("form").getFellow("v_ps");
@@ -657,8 +668,8 @@
 								vbox_reference.setVisible(false);
 								//vbox_arrelps.setVisible(true);
 								vbox_arrelps.setVisible(false);
-								showDetall();
 								arrel=false;
+								showDetall();
 							}else{
 								b_inserir_ps.setDisabled(false); 
 								b_esborrar.setDisabled(true);
@@ -674,20 +685,22 @@
 							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
-							e.printStackTrace();				
+							System.out.println("onChangeDadesError");
+//							e.printStackTrace();				
 						}catch (es.caib.zkib.jxpath.JXPathNotFoundException e) {
 							// No active record
 							form.getFellow("detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("po_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_detall_tipus").getFellow("dada").setDisabled(true);
 							form.getFellow("id_new_ps").getFellow("dada").setDisabled(true);
+							System.out.println("onChangeDadesError");
 						}
 					}
 				
 				]]>	
 			</zscript>
 			
-			<form dataPath="/esquema/lista/treebox:/." id="form" onChangeXPath="onChangeDades()" width="100%">
+			<form dataPath="/esquema/lista/treebox:/." id="form" onChangeXPath="onChangeDades()" width="90%">
 				<attribute name="onActualitza">
 				</attribute>
 			 	<vbox id="v_ps" visible="false" width="99%" widths="5%, *">

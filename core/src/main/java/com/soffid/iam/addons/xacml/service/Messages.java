@@ -3,7 +3,7 @@ package com.soffid.iam.addons.xacml.service;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import es.caib.seycon.ng.comu.lang.MessageFactory;
+import com.soffid.iam.lang.MessageFactory;
 
 public class Messages {
 	private static final String BUNDLE_NAME = "com.soffid.iam.addons.xacml.service.messages"; //$NON-NLS-1$
@@ -16,7 +16,7 @@ public class Messages {
 
 	public static String getString(String key) {
 		try {
-            return es.caib.seycon.ng.comu.lang.MessageFactory.getString(BUNDLE_NAME, key);
+            return com.soffid.iam.lang.MessageFactory.getString(BUNDLE_NAME, key);
 		} catch (MissingResourceException e) {
 			return '!' + key + '!';
 		}

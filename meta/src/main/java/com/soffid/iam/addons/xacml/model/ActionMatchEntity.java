@@ -41,11 +41,11 @@ public abstract class ActionMatchEntity {
 	@Nullable
 	public com.soffid.iam.addons.xacml.common.DataType dataTypeActionDesignator;
 
-	@DaoFinder
-	public com.soffid.iam.addons.xacml.common.ActionMatch findActionMatchById(
-		com.soffid.iam.addons.xacml.common.MatchIdEnumeration MatchId) {
-	 return null;
-	}
+//	@DaoFinder
+//	public com.soffid.iam.addons.xacml.common.ActionMatch findActionMatchById(
+//		com.soffid.iam.addons.xacml.common.MatchIdEnumeration MatchId) {
+//	 return null;
+//	}
 	@DaoFinder
 	public java.util.List<com.soffid.iam.addons.xacml.model.ActionMatchEntity> findByTarget(
 		com.soffid.iam.addons.xacml.model.TargetEntity target) {

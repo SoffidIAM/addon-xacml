@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class Policy {
+public class Policy {
 
 	@Nullable
 	public java.lang.String description;

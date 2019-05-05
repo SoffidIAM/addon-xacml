@@ -9,10 +9,19 @@ import com.soffid.iam.addons.xacml.common.PDPConfiguration;
 import com.soffid.iam.addons.xacml.common.PDPPolicySetReference;
 
 public class PolicyStatus {
-	boolean testing;
 	boolean enabled;
 	String policyId;
 	String policyVersion;
+	
+	public PolicyStatus() {
+	
+	}
+
+	public PolicyStatus(PolicyStatus authPolicy) {
+		enabled = authPolicy.enabled;
+		policyId = authPolicy.policyId;
+		policyVersion = authPolicy.policyVersion;
+	}
 	
 	public boolean isEnabled() {
 		return enabled;
@@ -32,13 +41,6 @@ public class PolicyStatus {
 	public void setPolicyVersion(String policyVersion) {
 		this.policyVersion = policyVersion;
 	}
-	public boolean isTesting() {
-		return testing;
-	}
-	public void setTesting(boolean testing) {
-		this.testing = testing;
-	}
-	
 	PDPConfiguration config;
 	public PDPConfiguration getPDPConfig ()
 	{

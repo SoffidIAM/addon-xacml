@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class Expression {
+public  class Expression {
 
 	@Nullable
 	public java.lang.Integer order;
@@ -21,6 +21,7 @@ public abstract class Expression {
 	public java.lang.String expressionType;
 
 	@Nullable
+	@Attribute(defaultValue="new java.util.LinkedList<com.soffid.iam.addons.xacml.common.Expression>()")
 	public java.util.Collection<com.soffid.iam.addons.xacml.common.Expression> subexpression;
 
 	@Nullable

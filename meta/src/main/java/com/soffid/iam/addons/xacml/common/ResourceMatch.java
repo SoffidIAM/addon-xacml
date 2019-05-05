@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class ResourceMatch {
+public class ResourceMatch {
 
 	public com.soffid.iam.addons.xacml.common.MatchIdEnumeration matchId;
 

@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class Condition {
+public class Condition {
 
 	@Nullable
 	public java.lang.Long id;

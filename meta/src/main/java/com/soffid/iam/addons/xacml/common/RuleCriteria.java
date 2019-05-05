@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @Criteria 
-public abstract class RuleCriteria {
+public class RuleCriteria {
 
 	public java.lang.String ruleId;
 

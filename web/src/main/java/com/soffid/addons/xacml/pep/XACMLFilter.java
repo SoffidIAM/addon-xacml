@@ -1,3 +1,4 @@
+
 package com.soffid.addons.xacml.pep;
 
 import java.io.IOException;
@@ -48,18 +49,15 @@ import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
 
 public class XACMLFilter implements Filter {
 
-	PolicyManager policyManager;
+	WebPolicyManager policyManager;
 	private PolicySetService policySetService;
 	
 	public void init(FilterConfig filterConfig) throws ServletException {
-		policyManager  = new PolicyManager ();
+		policyManager  = new WebPolicyManager ();
 		try {
 			InitialContext ctx = new InitialContext ();
-			PolicySetServiceHome home = (PolicySetServiceHome) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
-			policySetService = home.create();
+			policySetService = (PolicySetService) ctx.lookup(PolicySetServiceHome.JNDI_NAME);
 		} catch (NamingException e) {
-			throw new ServletException (e);
-		} catch (CreateException e) {
 			throw new ServletException (e);
 		}
 	}
@@ -69,7 +67,8 @@ public class XACMLFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		try {
-			PolicyStatus ps  = policyManager.getCurrentPolicy(httpRequest);
+			PepConfiguration pc  = policyManager.getCurrentPolicy(httpRequest);
+			PolicyStatus ps = pc.getWebPolicy();
 			if (ps != null && ps.isEnabled())
 			{
 				
@@ -192,7 +191,6 @@ public class XACMLFilter implements Filter {
 					}
 				}
 			}
-			chain.doFilter(request, response);
 		} catch (Exception e) {
 			ServletOutputStream out = httpResponse.getOutputStream();
 			httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -207,6 +205,7 @@ public class XACMLFilter implements Filter {
 			return;
 		}
 
+		chain.doFilter(request, response);
 	}
 
 	public void destroy() {

@@ -26,18 +26,6 @@
         <property name="dataSource"><ref bean="dataSource"/></property>
     </bean>
 
-    <!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
-
-	<!-- ========================= IDENTITY GENERATOR ========================= -->
-	<bean id="identity-generator-2" class="es.caib.seycon.ng.model.identity.IdentityGeneratorBean">
-		<property name="tableName">
-			<value>SC_SEQUENCE</value>
-		</property>
-		<property name="dataSource"><ref bean="dataSource"/></property>
-		<property name="createTable">
-			<value>true</value>
-		</property>
-	</bean>
 
 
 </beans>

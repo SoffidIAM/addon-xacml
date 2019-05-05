@@ -78,15 +78,12 @@
 										<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder2">
 											<separator />
 											<radio label="  ${c:l('xacml_policySet.SubjectAttribute')}" checked="true" onCheck="selectAttributeType(self)"/>
-											<listbox bind="@subjectAttributeDesignator" mold="select" width="85px" style="font-size: 10px" onSelect="setDataType(self)">
-												<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
-												<listitem label="${c:l('xacml_policySet.User')}" value="urn:com:soffid:xacml:subject:user"/>
-												<listitem label="${c:l('xacml_policySet.SubjectId')}" value="urn:oasis:names:tc:xacml:1.0:subject:subject-id"/>
-												<listitem label="${c:l('xacml_policySet.Roles')}" value="urn:oasis:names:tc:xacml:2.0:subject:role"/>
-												<listitem label="${c:l('xacml_policySet.Groups')}" value="urn:com:soffid:xacml:subject:group"/>
-												<listitem label="${c:l('xacml_policySet.PrimaryGroup')}" value="urn:com:soffid:xacml:subject:primaryGroup"/>
-												<listitem label="${c:l('xacml_policySet.SubjectIdQualifier')}" value="urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"/>
-												<listitem label="${c:l('xacml_policySet.IPaddress')}" value="urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"/>
+											<listbox bind="@subjectAttributeDesignator" mold="select" width="85px" style="font-size: 10px" onSelect="setDataType(self)"
+												dataPath="/model:/metadata">
+												<dataitem bind="@value">
+													<listcell bind="@name"/>
+													<listcell bind="@value"/>
+												</dataitem>
 											</listbox>
 											<separator />
 											<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
@@ -224,6 +221,9 @@
 												<listbox bind="@resourceAttributeDesignator" mold="select" onSelect="setDataType(self)" style="font-size: 10px" width="85px">
 													<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
 													<listitem label="${c:l('xacml_policySet.Url')}" value="urn:oasis:names:tc:xacml:1.0:resource:resource-location"/>
+													<listitem label="${c:l('xacml_policySet.SoffidObject')}" value="com:soffid:iam:xacml:1.0:resource:soffid-object"/>
+													<listitem label="${c:l('xacml_policySet.AccountName')}" value="urn:com:soffid:xacml:subject:account"/>
+													<listitem label="${c:l('xacml_policySet.SystemName')}" value="urn:com:soffid:xacml:subject:system"/>
 												</listbox>
 												<separator />
 												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>

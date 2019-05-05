@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @Criteria 
-public abstract class PolicySetCriteria {
+public class PolicySetCriteria {
 
 	public java.lang.String policySetId;
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<zkib-model>
+
+	<datanode name="root">
+		<finder name="config" type="config">
+			<script-finder>
+			    pm = new com.soffid.addons.xacml.pep.WebPolicyManager();
+			    return pm.getCurrentPolicyRW();
+			</script-finder>
+		</finder>
+	</datanode>
+	
+	<datanode name="config" transient="true">
+	</datanode>
+	
+</zkib-model>

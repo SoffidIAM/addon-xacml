@@ -42,8 +42,8 @@ public abstract class EnvironmentMatchEntity {
 	public java.lang.String environmentAttributeDesignator;
 
 	@DaoFinder
-	public com.soffid.iam.addons.xacml.common.EnvironmentMatch findEnvironmentMatchById(
-		com.soffid.iam.addons.xacml.common.MatchIdEnumeration MatchId) {
+	public com.soffid.iam.addons.xacml.model.EnvironmentMatchEntity findEnvironmentMatchById(
+		com.soffid.iam.addons.xacml.common.MatchIdEnumeration matchId) {
 	 return null;
 	}
 	@DaoFinder

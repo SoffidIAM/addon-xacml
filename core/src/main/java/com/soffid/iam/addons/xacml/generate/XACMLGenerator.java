@@ -171,6 +171,13 @@ public class XACMLGenerator {
 	 	 node.appendChild(descrip);
 	  }
 	  
+	  /// Add Policy defaults
+	  Element pdef = doc.createElement("PolicySetDefaults");
+	  Element xpv = doc.createElement("XPathVersion");
+	  xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+	  pdef.appendChild(xpv);
+	  node.appendChild(pdef);
+	  
 	  Collection<Target> targetCollection = policySet.getTarget();
 	  if(targetCollection != null && !targetCollection.isEmpty())
 	  {
@@ -266,7 +273,13 @@ public class XACMLGenerator {
 		 policy.appendChild(descrip);
 	 }
 	 
-	 Collection<Target> targetCollection = comp.getTarget();
+	  Element pdef = doc.createElement("PolicyDefaults");
+	  Element xpv = doc.createElement("XPathVersion");
+	  xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+	  pdef.appendChild(xpv);
+	  policy.appendChild(pdef);
+
+	  Collection<Target> targetCollection = comp.getTarget();
 	 for(Iterator<Target> it = targetCollection.iterator(); it.hasNext();)
 	 {
 	 	Target target = (Target) it.next();

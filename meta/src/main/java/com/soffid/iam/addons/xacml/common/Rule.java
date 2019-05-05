@@ -8,7 +8,7 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class Rule {
+public class Rule {
 
 	@Nullable
 	public java.lang.String ruleId;

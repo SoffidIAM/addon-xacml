@@ -8,6 +8,6 @@ package com.soffid.iam.addons.xacml.common;
 import com.soffid.mda.annotation.*;
 
 @ValueObject 
-public abstract class PolicySetIdReference extends com.soffid.iam.addons.xacml.common.IdReference {
+public class PolicySetIdReference extends com.soffid.iam.addons.xacml.common.IdReference {
 
 }

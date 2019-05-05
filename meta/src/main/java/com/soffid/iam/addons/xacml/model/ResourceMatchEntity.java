@@ -41,11 +41,12 @@ public abstract class ResourceMatchEntity {
 	@Nullable
 	public com.soffid.iam.addons.xacml.common.DataType dataTypeResourceDesignator;
 
-	@DaoFinder
-	public com.soffid.iam.addons.xacml.common.ResourceMatch findResourceMatchById(
-		com.soffid.iam.addons.xacml.common.MatchIdEnumeration MatchId) {
-	 return null;
-	}
+//	@DaoFinder
+//	public com.soffid.iam.addons.xacml.common.ResourceMatch findResourceMatchById(
+//		com.soffid.iam.addons.xacml.common.MatchIdEnumeration matchId) {
+//	 return null;
+//	}
+
 	@DaoFinder
 	public java.util.List<com.soffid.iam.addons.xacml.model.ResourceMatchEntity> findByTarget(
 		com.soffid.iam.addons.xacml.model.TargetEntity target) {

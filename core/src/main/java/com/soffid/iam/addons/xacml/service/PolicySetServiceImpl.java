@@ -5,13 +5,10 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import org.jboss.security.xacml.interfaces.RequestContext;
 import org.jboss.security.xacml.interfaces.ResponseContext;
-
-import bsh.This;
 
 import com.soffid.iam.addons.xacml.common.Expression;
 import com.soffid.iam.addons.xacml.common.PDPConfiguration;
@@ -24,9 +21,17 @@ import com.soffid.iam.addons.xacml.common.RuleCriteria;
 import com.soffid.iam.addons.xacml.common.Target;
 import com.soffid.iam.addons.xacml.common.TargetCriteria;
 import com.soffid.iam.addons.xacml.generate.XACMLGenerator;
-import com.soffid.iam.addons.xacml.model.*;
+import com.soffid.iam.addons.xacml.model.ExpressionEntity;
+import com.soffid.iam.addons.xacml.model.ExpressionEntityDao;
+import com.soffid.iam.addons.xacml.model.PolicyEntity;
+import com.soffid.iam.addons.xacml.model.PolicyEntityDao;
+import com.soffid.iam.addons.xacml.model.PolicySetEntity;
+import com.soffid.iam.addons.xacml.model.PolicySetEntityDao;
+import com.soffid.iam.addons.xacml.model.RuleEntity;
+import com.soffid.iam.addons.xacml.model.RuleEntityDao;
+import com.soffid.iam.addons.xacml.model.TargetEntity;
+import com.soffid.iam.addons.xacml.model.TargetEntityDao;
 import com.soffid.iam.addons.xacml.utils.ImportData;
-import com.soffid.iam.addons.xacml.service.Messages;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 
@@ -298,6 +303,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 	}
 
 
+	
 	MultiPDPHandler handler = new MultiPDPHandler(this);
 	@Override
 	protected ResponseContext handleEvaluate(PDPConfiguration config,

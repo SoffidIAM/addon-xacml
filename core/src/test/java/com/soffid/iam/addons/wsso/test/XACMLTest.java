@@ -40,10 +40,10 @@ import com.soffid.iam.addons.xacml.common.VariableDefinition;
 import com.soffid.iam.addons.xacml.service.PolicySetService;
 import com.soffid.iam.addons.xacml.service.XACMLBootService;
 import com.soffid.iam.addons.xacml.sync.web.XACMLPolicyServlet;
+import com.soffid.iam.utils.Security;
 
-import es.caib.seycon.ng.ServiceLocator;
 import es.caib.seycon.ng.exception.InternalErrorException;
-import es.caib.seycon.ng.utils.Security;
+import es.caib.seycon.ng.test.AbstractTest;
 
 public class XACMLTest extends AbstractTest
 {
@@ -55,9 +55,6 @@ public class XACMLTest extends AbstractTest
 	protected void setUp() throws Exception
 	{
 		super.setUp();
-		
-		ServiceLocator.instance().getApplicationBootService().consoleBoot();
-		
 		xacml = (XACMLBootService) context.getBean(XACMLBootService.SERVICE_NAME);
 		policySetService = (PolicySetService) context.getBean(policySetService.SERVICE_NAME);
 		
