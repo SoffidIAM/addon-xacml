@@ -23,8 +23,18 @@
 			</roles>
 		</developer>
 	</developers>
-	<scm>
-  </scm>
+         <licenses>
+            <license>
+              <name>GNU GPL Version 3.0</name>
+              <url>http://www.gnu.org/licenses/gpl.html</url>
+            </license>
+          </licenses>
+
+        <scm>
+                <connection>scm:git:ssh://git@github.com:/SoffidIAM/addon-xacml.git</connection>
+                <developerConnection>scm:git:ssh://git@github.com:/SoffidIAM/addon-xacml.git</developerConnection>
+                <tag>HEAD</tag>
+        </scm>
 	<build>
 		<defaultGoal>install</defaultGoal>
 		<plugins>
