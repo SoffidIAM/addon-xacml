@@ -350,7 +350,18 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
     	
     	Node node = context.getRequestRoot();
     	if (! (node instanceof SoffidDummyElement))
-            return new EvaluationResult(BagAttribute.createEmptyBag(attributeType));
+    	{
+    		Node att = node.getAttributes().getNamedItem(contextPath);
+    		if (att == null)
+    			return new EvaluationResult(BagAttribute.createEmptyBag(attributeType));
+    		else
+    		{
+    			String value = att.getNodeValue();
+    	    	return new EvaluationResult(new BagAttribute(attributeType, 
+    	    			Collections.singleton(
+    	    					new StringAttribute(value))));
+    		}
+    	}
     	
     	SoffidDummyElement sdn = (SoffidDummyElement) node;
     	

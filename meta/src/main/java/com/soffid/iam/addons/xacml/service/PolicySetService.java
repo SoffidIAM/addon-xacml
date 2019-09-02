@@ -5,13 +5,21 @@
 //
 
 package com.soffid.iam.addons.xacml.service;
+import com.soffid.iam.model.VaultFolderEntity;
 import com.soffid.mda.annotation.*;
+
+import es.caib.seycon.ng.comu.Account;
+import es.caib.seycon.ng.model.AccountEntity;
+
+import java.util.Collection;
 
 import org.springframework.transaction.annotation.Transactional;
 
 @Service ( translatedName="PolicySetService",
 	 translatedPackage="com.soffid.iam.addons.xacml.service")
 @Depends ({com.soffid.iam.addons.xacml.model.PolicySetEntity.class,
+	AccountEntity.class,
+	VaultFolderEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicyEntity.class,
 	com.soffid.iam.addons.xacml.model.RuleEntity.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class,
@@ -184,4 +192,7 @@ public abstract class PolicySetService {
 		java.io.OutputStream outputStream)
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	}
+	
+	public Collection<Account> findFolderAccounts(String folder)
+	{ return null; }
 }

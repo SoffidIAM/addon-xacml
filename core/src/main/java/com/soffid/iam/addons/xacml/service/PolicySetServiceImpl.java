@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.jboss.security.xacml.interfaces.RequestContext;
@@ -32,6 +33,10 @@ import com.soffid.iam.addons.xacml.model.RuleEntityDao;
 import com.soffid.iam.addons.xacml.model.TargetEntity;
 import com.soffid.iam.addons.xacml.model.TargetEntityDao;
 import com.soffid.iam.addons.xacml.utils.ImportData;
+import com.soffid.iam.api.Account;
+import com.soffid.iam.model.AccountEntity;
+import com.soffid.iam.model.VaultFolderEntity;
+import com.soffid.iam.model.VaultFolderEntityDao;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 
@@ -311,5 +316,38 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 		return handler.handle(config, requestContext);
 	}
 
+
+	@Override
+	protected Collection<Account> handleFindFolderAccounts(String folder) throws Exception {
+		List<VaultFolderEntity> list = getVaultFolderEntityDao().findPublicRoots();
+		
+		StringBuffer sb = new StringBuffer();
+		VaultFolderEntity f = findFolder ( getVaultFolderEntityDao(), list, folder.split("/"), 0, sb);
+		if (f == null)
+			return null;
+		LinkedList<Account> r = new LinkedList<Account>();
+		for (AccountEntity account: f.getAccounts())
+			r.add( getAccountEntityDao().toAccount(account));
+	
+		return r;
+	}
+
+
+	private VaultFolderEntity findFolder(VaultFolderEntityDao dao, Collection<VaultFolderEntity> folders, String[] split, int i, StringBuffer sb) throws InternalErrorException {
+		sb.append("Checking folders\n");
+		for (VaultFolderEntity folder: folders)
+		{
+			sb.append(">> "+folder.getName()+" vs "+split[i]+"\n");
+			if (folder.getName().equals(split[i]))
+			{
+				i++;
+				if (i >= split.length)
+					return folder;
+				else
+					return findFolder (dao, folder.getChildren(), split, i, sb);
+			}
+		}
+		return null;
+	}
 
 }

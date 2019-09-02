@@ -120,6 +120,7 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 				se.setExpression(ee);
 				ee.getSubexpression().add(se);
 				getExpressionEntityDao().update(ee);
+				getExpressionEntityDao().update(se);
 			}else{
 				getExpressionEntityDao().update(sub);
 			}
@@ -179,7 +180,9 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 			ee.getSubexpression().add(expE);
 			getExpressionEntityDao().update(ee);
 			expE.setExpression(ee);
+			getExpressionEntityDao().update(expE);
 			exp.setId(expE.getId());
+			
 		}
 		expression.setId(ee.getId());
 		return ee;
