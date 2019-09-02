@@ -3,6 +3,8 @@ package com.soffid.iam.addons.xacml.sync.web;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,11 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.security.xacml.sunxacml.ctx.Result;
-import org.jboss.security.xacml.sunxacml.ctx.Status;
 import org.json.JSONObject;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.soffid.addons.xacml.pep.PepConfiguration;
 import com.soffid.addons.xacml.pep.PolicyManager;
 import com.soffid.addons.xacml.pep.PolicyStatus;
@@ -51,7 +51,7 @@ public class XACMLExternalPEP extends HttpServlet{
 			String token = req.getParameter("token");
 			String method = req.getParameter("method");
 			String resource = req.getParameter("resource");
-			service (req, resp, token, method, resource);
+			service (req, resp, token, method, resource, null);
 		} catch (Exception e) {
 			log.warn(e);
 			throw new ServletException(e);
@@ -72,7 +72,18 @@ public class XACMLExternalPEP extends HttpServlet{
 			String token = ob.getString("token");
 			String method = ob.getString("method");
 			String resource = ob.getString("resource");
-			service (req, resp, token, method, resource);
+			JSONObject params = ob.optJSONObject("params");
+			Map<String,String> ctx = new HashMap<String, String>();
+			if (params != null)
+			{
+				for (Iterator<String> it = params.keys(); it.hasNext();)
+				{
+					String key = it.next();
+					String value = params.optString(key);
+					ctx.put(key, value);
+				}
+			}
+			service (req, resp, token, method, resource, ctx);
 		} catch (Exception e) {
 			log.warn(e);
 			throw new ServletException(e);
@@ -80,7 +91,7 @@ public class XACMLExternalPEP extends HttpServlet{
     	
     }
 
-    protected void service(HttpServletRequest req, HttpServletResponse resp, String token, String method, String resource) throws Exception {
+    protected void service(HttpServletRequest req, HttpServletResponse resp, String token, String method, String resource, Map<String, String> ctx) throws Exception {
 		PepConfiguration cfg;
 		JSONObject result = new JSONObject();
 		try {
@@ -94,7 +105,7 @@ public class XACMLExternalPEP extends HttpServlet{
 					throw new Exception(e.getMessage());
 				}
 				PolicyStatus ps = cfg.getExternalPolicy();
-				Set<Result> r = new XACMLEngine().testResource(ps, req.getRemoteAddr(), data, resource, method);
+				Set<Result> r = new XACMLEngine().testResource(ps, req.getRemoteAddr(), data, resource, method, ctx);
 				if (r == null)
 				{
 					result.put("status", "denied");
@@ -115,6 +126,7 @@ public class XACMLExternalPEP extends HttpServlet{
 						else if (decision == Result.DECISION_PERMIT)
 						{
 							result.put("status", "accept");
+							result.put("cause", "");
 							result.put("message", rr.getStatus().getMessage());
 							if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
 								result.put("message", "Cannot take decision: "+ rr.getStatus().getMessage());

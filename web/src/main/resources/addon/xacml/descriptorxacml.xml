@@ -92,6 +92,9 @@
 				l.add ( new String [] { Labels.getLabel ("xacml_policySet.PrimaryGroup"), "urn:com:soffid:xacml:subject:primaryGroup"});
 				l.add ( new String [] { Labels.getLabel ("xacml_policySet.SubjectIdQualifier"), "urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"});
 				l.add ( new String [] { Labels.getLabel ("xacml_policySet.IPaddress"), "urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OperatingSystem"), "urn:com:soffid:host:os"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.DhcpParams"), "urn:com:soffid:host:dhcp"});
+				l.add ( new String [] { Labels.getLabel ("xacml_policySet.HostName"), "urn:oasis:names:tc:xacml:1.0:subject:authn-locality:dns-name"});
 				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdIssuer"), "urn:com:soffid:oidc:iss"});
 				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdAudience"), "urn:com:soffid:oidc:aud"});
 				ejb = new javax.naming.InitialContext(). lookup ("java:comp/env/ejb/DadesAddicionalsEJB");

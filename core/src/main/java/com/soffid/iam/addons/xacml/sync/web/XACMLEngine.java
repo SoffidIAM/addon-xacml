@@ -1,5 +1,6 @@
 package com.soffid.iam.addons.xacml.sync.web;
 
+import java.io.ByteArrayOutputStream;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -13,10 +14,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jboss.security.xacml.factories.RequestResponseContextFactory;
 import org.jboss.security.xacml.interfaces.RequestContext;
 import org.jboss.security.xacml.interfaces.ResponseContext;
 import org.jboss.security.xacml.interfaces.XACMLConstants;
+import org.jboss.security.xacml.sunxacml.Indenter;
 import org.jboss.security.xacml.sunxacml.attr.DateAttribute;
 import org.jboss.security.xacml.sunxacml.attr.DateTimeAttribute;
 import org.jboss.security.xacml.sunxacml.attr.IPv4AddressAttribute;
@@ -28,6 +35,8 @@ import org.jboss.security.xacml.sunxacml.ctx.RequestCtx;
 import org.jboss.security.xacml.sunxacml.ctx.ResponseCtx;
 import org.jboss.security.xacml.sunxacml.ctx.Result;
 import org.jboss.security.xacml.sunxacml.ctx.Subject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import com.soffid.addons.xacml.pep.PolicyStatus;
 import com.soffid.iam.ServiceLocator;
@@ -37,16 +46,20 @@ import com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyDocument;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidXPathBean;
+import com.soffid.iam.api.Host;
 import com.soffid.iam.api.System;
 import com.soffid.iam.api.UserAccount;
+import com.soffid.iam.service.NetworkService;
 import com.soffid.iam.utils.Security;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class XACMLEngine {
 	static PolicySetService policySetService = XacmlServiceLocator.instance().getPolicySetService();
-	
-	public Set<Result> testResource (PolicyStatus ps, String remoteAddress, Map<String,Object> token, String resource, String method) throws Exception
+	static NetworkService networkService = ServiceLocator.instance().getNetworkService();
+	static Log log = LogFactory.getLog(XACMLEngine.class);
+	public Set<Result> testResource (PolicyStatus ps, String remoteAddress, Map<String,Object> token, String resource, String method,
+			Map<String,String> context) throws Exception
 	{
 		LinkedList<Attribute> subjectAttributes = new LinkedList<Attribute>();
 		LinkedList<Attribute> resourceAttributes = new LinkedList<Attribute>();
@@ -60,14 +73,15 @@ public class XACMLEngine {
 				new StringAttribute( method)));
 		
 		return test(ps, remoteAddress, token, subjectAttributes, resourceAttributes, actionAttributes,
-				environmentAttributes);
+				environmentAttributes, context);
 
 	}
 
 	private Set<Result> test(PolicyStatus ps, String remoteAddress, Map<String, Object> token,
 			LinkedList<Attribute> subjectAttributes, LinkedList<Attribute> resourceAttributes,
-			LinkedList<Attribute> actionAttributes, LinkedList<Attribute> environmentAttributes)
-			throws UnknownHostException, URISyntaxException, InternalErrorException 
+			LinkedList<Attribute> actionAttributes, LinkedList<Attribute> environmentAttributes,
+			Map<String,String> context)
+			throws UnknownHostException, URISyntaxException, InternalErrorException, ParserConfigurationException 
 	{
 		InetAddress addr = InetAddress.getByName(remoteAddress);
 		if (addr instanceof Inet4Address)
@@ -85,6 +99,17 @@ public class XACMLEngine {
 					new StringAttribute(addr.getHostAddress())));
 		}
 
+		Host host = networkService.findHostByIp(remoteAddress);
+		if (host != null)
+		{
+			subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_DNS_NAME), (String) null, null, 
+					new StringAttribute(host.getName())));
+			subjectAttributes.add(new Attribute (new URI("urn:com:soffid:host:os"), (String) null, null, 
+					new StringAttribute(host.getOs())));
+			subjectAttributes.add(new Attribute (new URI("urn:com:soffid:host:dhcp"), (String) null, null, 
+					new StringAttribute(host.getDhcp())));
+		}
+		
 		String subject = "anonymous";
 		// Split authorization
 		for (Entry<String, Object> entry: token.entrySet())
@@ -135,14 +160,27 @@ public class XACMLEngine {
 				new DateAttribute( new Date())));
 
 		// Create empty document
-		SoffidDummyDocument d = new SoffidDummyDocument();
-		SoffidDummyElement e = new SoffidDummyElement();
-		e.setDocument(d);
-		d.setRootNode(e);
-		d.appendChild( d.createElement("Request") );
-
+		Document d;
+		Element e;
+		d = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		e = d.createElement("Request");
+		d.appendChild(e);
+		if (context != null)
+		{
+			for ( Entry<String, String> pair: context.entrySet())
+			{
+				e.setAttribute(pair.getKey(), pair.getValue());
+				environmentAttributes.add(new Attribute (new URI(pair.getKey()), (String) null, null, 
+						new StringAttribute( pair.getValue() )));
+			}
+		}
+		
 		RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
 				resourceAttributes, actionAttributes, environmentAttributes, e);
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ctx.encode(out, new Indenter(5));
+		log.info ("Testing rules for:\n"+out.toString());
 
 		RequestContext req = RequestResponseContextFactory.createRequestCtx();
 		req.set(XACMLConstants.REQUEST_CTX, ctx);
@@ -163,7 +201,7 @@ public class XACMLEngine {
 
 	
 	public Set<Result> testAccount(PolicyStatus ps, String remoteAddress, Map<String, Object> token, String account,
-			String system) throws Exception 
+			String system, Map<String,String> context) throws Exception 
 	{
 		LinkedList<Attribute> subjectAttributes = new LinkedList<Attribute>();
 		LinkedList<Attribute> resourceAttributes = new LinkedList<Attribute>();
@@ -177,7 +215,7 @@ public class XACMLEngine {
 				new StringAttribute( system )));
 		
 		return test(ps, remoteAddress, token, subjectAttributes, resourceAttributes, actionAttributes,
-				environmentAttributes);
+				environmentAttributes, context);
 	}
 
 }

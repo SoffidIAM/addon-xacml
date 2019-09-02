@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -597,6 +598,14 @@ public class XACMLExpressionComponent extends Form implements BindContext, XPath
 							minSubexpressions ( subExpressionCol, 2 );
 						if ( functionType[i][2].startsWith("3"))
 							minSubexpressions ( subExpressionCol, 3 );
+						if ( functionType[i][2].startsWith("U"))
+							maxSubexpressions ( subExpressionCol, 1 );
+						if ( functionType[i][2].startsWith("S"))
+							maxSubexpressions ( subExpressionCol, 1 );
+						if ( functionType[i][2].equals("T"))
+							maxSubexpressions ( subExpressionCol, 2 );
+						if ( functionType[i][2].equals("TQ"))
+							maxSubexpressions ( subExpressionCol, 2 );
 						typeString = n.replace('_', ' ');
 						result = result + functionType[i][1];
 						if(functionType[i][2].equals("S"))
@@ -764,6 +773,17 @@ public class XACMLExpressionComponent extends Form implements BindContext, XPath
 			exp.setOrder( subExpressionCol.size() + 1);
 			
 			subExpressionCol.add(exp);
+		}
+	}
+
+	private void maxSubexpressions(Collection<Expression> subExpressionCol, int max) {
+		if (subExpressionCol == null)
+			return;
+		int i = 0;
+		for ( Iterator<Expression> it = subExpressionCol.iterator(); it.hasNext (); i++)
+		{
+			it.next();
+			if (i >= max) it.remove();
 		}
 	}
 

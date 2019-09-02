@@ -37,6 +37,8 @@ public class ConditionEntityDaoImpl extends ConditionEntityDaoBase
 	@Override
 	public void remove(ConditionEntity entity) {
 		ExpressionEntity ee = entity.getExpression();
+		ee.setCondicion(null);
+		getExpressionEntityDao().update(ee);
 		super.remove(entity);
 		getExpressionEntityDao().remove(ee);
 	}

@@ -41,6 +41,8 @@ public class VariableDefinitionEntityDaoImpl extends VariableDefinitionEntityDao
 	@Override
 	public void remove(VariableDefinitionEntity entity) {
 		ExpressionEntity ee = entity.getExpression();
+		ee.setVariableDefinition(null);
+		getExpressionEntityDao().update(ee);
 		super.remove(entity);
 		getExpressionEntityDao().remove(ee);
 	}
