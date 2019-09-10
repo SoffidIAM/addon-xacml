@@ -10,7 +10,7 @@
 	<artifactId>root</artifactId>
 	<packaging>pom</packaging>
 	<name>xacml</name>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.1.1</version>
 	<description>SOFFID IAM xacml addon</description>
 	<prerequisites>
 		<maven>2.0.1</maven>
@@ -33,7 +33,7 @@
         <scm>
                 <connection>scm:git:ssh://git@github.com:/SoffidIAM/addon-xacml.git</connection>
                 <developerConnection>scm:git:ssh://git@github.com:/SoffidIAM/addon-xacml.git</developerConnection>
-                <tag>HEAD</tag>
+                <tag>xacml-2.1.1</tag>
         </scm>
 	<build>
 		<defaultGoal>install</defaultGoal>
