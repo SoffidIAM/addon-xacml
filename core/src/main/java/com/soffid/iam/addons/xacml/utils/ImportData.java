@@ -342,9 +342,15 @@ public class ImportData {
 		Attribute dataType = subjectAttributeDesignator.attribute("DataType"); //$NON-NLS-1$
 		String[] possibilities = {"urn:oasis:names:tc:xacml:1.0:subject:subject-id",  //$NON-NLS-1$
 				"urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier",   //$NON-NLS-1$ //$NON-NLS-2$
-				"urn:com:soffid:xacml:subject:group", "urn:com:soffid:xacml:subject:primaryGroup",
+				"urn:com:soffid:xacml:subject:group", 
+				"urn:com:soffid:xacml:subject:primaryGroup",
+				"urn:oasis:names:tc:xacml:1.0:subject:authn-locality:dns-name", 
 				"urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address", 
-				"urn:com:soffid:xacml:subject:user", "urn:oasis:names:tc:xacml:2.0:subject:role" }; //$NON-NLS-1$ //$NON-NLS-2$
+				"urn:com:soffid:xacml:subject:user", 
+				"urn:oasis:names:tc:xacml:2.0:subject:role",
+				"urn:com:soffid:oidc:aud",
+				"urn:com:soffid:host:os", 
+				"urn:com:soffid:host:dhcp"}; //$NON-NLS-1$ //$NON-NLS-2$
 		for(int i = 0; i < possibilities.length; i++){
 			if(possibilities[i].equals(attributeId.getValue())){
 				found = true;
@@ -467,7 +473,18 @@ public class ImportData {
 		Attribute attributeId = resourceAttributeDesignator.attribute("AttributeId"); //$NON-NLS-1$
 		Attribute dataType = resourceAttributeDesignator.attribute("DataType"); //$NON-NLS-1$
 		
-		if(!attributeId.getValue().equals("urn:oasis:names:tc:xacml:1.0:resource:resource-location")) //$NON-NLS-1$
+		String[] possibilities = {"urn:oasis:names:tc:xacml:1.0:resource:resource-location", 
+				"urn:com:soffid:xacml:subject:account",   //$NON-NLS-1$ //$NON-NLS-2$
+				"urn:com:soffid:xacml:subject:system",
+				"com:soffid:iam:xacml:1.0:resource:soffid-object"}; 
+		boolean found = false;
+		for(int i = 0; i < possibilities.length; i++){
+			if(possibilities[i].equals(attributeId.getValue())){
+				found = true;
+				break;
+			}
+		}
+		if(!found) //$NON-NLS-1$
 			throw new InternalErrorException(String.format(Messages.getString("ImportData.NoResource"), 
 					new Object[] {attributeId.getValue()}));
 		String dataTypeValue = dataType.getValue();
@@ -475,7 +492,7 @@ public class ImportData {
 			resourceMatchVO.setDataTypeResourceDesignator(dataTypeConvert(dataTypeValue));
 		else
 			throw new InternalErrorException(Messages.getString("ImportData.DataTypeNeed23")); //$NON-NLS-1$
-		resourceMatchVO.setResourceAttributeDesignator("urn:oasis:names:tc:xacml:1.0:resource:resource-location");	 //$NON-NLS-1$
+		resourceMatchVO.setResourceAttributeDesignator(attributeId.getValue());	 //$NON-NLS-1$
 	}
 
 
