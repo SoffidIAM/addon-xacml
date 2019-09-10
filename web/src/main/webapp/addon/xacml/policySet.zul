@@ -9,7 +9,7 @@
 	<style src="~./styles/estil.css"/>
 	<style src="/css/localSEU.css"/>
 	<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacml.xml"
-		onCommit="onRefrescaArbreIntern(true);" onChange="showCancelButton()"/>
+		onChange="showCancelButton()"/>
 	
 	<zscript src="/comu/netejaCriteris.zul"/>
 	
