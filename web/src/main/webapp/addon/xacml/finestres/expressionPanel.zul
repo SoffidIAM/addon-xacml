@@ -1051,7 +1051,7 @@
 									<listitem label="${c:l('xacml_policySet.PrimaryGroup')}" value="urn:com:soffid:xacml:subject:primaryGroup"/>
 									<listitem label="${c:l('xacml_policySet.SubjectIdQualifier')}" value="urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"/>
 									<listitem label="${c:l('xacml_policySet.IPaddress')}" value="urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"/>
-									<listitem label="${c:l('xacml_policySet.HostName')}" value="urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"/>
+									<listitem label="${c:l('xacml_policySet.HostName')}" value="urn:oasis:names:tc:xacml:1.0:subject:authn-locality:dns-name"/>
 									<listitem label="${c:l('xacml_policySet.OperatingSystem')}" value="urn:com:soffid:host:os"/>
 									<listitem label="${c:l('xacml_policySet.DhcpParams')}" value="urn:com:soffid:host:dhcp"/>
 								</listbox>
