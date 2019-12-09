@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.crypto.Cipher;
@@ -32,6 +34,7 @@ import com.soffid.addons.xacml.pep.PolicyStatus;
 import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.xacml.XacmlServiceLocator;
 import com.soffid.iam.api.Account;
+import com.soffid.iam.api.Audit;
 import com.soffid.iam.api.Password;
 import com.soffid.iam.service.AccountService;
 import com.soffid.iam.sync.service.SecretStoreService;
@@ -76,7 +79,7 @@ public class XACMLPasswordVault extends HttpServlet{
 			else
 				service (req, resp, token, account, system, null);
 		} catch (Exception e) {
-			log.warn(e);
+			log.warn("Error processing request",e);
 			throw new ServletException(e);
 		}
     	
@@ -107,13 +110,13 @@ public class XACMLPasswordVault extends HttpServlet{
 					ctx.put(key, value);
 				}
 			}
-			if (folder == null)
+			if (folder == null || folder.trim().isEmpty())
 				service (req, resp, token, account, system, ctx);
 			else
 				service (req, resp, token, folder, ctx);
 				
 		} catch (Exception e) {
-			log.warn(e);
+			log.warn("Error processing request", e);
 			throw new ServletException(e);
 		}
     	
@@ -129,38 +132,53 @@ public class XACMLPasswordVault extends HttpServlet{
 			cfg = new PolicyManager().getCurrentPolicy();
 			if (cfg.getVaultPolicy().isEnabled())
 			{
-				Map<String, Object> data = new TokenVerifier().verify( token );
-				PolicyStatus ps = cfg.getVaultPolicy();
-				Set<Result> r = new XACMLEngine().testAccount(ps, req.getRemoteAddr(), data, account, system, ctx);
-				if (r == null)
+				Account acc = ServiceLocator.instance().getAccountService().findAccount(account, system);
+				if (acc == null)
 				{
 					result.put("status", "denied");
-					result.put("cause", "No policy applies to this resource and method");
+					result.put("cause", "Account does not exist");
 				}
 				else
 				{
-					for (Result rr: r)
+					
+					log.info("Checking policy for account "+account+" at "+system);
+					Map<String, Object> data = new TokenVerifier().verify( token );
+					PolicyStatus ps = cfg.getVaultPolicy();
+					Set<Result> r = new XACMLEngine().testAccount(ps, req.getRemoteAddr(), data, account, system, ctx);
+					if (r == null)
 					{
-						int decision = rr.getDecision() ;
-						if (decision == Result.DECISION_INDETERMINATE || decision == Result.DECISION_NOT_APPLICABLE)
+						auditAccountAccess(acc, data, "D");
+						result.put("status", "denied");
+						result.put("cause", "No policy applies to this resource and method");
+					}
+					else
+					{
+						for (Result rr: r)
 						{
-							result.put("status", "deny");
-							result.put("cause", "Cannot take decision");
-							if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
-								result.put("message", "Cannot take decision: "+ rr.getStatus().getMessage());
-						}
-						else if (decision == Result.DECISION_PERMIT)
-						{
-							result.put("status", "accept");
-							result.put("message", rr.getStatus().getMessage());
-							result.put("password", getPassword(account,system));
-						}
-						else
-						{
-							result.put("status", "deny");
-							result.put("cause", "Access denied");
-							if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
-								result.put("message", "Cannot take decision: "+ rr.getStatus().getMessage());
+							int decision = rr.getDecision() ;
+							if (decision == Result.DECISION_INDETERMINATE || decision == Result.DECISION_NOT_APPLICABLE)
+							{
+								auditAccountAccess(acc, data, "D");
+								result.put("status", "deny");
+								result.put("cause", "Cannot take decision");
+								if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
+									result.put("message", "Cannot take decision: "+ rr.getStatus().getMessage());
+							}
+							else if (decision == Result.DECISION_PERMIT)
+							{
+								auditAccountAccess(acc, data, "A");
+								result.put("status", "accept");
+								result.put("message", rr.getStatus().getMessage());
+								result.put("password", getPassword(account,system));
+							}
+							else
+							{
+								auditAccountAccess(acc, data, "D");
+								result.put("status", "deny");
+								result.put("cause", "Access denied");
+								if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
+									result.put("message", "Cannot take decision: "+ rr.getStatus().getMessage());
+							}
 						}
 					}
 				}
@@ -171,7 +189,7 @@ public class XACMLPasswordVault extends HttpServlet{
 				result.put("cause", "Vault policy is disabled");
 			}
 		} catch (Exception e) {
-			log.warn(e);
+			log.warn("Error parsing rules", e);
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			result.put("status", "error");
 			result.put("cause", e.toString());
@@ -187,6 +205,8 @@ public class XACMLPasswordVault extends HttpServlet{
 		if (acc == null)
 			return null;
 		Password password = secretStore.getPassword(acc.getId());
+		if (password == null)
+			return null;
 		byte[] bytes = password.getPassword().getBytes("UTF-8");
 		String encryptKey = ConfigurationCache.getProperty("xacml.password.encryptionKey");
 		if (encryptKey != null)
@@ -236,6 +256,14 @@ public class XACMLPasswordVault extends HttpServlet{
 				else
 				{
 					
+					Audit audit = new Audit();
+					audit.setAccount(folder);
+					audit.setAction("Q");
+					audit.setObject("XACML");
+					audit.setCalendar(Calendar.getInstance());
+					fillSubject (audit, data);
+					ServiceLocator.instance().getAuditService().create(audit);
+
 					JSONArray array = new JSONArray();
 					result.put("status", "success");
 					result.put("data", array);
@@ -249,6 +277,7 @@ public class XACMLPasswordVault extends HttpServlet{
 						Set<Result> r = new XACMLEngine().testAccount(ps, req.getRemoteAddr(), data, account.getName(), account.getSystem(), ctx);
 						if (r == null)
 						{
+							auditAccountAccess(account, data, "D");
 							accountResult.put("status", "denied");
 							accountResult.put("cause", "No policy applies to this resource and method");
 						}
@@ -259,6 +288,7 @@ public class XACMLPasswordVault extends HttpServlet{
 								int decision = rr.getDecision() ;
 								if (decision == Result.DECISION_INDETERMINATE || decision == Result.DECISION_NOT_APPLICABLE)
 								{
+									auditAccountAccess(account, data, "D");
 									accountResult.put("status", "deny");
 									accountResult.put("cause", "Cannot take decision");
 									if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
@@ -266,12 +296,14 @@ public class XACMLPasswordVault extends HttpServlet{
 								}
 								else if (decision == Result.DECISION_PERMIT)
 								{
+									auditAccountAccess(account, data, "A");
 									accountResult.put("status", "accept");
 									accountResult.put("message", rr.getStatus().getMessage());
 									accountResult.put("password", getPassword(account.getName(),account.getSystem()));
 								}
 								else
 								{
+									auditAccountAccess(account, data, "D");
 									accountResult.put("status", "deny");
 									accountResult.put("cause", "Access denied");
 									if (rr.getStatus() != null && rr.getStatus().getMessage() != null)
@@ -289,7 +321,7 @@ public class XACMLPasswordVault extends HttpServlet{
 				result.put("cause", "Vault policy is disabled");
 			}
 		} catch (Exception e) {
-			log.warn(e);
+			log.warn("Error parsing rules", e);
 			resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			result.put("status", "error");
 			result.put("cause", e.toString());
@@ -298,6 +330,37 @@ public class XACMLPasswordVault extends HttpServlet{
 		PrintWriter out = resp.getWriter();
 		out.print(result.toString());
     }
+
+
+	public void auditAccountAccess(Account account, Map<String, Object> data, String action)
+			throws InternalErrorException {
+		Audit audit;
+		audit = new Audit();
+		audit.setAccount(account.getName());
+		audit.setDatabase(account.getSystem());
+		audit.setAction(action);
+		audit.setObject("XACML");
+		audit.setCalendar(Calendar.getInstance());
+		fillSubject (audit, data);
+		ServiceLocator.instance().getAuditService().create(audit);
+	}
+
+
+	private void fillSubject(Audit audit, Map<String, Object> data) {
+		for (Entry<String, Object> entry: data.entrySet())
+		{
+			Object v = entry.getValue();
+			if (v != null)
+			{
+				if (entry.getKey().equals("sub"))
+				{
+					audit.setAuthor((String) entry.getValue());
+				} 
+				else if (entry.getKey().equals("aud"))
+					audit.setApplication((String) entry.getValue());
+			}
+		}
+	}
 
 
 }
