@@ -34,6 +34,7 @@ import com.soffid.iam.addons.xacml.model.TargetEntity;
 import com.soffid.iam.addons.xacml.model.TargetEntityDao;
 import com.soffid.iam.addons.xacml.utils.ImportData;
 import com.soffid.iam.api.Account;
+import com.soffid.iam.api.Configuration;
 import com.soffid.iam.model.AccountEntity;
 import com.soffid.iam.model.VaultFolderEntity;
 import com.soffid.iam.model.VaultFolderEntityDao;
@@ -56,17 +57,37 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 					policySetId));
 		}
 		else{
-			handler.reset ();
+			updateTimeStamp();
 			return getPolicySetEntityDao().toPolicySet(getPolicySetEntityDao().create(policySet));
 		}
 	}
+
+
+	public void updateTimeStamp() throws InternalErrorException {
+//		handler.reset ();
+		Configuration c = getConfigurationService().findParameterByNameAndNetworkName("soffid.xacml.timestamp", null);
+		if (c == null)
+		{
+			c = new Configuration();
+			c.setCode("soffid.xacml.timestamp");
+			c.setDescription("XCML Policy set timestamp");
+			c.setValue(Long.toString(System.currentTimeMillis()));
+			getConfigurationService().create(c);
+		}
+		else
+		{
+			c.setValue(Long.toString(System.currentTimeMillis()));
+			getConfigurationService().update(c);
+		}
+	}
+	
 	
 	
 	protected com.soffid.iam.addons.xacml.common.PolicySet handleUpdate(
 			com.soffid.iam.addons.xacml.common.PolicySet policySet) throws java.lang.Exception
 	{
 		getPolicySetEntityDao().update(policySet);
-		handler.reset ();
+		updateTimeStamp();
 		return policySet;
 	}
 	
@@ -75,7 +96,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.PolicySet policySet) throws java.lang.Exception
 	{
 		getPolicySetEntityDao().remove(policySet);
-		handler.reset ();
+		updateTimeStamp();
 	}
 	
 	
@@ -92,7 +113,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			throw new InternalErrorException(String.format(Messages.getString("PolicySetServiceImpl.PolicyDuplicated"),  //$NON-NLS-1$
 					policyId));
 		}else{
-			handler.reset ();
+			updateTimeStamp();
 			return getPolicyEntityDao().toPolicy(getPolicyEntityDao().create(policy));
 		}
 	}
@@ -102,7 +123,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Policy policy) throws java.lang.Exception
 	{
 		getPolicyEntityDao().update(policy);
-		handler.reset ();
+		updateTimeStamp();
 		return policy;
 	}
 	
@@ -111,7 +132,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Policy policy) throws java.lang.Exception
 	{
 		getPolicyEntityDao().remove(policy);
-		handler.reset ();
+		updateTimeStamp();
 	}
 	
 	
@@ -119,7 +140,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Rule rule) throws java.lang.Exception
 	{
 		PolicyEntity pe = getPolicyEntityDao().load(rule.getPolicyId());
-		handler.reset ();
+		updateTimeStamp();
 		return getRuleEntityDao().toRule(getRuleEntityDao().create(rule, pe ));	
 	}
 	
@@ -128,7 +149,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Rule rule) throws java.lang.Exception
 	{
 		getRuleEntityDao().update(rule);
-		handler.reset ();
+		updateTimeStamp();
 		return rule;
 	}
 	
@@ -137,7 +158,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Rule rule) throws java.lang.Exception
 	{
 		getRuleEntityDao().remove(rule);
-		handler.reset ();
+		updateTimeStamp();
 	}
 	
 	@Override

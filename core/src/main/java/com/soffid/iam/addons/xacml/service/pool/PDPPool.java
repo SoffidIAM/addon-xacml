@@ -19,7 +19,7 @@ import com.soffid.iam.utils.ConfigurationCache;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 
-public class PDPPool extends AbstractPool<JBossPDP> {
+public class PDPPool extends AbstractPool<SoffidPDP> {
 	PDPConfiguration config;
 	PolicySetService policySetService;
 	
@@ -86,7 +86,7 @@ public class PDPPool extends AbstractPool<JBossPDP> {
 	}
 
 	@Override
-	protected JBossPDP createConnection() throws Exception {
+	protected SoffidPDP createConnection() throws Exception {
 		StringBuffer sb = new StringBuffer();
 		sb.append("<?xml version='1.0' encoding='utf-8'?>")
 			.append("<ns:jbosspdp xmlns:ns='urn:jboss:xacml:2.0'>")
@@ -118,11 +118,21 @@ public class PDPPool extends AbstractPool<JBossPDP> {
 			.append("</ns:Locators>")
 			.append("</ns:jbosspdp>");
 		String result = sb.toString();
-		JBossPDP jbossPDP = new JBossPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
+		SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
 		return jbossPDP;
 	}
 
 	@Override
-	protected void closeConnection(JBossPDP connection) throws Exception {
+	protected void closeConnection(SoffidPDP connection) throws Exception {
+	}
+
+	@Override
+	protected boolean isConnectionValid(SoffidPDP connection) throws Exception {
+		String s = ConfigurationCache.getProperty("soffid.xacml.timestamp");
+		if (s == null)
+			return true;
+		if (connection.getCreated() < Long.decode(s))
+			return false;
+		return true;
 	};
 }

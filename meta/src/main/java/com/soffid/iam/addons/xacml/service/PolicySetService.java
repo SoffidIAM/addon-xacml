@@ -10,6 +10,7 @@ import com.soffid.mda.annotation.*;
 
 import es.caib.seycon.ng.comu.Account;
 import es.caib.seycon.ng.model.AccountEntity;
+import es.caib.seycon.ng.servei.ConfiguracioService;
 
 import java.util.Collection;
 
@@ -23,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 	com.soffid.iam.addons.xacml.model.PolicyEntity.class,
 	com.soffid.iam.addons.xacml.model.RuleEntity.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class,
-	com.soffid.iam.addons.xacml.model.ExpressionEntity.class})
+	com.soffid.iam.addons.xacml.model.ExpressionEntity.class,
+	ConfiguracioService.class})
 public abstract class PolicySetService {
 
 	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_create.class})
