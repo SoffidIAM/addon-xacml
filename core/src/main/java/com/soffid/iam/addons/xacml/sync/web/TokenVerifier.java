@@ -1,14 +1,18 @@
 package com.soffid.iam.addons.xacml.sync.web;
 
 import java.math.BigInteger;
+import java.security.AlgorithmParameters;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,7 +88,7 @@ public class TokenVerifier {
 		return o;
 	}
 
-	private Algorithm createAlgorithm(Jwk key) throws NoSuchAlgorithmException, InvalidKeySpecException, InternalErrorException {
+	private Algorithm createAlgorithm(Jwk key) throws NoSuchAlgorithmException, InvalidKeySpecException, InternalErrorException, InvalidParameterSpecException {
 		if (key.getType().equals("RSA"))
 		{
 			KeyFactory kf = KeyFactory.getInstance("RSA");
@@ -107,13 +111,28 @@ public class TokenVerifier {
 			BigInteger x = new BigInteger(1, java.util.Base64.getUrlDecoder().decode((String) key.getAdditionalAttributes().get("x")));
 			BigInteger y = new BigInteger(1, java.util.Base64.getUrlDecoder().decode((String) key.getAdditionalAttributes().get("y")));
 			ECPoint p = new ECPoint(x, y);
-			PublicKey pk = kf.generatePublic(new ECPublicKeySpec( p, null ));
+			AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
 			if (key.getAlgorithm().equals("ES256"))
+			{
+				parameters.init(new ECGenParameterSpec("secp256r1"));
+				ECParameterSpec ecParameterSpec = parameters.getParameterSpec(ECParameterSpec.class);
+				PublicKey pk = kf.generatePublic(new ECPublicKeySpec( p, ecParameterSpec ));
 				return Algorithm.ECDSA256((ECPublicKey) pk, null);
+			}
 			else if (key.getAlgorithm().equals("ES384"))
+			{
+				parameters.init(new ECGenParameterSpec("secp384r1"));
+				ECParameterSpec ecParameterSpec = parameters.getParameterSpec(ECParameterSpec.class);
+				PublicKey pk = kf.generatePublic(new ECPublicKeySpec( p, ecParameterSpec ));
 				return Algorithm.ECDSA384((ECPublicKey) pk, null);
-			else if (key.getAlgorithm().equals("ES512"))
+			}
+			else if (key.getAlgorithm().equals("ES521"))
+			{
+				parameters.init(new ECGenParameterSpec("secp521r1"));
+				ECParameterSpec ecParameterSpec = parameters.getParameterSpec(ECParameterSpec.class);
+				PublicKey pk = kf.generatePublic(new ECPublicKeySpec( p, ecParameterSpec ));
 				return Algorithm.ECDSA512((ECPublicKey) pk, null);
+			}
 			else
 				throw new InternalErrorException ("Unsupported algorithm "+key.getAlgorithm()+" for key type "+key.getType());
 		}

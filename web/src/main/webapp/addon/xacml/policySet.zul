@@ -93,7 +93,8 @@
 		}
 		
 		
-		void createPolicySet(){
+		void createPolicySet()
+		{
 			try{
 				Object obj = esquema.getFellow("lista").getFellow("treebox").getSelectedItem().getValue().getInstance();
 				if(obj instanceof PolicySet)//PolicySet seleccionada
@@ -697,6 +698,15 @@
 						}
 					}
 				
+				void testPolicySet (Component c)
+				{
+					model.commit();
+					PolicySet ps = es.caib.zkib.datasource.XPathUtils.getValue(c, ".").getInstance();
+					com.soffid.iam.addons.xacml.service.ejb.PolicySetService svc =
+						new javax.naming.InitialContext()
+							.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
+					svc.test(ps);
+				}
 				]]>	
 			</zscript>
 			
@@ -767,6 +777,7 @@
 							</row>
 						</rows>
 					</grid>
+					<button label="Test policy set" onClick="testPolicySet(self)"/>
 				</vbox>
 				<vbox id="v_po" visible="false" width="99%">
 					<hbox width="100%" widths="93%, 2%, *" >

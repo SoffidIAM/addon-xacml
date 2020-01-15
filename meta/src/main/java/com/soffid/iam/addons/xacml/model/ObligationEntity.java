@@ -5,12 +5,16 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_OBLIGA" )
 @Depends ({com.soffid.iam.addons.xacml.model.ObligationsEntity.class,
 	com.soffid.iam.addons.xacml.model.AttributeAssignment.class})
 public abstract class ObligationEntity {
+	@Column (name="OBL_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="OBL_OBLIID", length=50)
 	public java.lang.String obligationId;

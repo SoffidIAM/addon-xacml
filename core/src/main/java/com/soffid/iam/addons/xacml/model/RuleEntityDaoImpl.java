@@ -125,7 +125,13 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 		String ruleId = vo.getRuleId().replace(" ", "");
 		vo.setRuleId(ruleId);
 		RuleEntity re = ruleToEntity(vo);
-		super.update (re);
+		if (re.getId() == null)
+		{
+			super.create(re);
+			vo.setId(re.getId());
+		}
+		else
+			super.update (re);
 		for (TargetEntity targetE: re.getTarget())
 		{
 			boolean found = false;

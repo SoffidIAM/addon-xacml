@@ -35,6 +35,7 @@ public abstract class PolicySetService {
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	 return null;
 	}
+
 	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_update.class})
 	@Transactional(rollbackFor={java.lang.Exception.class})
 	public com.soffid.iam.addons.xacml.common.PolicySet update(
@@ -42,6 +43,15 @@ public abstract class PolicySetService {
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	 return null;
 	}
+
+	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_update.class})
+	@Transactional(rollbackFor={java.lang.Exception.class})
+	public com.soffid.iam.addons.xacml.common.PolicySet test(
+		com.soffid.iam.addons.xacml.common.PolicySet policySet)
+		throws es.caib.seycon.ng.exception.InternalErrorException {
+	 return null;
+	}
+
 	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_delete.class})
 	@Transactional(rollbackFor={java.lang.Exception.class})
 	public void delete(
@@ -55,6 +65,7 @@ public abstract class PolicySetService {
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	 return null;
 	}
+
 	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_update.class})
 	@Transactional(rollbackFor={java.lang.Exception.class})
 	public com.soffid.iam.addons.xacml.common.Policy update(

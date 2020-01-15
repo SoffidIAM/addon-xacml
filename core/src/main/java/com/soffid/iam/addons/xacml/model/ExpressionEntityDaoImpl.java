@@ -98,7 +98,13 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 	@Override
 	protected void handleUpdate(Expression expression) throws Exception {
 		ExpressionEntity ee = expressionToEntity(expression);
-		super.update(ee);
+		if (ee.getId() == null)
+		{
+			super.create(ee);
+			expression.setId(ee.getId());
+		}
+		else
+			super.update(ee);
 		for (ExpressionEntity subE: ee.getSubexpression())
 		{
 			boolean found = false;

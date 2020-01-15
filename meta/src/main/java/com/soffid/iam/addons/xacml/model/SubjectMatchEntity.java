@@ -5,12 +5,16 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_SUBMAT" )
 @Depends ({com.soffid.iam.addons.xacml.common.SubjectMatch.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class})
 public abstract class SubjectMatchEntity {
+	@Column (name="SUB_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="SUB_MATCHID")
 	public com.soffid.iam.addons.xacml.common.MatchIdEnumeration matchId;

@@ -45,6 +45,7 @@ public class Duplicator {
 		nova.setPolicySetIdReference(new LinkedList<PolicySetIdReference>());
 		nova.setPolicyIdReference(new LinkedList<PolicyIdReference>());
 		nova.setVersion(versio);
+		nova.setParentPolicySet(null);
 		nova.setOrder(number + 1);
 		nova.setId(null);
 	

@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_TARGET" )
@@ -17,6 +18,9 @@ import com.soffid.mda.annotation.*;
 	com.soffid.iam.addons.xacml.model.RuleEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicySetEntity.class})
 public abstract class TargetEntity {
+	@Column (name="TAR_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="TAR_ID")
 	@Nullable

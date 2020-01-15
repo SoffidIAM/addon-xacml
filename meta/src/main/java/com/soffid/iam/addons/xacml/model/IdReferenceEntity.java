@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_IDREFE" ,
@@ -37,4 +38,6 @@ public abstract class IdReferenceEntity {
 	@Nullable
 	public java.lang.Integer order;
 
+	@Column (name="IDR_TEN_ID")
+	TenantEntity tenant;
 }
