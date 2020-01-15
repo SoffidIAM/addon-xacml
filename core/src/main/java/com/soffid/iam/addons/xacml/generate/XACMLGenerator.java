@@ -111,7 +111,7 @@ public class XACMLGenerator {
 				} 
 			}
 		}catch (Exception e) {
-			throw new Exception("Error generating xml file: " + e.getMessage());	
+			throw new Exception("Error generating xml file ", e);	
 		}
 	}
 	
@@ -133,7 +133,7 @@ public class XACMLGenerator {
 		 }
 		 else{
 			 root = doc.createElementNS(POLICY_NAMESPACE, "Policy");
-			 generatePolicy(root, (Policy) polSet);
+			 generatePolicy(root, (Policy) polSet, true);
 		 }
 		 doc.appendChild(root);
 		     
@@ -207,7 +207,7 @@ public class XACMLGenerator {
 	 		 node.appendChild(nodenou);
 	 	 }
 	 	 else if(comp instanceof Policy)
-	 		 generatePolicy(node, (Policy) comp);
+	 		 generatePolicy(node, (Policy) comp, false);
 	 	 else if(comp instanceof PolicySetIdReference)
 	 		 generatePolicySetIdReference(node, (PolicySetIdReference) comp);
 	 	 else if(comp instanceof PolicyIdReference)
@@ -251,9 +251,11 @@ public class XACMLGenerator {
 	}
 	
 	
-	private void generatePolicy(Element node, Policy comp) {
+	private void generatePolicy(Element node, Policy comp, boolean rootPolicy) {
 		Element policy;
-		if(node == null)
+		if (rootPolicy)
+			policy = node;
+		else if(node == null)
 			policy = doc.createElementNS(POLICY_NAMESPACE, "Policy");
 		else
 			policy = doc.createElement("Policy");
@@ -299,10 +301,11 @@ public class XACMLGenerator {
 	 	Rule rule = (Rule) it.next();
 	 	generateRule(policy, rule);
 	 }
-	 if(node != null)
-	 	node.appendChild(policy);
-	 else
-	 	doc.appendChild(policy);
+	 if (!rootPolicy)
+		 if(node != null)
+		 	node.appendChild(policy);
+		 else
+		 	doc.appendChild(policy);
 	}
 	
 	

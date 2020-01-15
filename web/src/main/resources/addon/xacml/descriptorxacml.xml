@@ -175,6 +175,16 @@
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
 			</new-instance-bean>
 		</finder>
+		<script-handler>
+			<insert-script><![CDATA[
+				if (parent != null && parent.instance != null 
+					&& parent.instance instanceof com.soffid.iam.addons.xacml.common.PolicySet )
+				{
+					instance.parentPolicySet = parent.instance.id;
+				}
+			]]>
+			</insert-script>
+		</script-handler>
 		<ejb-handler
 			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService">
 			<insert-method method="create" returnBean="true">
@@ -218,6 +228,16 @@
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
 			</new-instance-bean>
 		</finder>
+		<script-handler>
+			<insert-script><![CDATA[
+				if (parent != null && parent.instance != null 
+					&& parent.instance instanceof com.soffid.iam.addons.xacml.common.PolicySet )
+				{
+					instance.policySetId = parent.instance.id;
+				}
+			]]>
+			</insert-script>
+		</script-handler>
 		<ejb-handler
 			jndi="openejb:/local/soffid.ejb.com.soffid.iam.addons.xacml.service.PolicySetService">
 			<insert-method method="create" returnBean="true">

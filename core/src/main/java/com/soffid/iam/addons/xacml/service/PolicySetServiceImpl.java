@@ -1,15 +1,39 @@
 package com.soffid.iam.addons.xacml.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jboss.security.xacml.factories.RequestResponseContextFactory;
 import org.jboss.security.xacml.interfaces.RequestContext;
 import org.jboss.security.xacml.interfaces.ResponseContext;
+import org.jboss.security.xacml.interfaces.XACMLConstants;
+import org.jboss.security.xacml.sunxacml.Indenter;
+import org.jboss.security.xacml.sunxacml.attr.DateAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DateTimeAttribute;
+import org.jboss.security.xacml.sunxacml.attr.TimeAttribute;
+import org.jboss.security.xacml.sunxacml.ctx.Attribute;
+import org.jboss.security.xacml.sunxacml.ctx.RequestCtx;
+import org.jboss.security.xacml.sunxacml.ctx.Subject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import com.soffid.iam.addons.xacml.common.Expression;
 import com.soffid.iam.addons.xacml.common.PDPConfiguration;
@@ -32,6 +56,7 @@ import com.soffid.iam.addons.xacml.model.RuleEntity;
 import com.soffid.iam.addons.xacml.model.RuleEntityDao;
 import com.soffid.iam.addons.xacml.model.TargetEntity;
 import com.soffid.iam.addons.xacml.model.TargetEntityDao;
+import com.soffid.iam.addons.xacml.service.pool.SoffidPDP;
 import com.soffid.iam.addons.xacml.utils.ImportData;
 import com.soffid.iam.api.Account;
 import com.soffid.iam.api.Configuration;
@@ -42,6 +67,7 @@ import com.soffid.iam.model.VaultFolderEntityDao;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.PolicySetServiceBase {
+	Log log = LogFactory.getLog(getClass());
 	
 	protected com.soffid.iam.addons.xacml.common.PolicySet handleCreate(
 			com.soffid.iam.addons.xacml.common.PolicySet policySet) throws java.lang.Exception
@@ -87,6 +113,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.PolicySet policySet) throws java.lang.Exception
 	{
 		getPolicySetEntityDao().update(policySet);
+		handleTest(policySet);
 		updateTimeStamp();
 		return policySet;
 	}
@@ -123,6 +150,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			com.soffid.iam.addons.xacml.common.Policy policy) throws java.lang.Exception
 	{
 		getPolicyEntityDao().update(policy);
+		handleTest(policy);
 		updateTimeStamp();
 		return policy;
 	}
@@ -369,6 +397,152 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			}
 		}
 		return null;
+	}
+
+
+	@Override
+	protected PolicySet handleTest(PolicySet policySet) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<?xml version='1.0' encoding='utf-8'?>")
+			.append("<ns:jbosspdp xmlns:ns='urn:jboss:xacml:2.0'>")
+			.append("<ns:Policies>");
+		LinkedList<File> policySetFiles = new LinkedList<File>();
+		File f = File.createTempFile("policySet", ".xml");
+		FileOutputStream out = new FileOutputStream(f);
+		handleExportXACMLPolcySet(policySet.getPolicySetId(), policySet.getVersion(), out);
+		out.close ();
+		f.deleteOnExit();
+		sb.append("<ns:PolicySet>")
+			.append("<ns:Location>")
+			.append(f.toURI().toString())
+			.append("</ns:Location>")
+			.append("</ns:PolicySet>")
+			.append("</ns:Policies>")
+			.append("<ns:Locators>")
+			.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
+			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
+			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
+			.append("</ns:Locators>")
+			.append("</ns:jbosspdp>");
+		String result = sb.toString();
+		try {
+			SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
+			testPDP (jbossPDP);
+		} catch (Throwable e) {
+			boolean follow = false;
+			do {
+				follow = false;
+				if (e instanceof InvocationTargetException)
+				{
+					if (((InvocationTargetException) e).getTargetException() != null)
+					{
+						e = ((InvocationTargetException) e).getTargetException();
+						follow = true;
+					}
+				}
+				else if (e.getCause() != null && e.getCause() != e)
+				{
+					e = e.getCause();
+					follow = true;
+				}
+			} while (follow);
+			if (e instanceof InternalErrorException) throw (InternalErrorException) e;
+			else throw new InternalErrorException("Error validating policy "+policySet.getPolicySetId(), e);
+		} finally {
+			f.delete();
+		}
+		return policySet;
+	}
+
+
+	protected Policy handleTest(Policy policySet) throws Exception {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<?xml version='1.0' encoding='utf-8'?>")
+			.append("<ns:jbosspdp xmlns:ns='urn:jboss:xacml:2.0'>")
+			.append("<ns:Policies>");
+		LinkedList<File> policySetFiles = new LinkedList<File>();
+		File f = File.createTempFile("policySet", ".xml");
+		FileOutputStream out = new FileOutputStream(f);
+		handleExportXACMLPolicy(policySet.getPolicyId(), policySet.getVersion(), out);
+		out.close ();
+		f.deleteOnExit();
+		sb.append("<ns:Policy>")
+			.append("<ns:Location>")
+			.append(f.toURI().toString())
+			.append("</ns:Location>")
+			.append("</ns:Policy>")
+			.append("</ns:Policies>")
+			.append("<ns:Locators>")
+			.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
+			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
+			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
+			.append("</ns:Locators>")
+			.append("</ns:jbosspdp>");
+		String result = sb.toString();
+		try {
+			SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
+			testPDP (jbossPDP);
+		} catch (Throwable e) {
+			boolean follow = false;
+			do {
+				follow = false;
+				if (e instanceof InvocationTargetException)
+				{
+					if (((InvocationTargetException) e).getTargetException() != null)
+					{
+						e = ((InvocationTargetException) e).getTargetException();
+						follow = true;
+					}
+				}
+				else if (e.getCause() != null && e.getCause() != e)
+				{
+					e = e.getCause();
+					follow = true;
+				}
+			} while (follow);
+			if (e instanceof Exception) throw (Exception) e;
+			else throw new InternalErrorException("Error validating policy", e);
+		} finally {
+			f.delete();
+		}
+		return policySet;
+	}
+
+
+	private void testPDP(SoffidPDP jbossPDP) throws ParserConfigurationException, URISyntaxException {
+		LinkedList<Attribute> subjectAttributes = new LinkedList<Attribute>();
+		LinkedList<Attribute> resourceAttributes = new LinkedList<Attribute>();
+		LinkedList<Attribute> actionAttributes = new LinkedList<Attribute>();
+		LinkedList<Attribute> environmentAttributes = new LinkedList<Attribute>();
+
+		// Enviromment
+		environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE_TIME), (String) null, null, 
+				new DateTimeAttribute( new Date())));
+
+		environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_TIME), (String) null, null, 
+				new TimeAttribute( new Date())));
+		
+		environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE), (String) null, null, 
+				new DateAttribute( new Date())));
+
+		// Create empty document
+		Document d;
+		Element e;
+		d = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		e = d.createElement("Request");
+		d.appendChild(e);
+		
+		RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
+				resourceAttributes, actionAttributes, environmentAttributes, e);
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ctx.encode(out, new Indenter(5));
+		log.info ("Testing rules for:\n"+out.toString());
+
+		RequestContext req = RequestResponseContextFactory.createRequestCtx();
+		req.set(XACMLConstants.REQUEST_CTX, ctx);
+
+		jbossPDP.evaluate(req);
 	}
 
 }
