@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_VARDEF" )
@@ -12,6 +13,9 @@ import com.soffid.mda.annotation.*;
 	com.soffid.iam.addons.xacml.model.ExpressionEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicyEntity.class})
 public abstract class VariableDefinitionEntity {
+	@Column (name="VAR_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="VAD_VARIID", length=50)
 	@Nullable

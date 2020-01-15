@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_RULEEN" )
@@ -13,6 +14,9 @@ import com.soffid.mda.annotation.*;
 	com.soffid.iam.addons.xacml.model.TargetEntity.class,
 	com.soffid.iam.addons.xacml.model.ConditionEntity.class})
 public abstract class RuleEntity {
+	@Column (name="RUL_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="RUL_POLICY")
 	public com.soffid.iam.addons.xacml.model.PolicyEntity policy;

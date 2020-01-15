@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_CONDIT" )
@@ -27,6 +28,10 @@ public abstract class ConditionEntity {
 	@Column (name="CON_CONDID", length=50)
 	@Nullable
 	public java.lang.String conditionId;
+
+	@Column (name="CON_TEN_ID")
+	TenantEntity tenant;
+
 
 	@DaoOperation
 	public com.soffid.iam.addons.xacml.model.ConditionEntity create(

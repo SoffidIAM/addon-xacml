@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_EXPRES" )
@@ -26,6 +27,10 @@ public abstract class ExpressionEntity {
 	@Nullable
 	@Identifier
 	public java.lang.Long id;
+
+	@Column (name="EXE_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="EXE_CONDIC")
 	@Nullable

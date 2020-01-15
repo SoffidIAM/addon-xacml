@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_COMPAS" ,
@@ -28,5 +29,8 @@ public abstract class CombinerParametersEntity {
 
 	@Column (name="COP_POLICY")
 	public com.soffid.iam.addons.xacml.model.PolicyEntity policy;
+
+	@Column (name="COP_TEN_ID")
+	TenantEntity tenant;
 
 }

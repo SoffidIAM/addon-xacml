@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_ENVMAT" )
@@ -40,6 +41,10 @@ public abstract class EnvironmentMatchEntity {
 	@Column (name="ENV_ATTDES", length=250)
 	@Nullable
 	public java.lang.String environmentAttributeDesignator;
+
+	@Column (name="ENV_TEN_ID")
+	TenantEntity tenant;
+
 
 	@DaoFinder
 	public com.soffid.iam.addons.xacml.model.EnvironmentMatchEntity findEnvironmentMatchById(

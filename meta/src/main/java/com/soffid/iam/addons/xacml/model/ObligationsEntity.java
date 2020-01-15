@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_OBLIGS" )
@@ -12,6 +13,9 @@ import com.soffid.mda.annotation.*;
 	com.soffid.iam.addons.xacml.model.PolicyEntity.class,
 	com.soffid.iam.addons.xacml.model.ObligationEntity.class})
 public abstract class ObligationsEntity {
+	@Column (name="OBS_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="OBS_POLSET")
 	public com.soffid.iam.addons.xacml.model.PolicySetEntity policySet;

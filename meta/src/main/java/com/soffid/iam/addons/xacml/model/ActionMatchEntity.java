@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_ACTMAT" )
@@ -19,6 +20,9 @@ public abstract class ActionMatchEntity {
 	@Nullable
 	@Identifier
 	public java.lang.Long id;
+
+	@Column (name="ACT_TEN_ID")
+	TenantEntity tenant;
 
 	@Column (name="ACT_ATTSEL", length=250)
 	@Nullable

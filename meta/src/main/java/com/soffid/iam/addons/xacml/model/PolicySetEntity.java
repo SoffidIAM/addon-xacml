@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_POLSET" )
@@ -20,6 +21,9 @@ import com.soffid.mda.annotation.*;
 	com.soffid.iam.addons.xacml.model.PolicySetIdReferenceEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicyIdReferenceEntity.class})
 public abstract class PolicySetEntity {
+	@Column (name="PSE_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="PSE_POLIID", length=50)
 	public java.lang.String policySetId;

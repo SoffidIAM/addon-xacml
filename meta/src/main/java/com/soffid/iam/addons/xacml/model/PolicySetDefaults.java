@@ -5,11 +5,15 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_POLISD" )
 @Depends ({com.soffid.iam.addons.xacml.model.PolicySetEntity.class})
 public abstract class PolicySetDefaults {
+	@Column (name="PSD_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="PSD_POLSET")
 	public com.soffid.iam.addons.xacml.model.PolicySetEntity policySet;

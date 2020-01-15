@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_ATTASS" )
@@ -21,5 +22,8 @@ public abstract class AttributeAssignment {
 	@Column (name="ID")
 	@Identifier
 	public java.lang.Long id;
+
+	@Column (name="AAS_TEN_ID")
+	TenantEntity tenant;
 
 }

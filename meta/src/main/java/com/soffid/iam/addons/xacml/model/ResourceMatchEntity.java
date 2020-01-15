@@ -5,12 +5,16 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_RESMAT" )
 @Depends ({com.soffid.iam.addons.xacml.common.ResourceMatch.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class})
 public abstract class ResourceMatchEntity {
+	@Column (name="RES_TEN_ID")
+	TenantEntity tenant;
+
 
 	@Column (name="RES_MATCID")
 	public com.soffid.iam.addons.xacml.common.MatchIdEnumeration matchId;

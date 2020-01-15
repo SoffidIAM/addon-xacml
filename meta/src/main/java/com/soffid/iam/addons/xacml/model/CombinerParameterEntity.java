@@ -5,6 +5,7 @@
 //
 
 package com.soffid.iam.addons.xacml.model;
+import com.soffid.iam.model.TenantEntity;
 import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_COMPAM" )
@@ -24,5 +25,8 @@ public abstract class CombinerParameterEntity {
 
 	@Column (name="CPE_COMPAR")
 	public com.soffid.iam.addons.xacml.model.CombinerParametersEntity combinerParameters;
+
+	@Column (name="CPE_TEN_ID")
+	TenantEntity tenant;
 
 }
