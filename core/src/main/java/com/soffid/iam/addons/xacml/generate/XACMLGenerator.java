@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -193,13 +194,34 @@ public class XACMLGenerator {
 	  Collection<Policy> policyCollectionChilds = policySetService.findPolicyChildrenPolicySet(policySet.getId());
 	  Collection<PolicySetIdReference> policySetIdRefCollectionChilds = policySet.getPolicySetIdReference();
 	  Collection<PolicyIdReference> policyIdReferenceCollectionChilds = policySet.getPolicyIdReference();
-	  int childs = policySetCollectionChilds.size() + policyCollectionChilds.size() + policySetIdRefCollectionChilds
-	 		 .size() + policyIdReferenceCollectionChilds.size();
+	  
+	  List<Object> list = new LinkedList<Object>();
+	  list.addAll(policyIdReferenceCollectionChilds);
+	  list.addAll(policySetIdRefCollectionChilds);
+	  list.addAll(policyCollectionChilds);
+	  list.addAll(policySetCollectionChilds);
+	  
+	  list.sort(new Comparator<Object>() {
+		public int compare(Object o1, Object o2) {
+			return getOrder(o1).compareTo( getOrder(o2) );
+		}
 
-	  for( int i = 0; i < childs; i ++)
+		private Integer getOrder(Object o) {
+			if (o instanceof PolicySet)
+				return ((PolicySet) o).getOrder();
+			if (o instanceof Policy)
+				return ((Policy) o).getOrder();
+			if (o instanceof PolicySetIdReference)
+				return ((PolicySetIdReference) o).getOrder();
+			if (o instanceof PolicyIdReference)
+				return ((PolicyIdReference) o).getOrder();
+			return 0;
+		}
+	  });
+	  
+	  
+	  for(Object comp: list )
 	  {
-	 	 Object comp = findElementAt(i + 1 , policySetCollectionChilds, policyCollectionChilds, policySetIdRefCollectionChilds,
-	 			 policyIdReferenceCollectionChilds);
 	 	 if(comp instanceof PolicySet)
 	 	 {
 	 		 Element nodenou = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
@@ -445,52 +467,6 @@ public class XACMLGenerator {
 		node.appendChild(varDefElement);
 	}
 	
-	
-	private Object findElementAt(int i,
-			Collection<PolicySet> policySetCollectionChilds,
-			Collection<Policy> policyCollectionChilds,
-			Collection<PolicySetIdReference> policySetIdRefCollectionChilds,
-			Collection<PolicyIdReference> policyIdReferenceCollectionChilds) {
-		Object litoca = new Object();
-		for(Iterator<PolicySet> it = policySetCollectionChilds.iterator(); it.hasNext();)
-		{
-			PolicySet policySet = it.next();
-			if(policySet.getOrder() == i)
-			{
-				litoca = (Object) policySet;
-				break;
-			}
-		}
-		for(Iterator<Policy> it = policyCollectionChilds.iterator(); it.hasNext();)
-		{
-			Policy policy = it.next();
-			if(policy.getOrder() == i)
-			{
-				litoca = (Object) policy;
-				break;
-			}
-		}
-		for(Iterator<PolicySetIdReference> it = policySetIdRefCollectionChilds.iterator(); it.hasNext();)
-		{
-			PolicySetIdReference policySetIdRef = it.next();
-			if(policySetIdRef.getOrder() == i)
-			{
-				litoca = (Object) policySetIdRef;
-				break;
-			}
-		}	
-		for(Iterator<PolicyIdReference> it = policyIdReferenceCollectionChilds.iterator(); it.hasNext();)
-		{
-			PolicyIdReference policyIdRef = it.next();
-			if(policyIdRef.getOrder() == i)
-			{
-				litoca = (Object) policyIdRef;
-				break;
-			}
-		}
-		
-		return litoca;
-	}
 	
 	
 	private void generateTarget(Element node, Target target)
