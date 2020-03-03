@@ -83,6 +83,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 					policySetId));
 		}
 		else{
+			handleTest(policySet);
 			updateTimeStamp();
 			return getPolicySetEntityDao().toPolicySet(getPolicySetEntityDao().create(policySet));
 		}
@@ -140,6 +141,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			throw new InternalErrorException(String.format(Messages.getString("PolicySetServiceImpl.PolicyDuplicated"),  //$NON-NLS-1$
 					policyId));
 		}else{
+			handleTest(policy);
 			updateTimeStamp();
 			return getPolicyEntityDao().toPolicy(getPolicyEntityDao().create(policy));
 		}

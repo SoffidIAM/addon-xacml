@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
+import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.xacml.sync.web.XACMLExternalPEP;
 import com.soffid.iam.addons.xacml.sync.web.XACMLPasswordVault;
 import com.soffid.iam.addons.xacml.sync.web.XACMLPolicyServlet;
@@ -35,7 +36,6 @@ import es.caib.seycon.ng.sync.jetty.JettyServer;
 
 public class XACMLBootServiceImpl extends XACMLBootServiceBase {
 	Log log = LogFactory.getLog(getClass());
-	private ApplicationContext applicationContext;
 	
 	@Override
 	protected void handleConsoleBoot() throws Exception {
@@ -44,7 +44,7 @@ public class XACMLBootServiceImpl extends XACMLBootServiceBase {
 
 	private void updateFromVersion1() throws IOException, Exception 
 	{
-		DataSource ds = (DataSource) applicationContext.getBean("dataSource"); //$NON-NLS-1$
+		DataSource ds = (DataSource) ServiceLocator.instance().getService("dataSource"); //$NON-NLS-1$
 		final Connection conn = ds.getConnection();
 		
 		try
@@ -99,12 +99,6 @@ public class XACMLBootServiceImpl extends XACMLBootServiceBase {
 		
 	}
 	
-
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
 
 	private void executeSentence(Connection conn, String sql, Object... objects)
 			throws SQLException {
