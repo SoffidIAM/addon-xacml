@@ -152,7 +152,8 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 			if (subject.getId() == null){
 				SubjectMatchEntity sm = getSubjectMatchEntityDao().create(subject, te);
 				sm.setTarget(te);
-				getSubjectMatchEntityDao().update(sm);
+				getSubjectMatchEntityDao().create(sm);
+				subject.setId(sm.getId());
 			}else
 				getSubjectMatchEntityDao().update(subject);
 		}
@@ -177,6 +178,7 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 				ResourceMatchEntity rm = getResourceMatchEntityDao().create(resource, te);
 				rm.setTarget(te);
 				getResourceMatchEntityDao().update(rm);
+				resource.setId(rm.getId());
 			}else
 				getResourceMatchEntityDao().update(resource);
 		}
@@ -201,6 +203,7 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 				ActionMatchEntity ae = getActionMatchEntityDao().create(action, te);
 				ae.setTarget(te);
 				getActionMatchEntityDao().update(ae);
+				action.setId(ae.getId());
 			}else
 				getActionMatchEntityDao().update(action);
 		}
@@ -225,6 +228,7 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 				EnvironmentMatchEntity ee = getEnvironmentMatchEntityDao().create(environment, te);
 				ee.setTarget(te);
 				getEnvironmentMatchEntityDao().update(ee);
+				environment.setId(ee.getId());
 			}else
 				getEnvironmentMatchEntityDao().update(environment);
 		}

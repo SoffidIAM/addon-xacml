@@ -83,9 +83,10 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 					policySetId));
 		}
 		else{
-			handleTest(policySet);
 			updateTimeStamp();
-			return getPolicySetEntityDao().toPolicySet(getPolicySetEntityDao().create(policySet));
+			policySet = getPolicySetEntityDao().toPolicySet(getPolicySetEntityDao().create(policySet));
+			handleTest(policySet);
+			return policySet;
 		}
 	}
 
@@ -141,9 +142,10 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			throw new InternalErrorException(String.format(Messages.getString("PolicySetServiceImpl.PolicyDuplicated"),  //$NON-NLS-1$
 					policyId));
 		}else{
-			handleTest(policy);
 			updateTimeStamp();
-			return getPolicyEntityDao().toPolicy(getPolicyEntityDao().create(policy));
+			policy = getPolicyEntityDao().toPolicy(getPolicyEntityDao().create(policy));
+			handleTest(policy);
+			return policy;
 		}
 	}
 	
@@ -413,45 +415,50 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 		FileOutputStream out = new FileOutputStream(f);
 		handleExportXACMLPolcySet(policySet.getPolicySetId(), policySet.getVersion(), out);
 		out.close ();
-		f.deleteOnExit();
-		sb.append("<ns:PolicySet>")
-			.append("<ns:Location>")
-			.append(f.toURI().toString())
-			.append("</ns:Location>")
-			.append("</ns:PolicySet>")
-			.append("</ns:Policies>")
-			.append("<ns:Locators>")
-			.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
-			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
-			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
-			.append("</ns:Locators>")
-			.append("</ns:jbosspdp>");
-		String result = sb.toString();
-		try {
-			SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
-			testPDP (jbossPDP);
-		} catch (Throwable e) {
-			boolean follow = false;
-			do {
-				follow = false;
-				if (e instanceof InvocationTargetException)
-				{
-					if (((InvocationTargetException) e).getTargetException() != null)
+		if ( f.length() == 0) {
+			f.delete();
+			// Nothing to test
+		} else {
+			f.deleteOnExit();
+			sb.append("<ns:PolicySet>")
+				.append("<ns:Location>")
+				.append(f.toURI().toString())
+				.append("</ns:Location>")
+				.append("</ns:PolicySet>")
+				.append("</ns:Policies>")
+				.append("<ns:Locators>")
+				.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
+				.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
+				.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
+				.append("</ns:Locators>")
+				.append("</ns:jbosspdp>");
+			String result = sb.toString();
+			try {
+				SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
+				testPDP (jbossPDP);
+			} catch (Throwable e) {
+				boolean follow = false;
+				do {
+					follow = false;
+					if (e instanceof InvocationTargetException)
 					{
-						e = ((InvocationTargetException) e).getTargetException();
+						if (((InvocationTargetException) e).getTargetException() != null)
+						{
+							e = ((InvocationTargetException) e).getTargetException();
+							follow = true;
+						}
+					}
+					else if (e.getCause() != null && e.getCause() != e)
+					{
+						e = e.getCause();
 						follow = true;
 					}
-				}
-				else if (e.getCause() != null && e.getCause() != e)
-				{
-					e = e.getCause();
-					follow = true;
-				}
-			} while (follow);
-			if (e instanceof InternalErrorException) throw (InternalErrorException) e;
-			else throw new InternalErrorException("Error validating policy "+policySet.getPolicySetId(), e);
-		} finally {
-			f.delete();
+				} while (follow);
+				if (e instanceof InternalErrorException) throw (InternalErrorException) e;
+				else throw new InternalErrorException("Error validating policy "+policySet.getPolicySetId(), e);
+			} finally {
+				f.delete();
+			}
 		}
 		return policySet;
 	}
@@ -467,45 +474,49 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 		FileOutputStream out = new FileOutputStream(f);
 		handleExportXACMLPolicy(policySet.getPolicyId(), policySet.getVersion(), out);
 		out.close ();
-		f.deleteOnExit();
-		sb.append("<ns:Policy>")
-			.append("<ns:Location>")
-			.append(f.toURI().toString())
-			.append("</ns:Location>")
-			.append("</ns:Policy>")
-			.append("</ns:Policies>")
-			.append("<ns:Locators>")
-			.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
-			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
-			.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
-			.append("</ns:Locators>")
-			.append("</ns:jbosspdp>");
-		String result = sb.toString();
-		try {
-			SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
-			testPDP (jbossPDP);
-		} catch (Throwable e) {
-			boolean follow = false;
-			do {
-				follow = false;
-				if (e instanceof InvocationTargetException)
-				{
-					if (((InvocationTargetException) e).getTargetException() != null)
+		if ( f.length() == 0) {
+			f.delete();
+		} else {
+			f.deleteOnExit();
+			sb.append("<ns:Policy>")
+				.append("<ns:Location>")
+				.append(f.toURI().toString())
+				.append("</ns:Location>")
+				.append("</ns:Policy>")
+				.append("</ns:Policies>")
+				.append("<ns:Locators>")
+				.append("<ns:Locator Name='org.jboss.security.xacml.locators.JBossPolicySetLocator'/>")
+				.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule'/>")
+				.append("<ns:Locator Name='com.soffid.iam.addons.xacml.service.SoffidPolicyLocator'/>")
+				.append("</ns:Locators>")
+				.append("</ns:jbosspdp>");
+			String result = sb.toString();
+			try {
+				SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
+				testPDP (jbossPDP);
+			} catch (Throwable e) {
+				boolean follow = false;
+				do {
+					follow = false;
+					if (e instanceof InvocationTargetException)
 					{
-						e = ((InvocationTargetException) e).getTargetException();
+						if (((InvocationTargetException) e).getTargetException() != null)
+						{
+							e = ((InvocationTargetException) e).getTargetException();
+							follow = true;
+						}
+					}
+					else if (e.getCause() != null && e.getCause() != e)
+					{
+						e = e.getCause();
 						follow = true;
 					}
-				}
-				else if (e.getCause() != null && e.getCause() != e)
-				{
-					e = e.getCause();
-					follow = true;
-				}
-			} while (follow);
-			if (e instanceof Exception) throw (Exception) e;
-			else throw new InternalErrorException("Error validating policy", e);
-		} finally {
-			f.delete();
+				} while (follow);
+				if (e instanceof Exception) throw (Exception) e;
+				else throw new InternalErrorException("Error validating policy", e);
+			} finally {
+				f.delete();
+			}
 		}
 		return policySet;
 	}
