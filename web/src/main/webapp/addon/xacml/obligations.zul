@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+
+<?component name="expressionEditor" macro-uri="expressionEditor.zul"?>
+
+<div xmlns:h="http://www.w3.org/1999/xhtml"
+	use="com.soffid.iam.addons.xacml.web.ObligationHandler" id="handler"
+	dataPath="${arg.dataPath}">
+	<style>
+		div.datatable.obligation-mattrix {
+			width:100%;
+			width: calc( 100% - 48px );
+			display: inline-block;
+			vertical-align: top;
+		}
+	</style>
+	<div sclass="section" width="100%">
+		<customfield3 label="${c:l('xacml_policySet.Obligations')}" dataType="SEPARATOR"/>
+		<datatable  sclass="variable-mattrix datatable" dataPath="${arg.dataPath}" id="gridObligations" enablefilter="false" multiselect="true" 
+			translatelabels="true"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('xacml_policySet.Obligation')}
+  value: obligationId
+- name:  ${c:l('xacml_policySet.fulFillOn') }
+  value: fulfillOn
+- name:  ${c:l('xacml_policySet.attribute') }
+  value: attributeName
+- name:  ${c:l('xacml_policySet.value') }
+  value: attributeValue
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<window id="var" closable="false" title="${c:l('xacml_policySet.Obligation') }"
+		position="top,center" 
+		visible="false" 
+		fulfill="var.onOpen" 
+		style="min-width: 500px; width: 90%; max-width: 1500px">
+		<form2 dataPath="../gridObligations:/" id="form">
+			<customfield3 bind="obligationId" maxlength="50" required="true" label="${c:l('xacml_policySet.Obligation') }" dataType="STRING"/>
+			<customfield3 bind="fulfillOn" enumeration="com.soffid.iam.addons.xacml.common.EffectTypeEnumeration" required="true" label="${c:l('xacml_policySet.fulFillOn') }" dataType="STRING"/>
+			<customfield3 bind="attributeName" maxlength="512" required="true" label="${c:l('xacml_policySet.attribute') }" dataType="STRING"/>
+			<customfield3 bind="attributeValue" maxlength="512" required="true" label="${c:l('xacml_policySet.value') }" dataType="STRING"/>
+			<div style="text-align: right; width: 100%">
+				<button image="/img/undo-r.svg" label="${c:l('common.undo')}" 
+					onClick="ref:handler.wizardBack" />
+				<button image="/img/ok-r.svg" label="${c:l('error.zul.Tancar') }"
+					onClick="ref:handler.wizardApply"/>
+			</div>
+		</form2>
+	</window>
+	
+</div>

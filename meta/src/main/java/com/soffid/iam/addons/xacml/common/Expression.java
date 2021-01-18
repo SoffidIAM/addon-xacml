@@ -16,6 +16,7 @@ public  class Expression {
 	@Nullable
 	public java.lang.Long id;
 
+	@Nullable
 	public com.soffid.iam.addons.xacml.common.FunctionEnumeration name;
 
 	public java.lang.String expressionType;

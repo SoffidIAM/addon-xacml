@@ -189,6 +189,17 @@ public abstract class PolicySetService {
 		java.io.OutputStream outputStream)
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	}
+
+	
+	@Transactional(rollbackFor={java.lang.Exception.class})
+	public void exportXACMLPolicySet(
+		java.lang.String policySetId, 
+		java.lang.String version, 
+		java.io.OutputStream outputStream,
+		boolean childPolicies)
+		throws es.caib.seycon.ng.exception.InternalErrorException {
+	}
+
 	@Operation ( grantees={com.soffid.iam.addons.xacml.service.anonymous.class})
 	@Transactional(rollbackFor={java.lang.Exception.class})
 	public org.jboss.security.xacml.interfaces.ResponseContext evaluate(
@@ -206,6 +217,17 @@ public abstract class PolicySetService {
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	}
 	
+	@Operation ( grantees={com.soffid.iam.addons.xacml.service.policySet_query.class})
+	@Transactional(rollbackFor={java.lang.Exception.class})
+	public void exportXACMLPolicy(
+		java.lang.String policyId, 
+		java.lang.String version, 
+		java.io.OutputStream outputStream,
+		boolean dummyPolicySet,
+		boolean allRules, Integer ruleNumber)
+		throws es.caib.seycon.ng.exception.InternalErrorException {
+	}
+
 	public Collection<Account> findFolderAccounts(String folder)
 	{ return null; }
 }

@@ -211,7 +211,7 @@ public class Duplicator {
 		Rule nova = new Rule (sourceR);
 		nova.setId(null);
 		nova.setTarget(new LinkedList<Target>());
-		nova.setCondicion(new LinkedList<Condition>());
+		nova.setCondition(new LinkedList<Condition>());
 		
 		String newPath = XPathUtils.createPath(ds, targetPath+"/rule", nova);
 		

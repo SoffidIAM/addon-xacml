@@ -25,7 +25,7 @@ public abstract class RuleEntity {
 	public java.util.Collection<com.soffid.iam.addons.xacml.model.TargetEntity> target;
 
 	@ForeignKey (foreignColumn="CON_RULE")
-	public java.util.Collection<com.soffid.iam.addons.xacml.model.ConditionEntity> condicion;
+	public java.util.Collection<com.soffid.iam.addons.xacml.model.ConditionEntity> condition;
 
 	@Column (name="RUL_DESCRI", length=250)
 	@Nullable

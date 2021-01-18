@@ -37,4 +37,6 @@ public class PolicySet {
 	@Nullable
 	public java.util.Collection<com.soffid.iam.addons.xacml.common.PolicyIdReference> policyIdReference;
 
+	@Nullable
+	public java.util.Collection<com.soffid.iam.addons.xacml.common.Obligation> obligation;
 }

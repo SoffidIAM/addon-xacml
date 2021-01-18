@@ -70,7 +70,7 @@ public class ConditionEntityDaoImpl extends ConditionEntityDaoBase
 			if (!ce.getExpression().getId().equals (exp.getId()))	
 				getExpressionEntityDao().remove(ce.getExpression());
 		}
-		if (exp.getId() == null){
+		if (exp.getId() == null || getExpressionEntityDao().load(exp.getId()) == null){
 			ExpressionEntity ee = getExpressionEntityDao().create(exp, ce);
 			ee.setCondicion(ce);
 		}else

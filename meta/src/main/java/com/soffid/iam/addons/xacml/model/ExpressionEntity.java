@@ -37,6 +37,7 @@ public abstract class ExpressionEntity {
 	public com.soffid.iam.addons.xacml.model.ConditionEntity condicion;
 
 	@Column (name="EXE_NAME")
+	@Nullable
 	public com.soffid.iam.addons.xacml.common.FunctionEnumeration name;
 
 	@Column (name="EXE_EXPTYP", length=50)

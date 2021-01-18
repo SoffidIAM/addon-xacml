@@ -255,6 +255,6 @@
 	</dependencyManagement>
 	<properties>
 		<!-- posem ací les dependències dels workflows -->
-		<console.version>2.5.0</console.version>
+		<console.version>3.0.0-SNAPSHOT</console.version>
 	</properties>
 </project>

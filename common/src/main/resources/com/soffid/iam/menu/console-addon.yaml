@@ -1,0 +1,19 @@
+- name: soffid.admin
+  img: /img/menu/laboratory.svg
+  options:
+      - name: seu.configuration
+        img_old: /img/menu/system-settings.png
+        img: /img/menu/toolbox.svg
+        options:
+        - name: seu.security
+          img: /img/menu/security.svg
+          options:
+          - name: policySet.Titol
+            url: /addon/xacml/policySet.zul
+            img: /img/menu/xacml.svg
+            permissions: ["seu:xacml:show"]
+          - name: xacml.apply
+            url: /addon/xacml/applyPolicySet.zul
+            img: /img/menu/xacml-apply.svg
+            permissions: ["seu:xacml:show"]
+            

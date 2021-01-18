@@ -12,9 +12,11 @@ import java.security.cert.CertificateException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,8 +35,10 @@ import org.xml.sax.SAXException;
 import com.soffid.iam.addons.xacml.common.ActionMatch;
 import com.soffid.iam.addons.xacml.common.Condition;
 import com.soffid.iam.addons.xacml.common.DataType;
+import com.soffid.iam.addons.xacml.common.EffectTypeEnumeration;
 import com.soffid.iam.addons.xacml.common.EnvironmentMatch;
 import com.soffid.iam.addons.xacml.common.Expression;
+import com.soffid.iam.addons.xacml.common.Obligation;
 import com.soffid.iam.addons.xacml.common.Policy;
 import com.soffid.iam.addons.xacml.common.PolicyCriteria;
 import com.soffid.iam.addons.xacml.common.PolicyIdReference;
@@ -51,12 +55,12 @@ import com.soffid.iam.addons.xacml.service.PolicySetService;
 import es.caib.seycon.ng.exception.InternalErrorException;
 
 public class XACMLGenerator {
-	
+
 	private static final String identationReference = "{http://xml.apache.org/xslt}indent-amount";
 	Document doc;
-    private DocumentBuilder dBuilder;
-    PolicySetService policySetService;
-    
+	private DocumentBuilder dBuilder;
+	PolicySetService policySetService;
+
 	final static String XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
 	final static String POLICY_NAMESPACE = "urn:oasis:names:tc:xacml:2.0:policy:schema:os";
 	final static String CONTEXT_NAMESPACE = "urn:oasis:names:tc:xacml:2.0:context:schema:os";
@@ -68,461 +72,484 @@ public class XACMLGenerator {
 	final static String DATATYPEANYURI = "http://www.w3.org/2001/XMLSchema#anyURI";
 	final static String DATATYPEBOOLEAN = "http://www.w3.org/2001/XMLSchema#boolean";
 	final static String DATATYPEDOUBLE = "http://www.w3.org/2001/XMLSchema#double";
-	final static String DATATYPEHEXBINARY = "http://www.w3.org/2001/XMLSchema#hexBinary"; 
+	final static String DATATYPEHEXBINARY = "http://www.w3.org/2001/XMLSchema#hexBinary";
 	final static String DATATYPEBASE64BINARY = "http://www.w3.org/2001/XMLSchema#base64Binary";
 	final static String DATATYPEYEARMONTH = "http://www.w3.org/TR/2002/WD-xquery-operators-20020816#yearMonthDuration";
 	final static String DATATYPEDAYTIME = "http://www.w3.org/TR/2002/WD-xquery-operators-20020816#dayTimeDuration";
 	final static String DATATYPEIPADDRESS = "urn:oasis:names:tc:xacml:2.0:data-type:ipAddress";
-	final static String DATATYPEDNSNAME= "urn:oasis:names:tc:xacml:2.0:data-type:dnsName";
+	final static String DATATYPEDNSNAME = "urn:oasis:names:tc:xacml:2.0:data-type:dnsName";
 	final static String DATATYPERFC822NAME = "urn:oasis:names:tc:xacml:1.0:data-type:rfc822Name";
 	final static String DATATYPEX500NAME = "urn:oasis:names:tc:xacml:1.0:data-type:x500Name";
 	final static String function10 = "urn:oasis:names:tc:xacml:1.0:function:";
 	final static String function20 = "urn:oasis:names:tc:xacml:2.0:function:";
-	
-	public XACMLGenerator(PolicySetService pss){
-		super(); 
+
+	public XACMLGenerator(PolicySetService pss) {
+		super();
 		policySetService = pss;
 	}
-	
-	public void generate (OutputStream out, String policySetId, String version) throws Exception{
+
+	public void generate(OutputStream out, String policySetId, String version, boolean childRules) throws Exception {
 		PolicySetCriteria criteria = new PolicySetCriteria();
 		criteria.setPolicySetId(policySetId);
 		criteria.setVersion(version);
-		try{
+		try {
 			Collection<PolicySet> polSetCollection = policySetService.findPolicySetByCriteria(criteria);
-			if(polSetCollection != null){
-				for(PolicySet polSet: polSetCollection){
-					generate(out, polSet);
-				} 
+			if (polSetCollection != null) {
+				for (PolicySet polSet : polSetCollection) {
+					generate(out, polSet, childRules, false, true, -1);
+				}
 			}
-		}catch (Exception e) {
-			throw new Exception("Error generating xml file: " + e.getMessage());	
+		} catch (Exception e) {
+			throw new Exception("Error generating xml file ", e);
 		}
 	}
-	
-	public void generatePolicy (OutputStream out, String policyId, String version) throws Exception{
+
+	public void generatePolicy(OutputStream out, String policyId, String version, boolean dummyPolicySet,
+			boolean allRules, int ruleNumber) throws Exception {
 		PolicyCriteria criteria = new PolicyCriteria();
 		criteria.setPolicyId(policyId);
 		criteria.setVersion(version);
-		try{
+		try {
 			Collection<Policy> polCollection = policySetService.findPolicyByCriteria(criteria);
-			if(polCollection != null){
-				for(Policy pol: polCollection){
-					generate(out, pol);
-				} 
+			if (polCollection != null) {
+				for (Policy pol : polCollection) {
+					generate(out, pol, false, dummyPolicySet, allRules, ruleNumber);
+				}
 			}
-		}catch (Exception e) {
-			throw new Exception("Error generating xml file ", e);	
+		} catch (Exception e) {
+			throw new Exception("Error generating xml file ", e);
 		}
 	}
-	
-	
-	public void generate (OutputStream out, Object polSet) throws SAXException, IOException, ParserConfigurationException, 
-		TransformerException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException, 
-		NoSuchAlgorithmException, CertificateException, IllegalStateException, NoSuchProviderException, 
-		SignatureException, InternalErrorException {
-		
-		 DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		 dbFactory.setNamespaceAware(true);
-		 dBuilder = dbFactory.newDocumentBuilder();
-		 doc = dBuilder.newDocument();
-		 
-		 Element root;
-		 if(polSet instanceof PolicySet){
-			 root = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
-			 generatePolicySet(root, (PolicySet) polSet);
-		 }
-		 else{
-			 root = doc.createElementNS(POLICY_NAMESPACE, "Policy");
-			 generatePolicy(root, (Policy) polSet, true);
-		 }
-		 doc.appendChild(root);
-		     
-		 // write the content into xml file
-		 TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		 Transformer transformer = transformerFactory.newTransformer();
-		 transformer.setOutputProperty(identationReference, "2");
-		 transformer.setOutputProperty(OutputKeys.INDENT, "yes");  
-		 
-		 DOMSource source = new DOMSource(doc);
-		 StreamResult result = new StreamResult(out);
-		 transformer.transform(source, result);
-		 
-		}
 
-
-	private void generatePolicySet(Element node, PolicySet policySet) throws SAXException, IOException, 
-			InternalErrorException
-	{
-	  node.setAttribute("PolicySetId", policySet.getPolicySetId());
-	  String version = policySet.getVersion();
-	  if (version == null || version.isEmpty())
-	 	 node.setAttribute("Version", "1");
-	  else
-	 	 node.setAttribute("Version", version);
-	  node.setAttribute("PolicyCombiningAlgId", 
-	 		 "urn:oasis:names:tc:xacml:1.0:policy-combining-algorithm:" + 
-	 				 policySet.getPolicyCombiningAlgId().toString().toLowerCase().replace('_', '-'));
-	  
-	  String description = policySet.getDescription();
-	  if(description != null && !description.isEmpty())
-	  {
-	 	 Element descrip = doc.createElement("Description");
-	 	 descrip.setTextContent(description);
-	 	 node.appendChild(descrip);
-	  }
-	  
-	  /// Add Policy defaults
-	  Element pdef = doc.createElement("PolicySetDefaults");
-	  Element xpv = doc.createElement("XPathVersion");
-	  xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
-	  pdef.appendChild(xpv);
-	  node.appendChild(pdef);
-	  
-	  Collection<Target> targetCollection = policySet.getTarget();
-	  if(targetCollection != null && !targetCollection.isEmpty())
-	  {
-	 	 for(Iterator<Target> it = targetCollection.iterator(); it.hasNext();)
-	 	 {
-	 		 Target target = (Target) it.next();
-	 		 generateTarget(node, target);
-	 	 }
-	  }
-	  
-	  //S'han d'ordenar entre ells i construir el nodes segons l'ordre
-	  Collection<PolicySet> policySetCollectionChilds = policySetService.findChildrenPolicySet(policySet.getId());
-	  Collection<Policy> policyCollectionChilds = policySetService.findPolicyChildrenPolicySet(policySet.getId());
-	  Collection<PolicySetIdReference> policySetIdRefCollectionChilds = policySet.getPolicySetIdReference();
-	  Collection<PolicyIdReference> policyIdReferenceCollectionChilds = policySet.getPolicyIdReference();
-	  
-	  List<Object> list = new LinkedList<Object>();
-	  list.addAll(policyIdReferenceCollectionChilds);
-	  list.addAll(policySetIdRefCollectionChilds);
-	  list.addAll(policyCollectionChilds);
-	  list.addAll(policySetCollectionChilds);
-	  
-	  list.sort(new Comparator<Object>() {
-		public int compare(Object o1, Object o2) {
-			return getOrder(o1).compareTo( getOrder(o2) );
-		}
-
-		private Integer getOrder(Object o) {
-			if (o instanceof PolicySet)
-				return ((PolicySet) o).getOrder();
-			if (o instanceof Policy)
-				return ((Policy) o).getOrder();
-			if (o instanceof PolicySetIdReference)
-				return ((PolicySetIdReference) o).getOrder();
-			if (o instanceof PolicyIdReference)
-				return ((PolicyIdReference) o).getOrder();
-			return 0;
-		}
-	  });
-	  
-	  
-	  for(Object comp: list )
-	  {
-	 	 if(comp instanceof PolicySet)
-	 	 {
-	 		 Element nodenou = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
-	 		 generatePolicySet(nodenou, (PolicySet) comp);
-	 		 node.appendChild(nodenou);
-	 	 }
-	 	 else if(comp instanceof Policy)
-	 		 generatePolicy(node, (Policy) comp, false);
-	 	 else if(comp instanceof PolicySetIdReference)
-	 		 generatePolicySetIdReference(node, (PolicySetIdReference) comp);
-	 	 else if(comp instanceof PolicyIdReference)
-	 		 generatePolicyIdReference(node, (PolicyIdReference) comp);
-	  }
+	public void generate(OutputStream out, Object polSet) throws SAXException, IOException,
+			ParserConfigurationException, TransformerException, UnrecoverableKeyException, InvalidKeyException,
+			KeyStoreException, NoSuchAlgorithmException, CertificateException, IllegalStateException,
+			NoSuchProviderException, SignatureException, InternalErrorException {
+		generate(out, polSet, true, false, true, 0);
 	}
-	
-	
+
+	public void generate(OutputStream out, Object polSet, boolean childPolicies, boolean dummyPolicySet,
+			boolean allRules, int ruleNumber) throws SAXException, IOException, ParserConfigurationException,
+			TransformerException, UnrecoverableKeyException, InvalidKeyException, KeyStoreException,
+			NoSuchAlgorithmException, CertificateException, IllegalStateException, NoSuchProviderException,
+			SignatureException, InternalErrorException {
+
+		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		dbFactory.setNamespaceAware(true);
+		dBuilder = dbFactory.newDocumentBuilder();
+		doc = dBuilder.newDocument();
+
+		Element root;
+		if (dummyPolicySet) {
+			Element root0 = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
+			doc.appendChild(root0);
+			root0.setAttribute("PolicySetId", "!!dummy-policy!!");
+			root0.setAttribute("Version", "1");
+			root0.setAttribute("PolicyCombiningAlgId",
+					"urn:oasis:names:tc:xacml:1.0:policy-combining-algorithm:permit-overrides");
+			Element pdef = doc.createElement("PolicySetDefaults");
+			Element xpv = doc.createElement("XPathVersion");
+			xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+			pdef.appendChild(xpv);
+			root0.appendChild(pdef);
+			generateDummyTarget(root0);
+			generatePolicy(root0, (Policy) polSet, false, allRules, ruleNumber);
+		} else if (polSet instanceof PolicySet) {
+			root = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
+			generatePolicySet(root, (PolicySet) polSet, childPolicies);
+			doc.appendChild(root);
+		} else {
+			root = doc.createElementNS(POLICY_NAMESPACE, "Policy");
+			generatePolicy(root, (Policy) polSet, true, allRules, ruleNumber);
+			doc.appendChild(root);
+		}
+
+		// write the content into xml file
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		Transformer transformer = transformerFactory.newTransformer();
+		transformer.setOutputProperty(identationReference, "2");
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+		DOMSource source = new DOMSource(doc);
+		StreamResult result = new StreamResult(out);
+		transformer.transform(source, result);
+
+	}
+
+	private void generatePolicySet(Element node, PolicySet policySet, boolean childPolicies)
+			throws SAXException, IOException, InternalErrorException {
+		node.setAttribute("PolicySetId", policySet.getPolicySetId());
+		String version = policySet.getVersion();
+		if (version == null || version.isEmpty())
+			node.setAttribute("Version", "1");
+		else
+			node.setAttribute("Version", version);
+		node.setAttribute("PolicyCombiningAlgId", "urn:oasis:names:tc:xacml:1.0:policy-combining-algorithm:"
+				+ policySet.getPolicyCombiningAlgId().toString().toLowerCase().replace('_', '-'));
+
+		String description = policySet.getDescription();
+		if (description != null && !description.isEmpty()) {
+			Element descrip = doc.createElement("Description");
+			descrip.setTextContent(description);
+			node.appendChild(descrip);
+		}
+
+		/// Add Policy defaults
+		Element pdef = doc.createElement("PolicySetDefaults");
+		Element xpv = doc.createElement("XPathVersion");
+		xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+		pdef.appendChild(xpv);
+		node.appendChild(pdef);
+
+		Collection<Target> targetCollection = policySet.getTarget();
+		if (targetCollection != null && !targetCollection.isEmpty()) {
+			for (Iterator<Target> it = targetCollection.iterator(); it.hasNext();) {
+				Target target = (Target) it.next();
+				generateTarget(node, target);
+			}
+		}
+
+		generateObligations(policySet.getObligation(), node);
+
+		if (childPolicies) {
+			// S'han d'ordenar entre ells i construir el nodes segons l'ordre
+			Collection<PolicySet> policySetCollectionChilds = policySetService.findChildrenPolicySet(policySet.getId());
+			Collection<Policy> policyCollectionChilds = policySetService.findPolicyChildrenPolicySet(policySet.getId());
+			Collection<PolicySetIdReference> policySetIdRefCollectionChilds = policySet.getPolicySetIdReference();
+			Collection<PolicyIdReference> policyIdReferenceCollectionChilds = policySet.getPolicyIdReference();
+
+			List<Object> list = new LinkedList<Object>();
+			list.addAll(policyIdReferenceCollectionChilds);
+			list.addAll(policySetIdRefCollectionChilds);
+			list.addAll(policyCollectionChilds);
+			list.addAll(policySetCollectionChilds);
+
+			list.sort(new Comparator<Object>() {
+				public int compare(Object o1, Object o2) {
+					return getOrder(o1).compareTo(getOrder(o2));
+				}
+
+				private Integer getOrder(Object o) {
+					if (o instanceof PolicySet)
+						return ((PolicySet) o).getOrder();
+					if (o instanceof Policy)
+						return ((Policy) o).getOrder();
+					if (o instanceof PolicySetIdReference)
+						return ((PolicySetIdReference) o).getOrder();
+					if (o instanceof PolicyIdReference)
+						return ((PolicyIdReference) o).getOrder();
+					return 0;
+				}
+			});
+
+			for (Object comp : list) {
+				if (comp instanceof PolicySet) {
+					Element nodenou = doc.createElementNS(POLICY_NAMESPACE, "PolicySet");
+					generatePolicySet(nodenou, (PolicySet) comp, true);
+					node.appendChild(nodenou);
+				} else if (comp instanceof Policy)
+					generatePolicy(node, (Policy) comp, false, true, 0);
+				else if (comp instanceof PolicySetIdReference)
+					generatePolicySetIdReference(node, (PolicySetIdReference) comp);
+				else if (comp instanceof PolicyIdReference)
+					generatePolicyIdReference(node, (PolicyIdReference) comp);
+			}
+		} else {
+			generateDummyPolicy(node);
+		}
+	}
+
+	private void generateObligations(Collection<Obligation> obligations, Element node) {
+		if (obligations != null && !obligations.isEmpty()) {
+			Element obligationsElement = doc.createElement("Obligations");
+			node.appendChild(obligationsElement);
+			Set<String> ids = new HashSet<String>();
+			for (Obligation o : obligations) {
+				ids.add(o.getObligationId() + "_" + o.getFulfillOn().getValue());
+			}
+
+			for (String id : ids) {
+				Element obl = null;
+				for (Obligation o : obligations) {
+					String oid = o.getObligationId() + "_" + o.getFulfillOn().getValue();
+					if (oid.equals(id)) {
+						if (obl == null) {
+							obl = doc.createElement("Obligation");
+							obl.setAttribute("ObligationId", o.getObligationId());
+							obl.setAttribute("FulfillOn",
+									o.getFulfillOn() == EffectTypeEnumeration.PERMIT ? "Permit" : "Deny");
+							obligationsElement.appendChild(obl);
+						}
+						Element a = doc.createElement("AttributeAssignment");
+						a.setAttribute("AttributeId", o.getAttributeName());
+						a.setAttribute("DataType", "http://www.w3.org/2001/XMLSchema#string");
+						a.setTextContent(o.getAttributeValue());
+						obl.appendChild(a);
+					}
+				}
+			}
+		}
+	}
+
 	private void generatePolicyIdReference(Element node, PolicyIdReference comp) {
 		Element polIdRef = doc.createElement("PolicyIdReference");
 		String version = comp.getVersion();
 		String earliest = comp.getEarliestVersion();
 		String latest = comp.getLatestVersion();
 		String idReferenceType = comp.getIdReferenceTypeValue();
-		if(version != null && !version.isEmpty())
+		if (version != null && !version.isEmpty())
 			polIdRef.setAttribute("Version", version);
-		if(earliest != null && !earliest.isEmpty())
+		if (earliest != null && !earliest.isEmpty())
 			polIdRef.setAttribute("EarliestVersion", earliest);
-		if(latest != null && !latest.isEmpty())
+		if (latest != null && !latest.isEmpty())
 			polIdRef.setAttribute("LatestVersion", latest);
 		polIdRef.setTextContent(idReferenceType);
 		node.appendChild(polIdRef);
 	}
-	
-	
-	private void generatePolicySetIdReference(Element node,
-			PolicySetIdReference comp) {
+
+	private void generatePolicySetIdReference(Element node, PolicySetIdReference comp) {
 		Element polSetIdRef = doc.createElement("PolicySetIdReference");
 		String version = comp.getVersion();
 		String earliest = comp.getEarliestVersion();
 		String latest = comp.getLatestVersion();
 		String idReferenceType = comp.getIdReferenceTypeValue();
-		if(version != null && !version.isEmpty())
+		if (version != null && !version.isEmpty())
 			polSetIdRef.setAttribute("Version", version);
-		if(earliest != null && !earliest.isEmpty())
+		if (earliest != null && !earliest.isEmpty())
 			polSetIdRef.setAttribute("EarliestVersion", earliest);
-		if(latest != null && !latest.isEmpty())
+		if (latest != null && !latest.isEmpty())
 			polSetIdRef.setAttribute("LatestVersion", latest);
 		polSetIdRef.setTextContent(idReferenceType);
 		node.appendChild(polSetIdRef);
 	}
-	
-	
-	private void generatePolicy(Element node, Policy comp, boolean rootPolicy) {
+
+	private void generatePolicy(Element node, Policy comp, boolean rootPolicy, boolean allRules, int ruleNumber) {
 		Element policy;
 		if (rootPolicy)
 			policy = node;
-		else if(node == null)
+		else if (node == null)
 			policy = doc.createElementNS(POLICY_NAMESPACE, "Policy");
 		else
 			policy = doc.createElement("Policy");
 		String version = comp.getVersion();
 		policy.setAttribute("PolicyId", comp.getPolicyId());
-		if(version != null && !version.isEmpty())
+		if (version != null && !version.isEmpty())
 			policy.setAttribute("Version", version);
-		policy.setAttribute("RuleCombiningAlgId", 
-				"urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:" + 
-						comp.getRuleCombiningAlgId().toString().toLowerCase().replace('_', '-'));
-		
-		String description = comp.getDescription();
-	 if(description != null && !description.isEmpty())
-	 {
-		 Element descrip = doc.createElement("Description");
-		 descrip.setTextContent(description);
-		 policy.appendChild(descrip);
-	 }
-	 
-	  Element pdef = doc.createElement("PolicyDefaults");
-	  Element xpv = doc.createElement("XPathVersion");
-	  xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
-	  pdef.appendChild(xpv);
-	  policy.appendChild(pdef);
+		policy.setAttribute("RuleCombiningAlgId", "urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:"
+				+ comp.getRuleCombiningAlgId().toString().toLowerCase().replace('_', '-'));
 
-	  Collection<Target> targetCollection = comp.getTarget();
-	 for(Iterator<Target> it = targetCollection.iterator(); it.hasNext();)
-	 {
-	 	Target target = (Target) it.next();
-		 	generateTarget(policy, target);
-	 }
-	 
-	 Collection<VariableDefinition> variableDefinitionCollection = comp.getVariableDefinition();
-	 for(Iterator<VariableDefinition> it = variableDefinitionCollection.iterator(); it.hasNext();)
-	 {
-	 	VariableDefinition variableDefinition = (VariableDefinition) it.next();
-	 	generateVariableDefinition(policy, variableDefinition);
-	 }
-	 
-	 Collection<Rule> ruleCollection = comp.getRule();
-	 for(Iterator<Rule> it = ruleCollection.iterator(); it.hasNext();)
-	 {
-	 	Rule rule = (Rule) it.next();
-	 	generateRule(policy, rule);
-	 }
-	 if (!rootPolicy)
-		 if(node != null)
-		 	node.appendChild(policy);
-		 else
-		 	doc.appendChild(policy);
+		String description = comp.getDescription();
+		if (description != null && !description.isEmpty()) {
+			Element descrip = doc.createElement("Description");
+			descrip.setTextContent(description);
+			policy.appendChild(descrip);
+		}
+
+		Element pdef = doc.createElement("PolicyDefaults");
+		Element xpv = doc.createElement("XPathVersion");
+		xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+		pdef.appendChild(xpv);
+		policy.appendChild(pdef);
+
+		Collection<Target> targetCollection = comp.getTarget();
+		for (Iterator<Target> it = targetCollection.iterator(); it.hasNext();) {
+			Target target = (Target) it.next();
+			generateTarget(policy, target);
+		}
+
+		Collection<VariableDefinition> variableDefinitionCollection = comp.getVariableDefinition();
+		for (Iterator<VariableDefinition> it = variableDefinitionCollection.iterator(); it.hasNext();) {
+			VariableDefinition variableDefinition = (VariableDefinition) it.next();
+			generateVariableDefinition(policy, variableDefinition);
+		}
+
+		int i = 0;
+		Collection<Rule> ruleCollection = comp.getRule();
+		for (Iterator<Rule> it = ruleCollection.iterator(); it.hasNext();) {
+			Rule rule = (Rule) it.next();
+			if (allRules || i == ruleNumber)
+				generateRule(policy, rule);
+			i++;
+		}
+		
+		if (!allRules && ruleNumber < 0)
+			generateDummyRule(policy);
+
+		generateObligations(comp.getObligation(), policy);
+
+		if (!rootPolicy)
+			if (node != null)
+				node.appendChild(policy);
+			else
+				doc.appendChild(policy);
 	}
-	
-	
+
 	private void generateRule(Element node, Rule rule) {
 		Element rul = doc.createElement("Rule");
 		String effect = rule.getEffectType().toString().toLowerCase();
 		effect = effect.substring(0, 1).toUpperCase() + effect.substring(1);
 		rul.setAttribute("Effect", effect);
 		rul.setAttribute("RuleId", rule.getRuleId());
-		
+
 		String description = rule.getDescription();
-	 if(description != null && !description.isEmpty())
-	 {
-		 	Element descrip = doc.createElement("Description");
-		 	descrip.setTextContent(description);
-		 	rul.appendChild(descrip);
-	 }
-	 
-	 Collection<Target> targetCollection = rule.getTarget();
-	 for(Iterator<Target> it = targetCollection.iterator(); it.hasNext();)
-	 {
-	 	Target target = (Target) it.next();
-	 	generateTarget(rul, target);
-	 }
-	 
-	 Collection<Condition> conditionCollection = rule.getCondicion();
-	 for(Iterator<Condition> it = conditionCollection.iterator(); it.hasNext();)
-	 {
-	 	Condition condition = (Condition) it.next();
-	 	generateCondition(rul, condition);
-	 }
- 
-	node.appendChild(rul);
+		if (description != null && !description.isEmpty()) {
+			Element descrip = doc.createElement("Description");
+			descrip.setTextContent(description);
+			rul.appendChild(descrip);
+		}
+
+		Collection<Target> targetCollection = rule.getTarget();
+		for (Iterator<Target> it = targetCollection.iterator(); it.hasNext();) {
+			Target target = (Target) it.next();
+			generateTarget(rul, target);
+		}
+
+		Collection<Condition> conditionCollection = rule.getCondition();
+		for (Iterator<Condition> it = conditionCollection.iterator(); it.hasNext();) {
+			Condition condition = (Condition) it.next();
+			generateCondition(rul, condition);
+		}
+
+		node.appendChild(rul);
 	}
-	
-	
+
+	private void generateDummyRule(Element node) {
+		Element rul = doc.createElement("Rule");
+		rul.setAttribute("Effect", "Permit");
+		rul.setAttribute("RuleId", "!!dummy-rule!!");
+
+		generateDummyTarget(rul);
+		node.appendChild(rul);
+	}
+
 	private void generateCondition(Element rul, Condition condition) {
 		Element conElement = doc.createElement("Condition");
-		
-		Expression expression =  condition.getExpression();
+
+		Expression expression = condition.getExpression();
 		generateExpression(conElement, expression, null);
 		rul.appendChild(conElement);
 	}
-	
-	
+
 	private void generateExpression(Element node, Expression expression, String tipusExpressioPare) {
-		
+
 		String expressionType = expression.getExpressionType();
 		String type = null;
-		if(tipusExpressioPare != null && !tipusExpressioPare.isEmpty())
+		if (tipusExpressioPare != null && !tipusExpressioPare.isEmpty())
 			type = tipusExpressioPare;
 		else
 			type = DATATYPESTRING;
-		if(expressionType.startsWith("function"))
-		{
+		if (expressionType.startsWith("function")) {
 			Element expElement = doc.createElement("Apply");
 			generateApply(expElement, expression, tipusExpressioPare);
 			node.appendChild(expElement);
-		}
-		else if(expressionType.equals("attributeSelector"))
-		{
+		} else if (expressionType.equals("attributeSelector")) {
 			generateAttributeSelector(node, expression.getAttributeSelector(), type);
-		}
-		else if(expressionType.equals("attributeValue"))
-		{
+		} else if (expressionType.equals("attributeValue")) {
 			generateAttributeValue(node, expression.getAttributeValue(), expression.getDataTypeAttributeValue());
-		}
-		else if(expressionType.equals("name"))
-		{
+		} else if (expressionType.equals("name")) {
 			generateFunctio(node, expression.getName().toString());
-		}
-		else if(expressionType.equals("variable"))
-		{
+		} else if (expressionType.equals("variable")) {
 			generateVariableReference(node, expression.getVariableId());
+		} else if (expressionType.equals("action")) {
+			generateActionAttributeDesignator(node, expression.getAttributeDesignator(),
+					expression.getDataTypeAttributeDesignator());
+		} else if (expressionType.equals("resource")) {
+			generateResourceAttributeDesignator(node, expression.getAttributeDesignator(),
+					expression.getDataTypeAttributeDesignator());
+		} else if (expressionType.equals("subject")) {
+			generateSubjectAttributeDesignator(node, expression.getAttributeDesignator(),
+					expression.getDataTypeAttributeDesignator());
+		} else if (expressionType.equals("environment")) {
+			generateEnvironmentAttributeDesignator(node, expression.getAttributeDesignator(),
+					expression.getDataTypeAttributeDesignator());
 		}
-		else if(expressionType.equals("action"))
-		{
-			generateActionAttributeDesignator(node, expression.getAttributeDesignator(), expression.getDataTypeAttributeDesignator());
-		}
-		else if(expressionType.equals("resource"))
-		{
-			generateResourceAttributeDesignator(node, expression.getAttributeDesignator(), expression.getDataTypeAttributeDesignator());
-		}
-		else if(expressionType.equals("subject"))
-		{
-			generateSubjectAttributeDesignator(node, expression.getAttributeDesignator(), expression.getDataTypeAttributeDesignator());
-		}
-		else if(expressionType.equals("environment"))
-		{
-			generateEnvironmentAttributeDesignator(node, expression.getAttributeDesignator(), expression.getDataTypeAttributeDesignator());
-		}
-		
+
 	}
-	
-	
+
 	private void generateVariableReference(Element expElement, String variableId) {
 		Element variableIdElement = doc.createElement("VariableReference");
 		variableIdElement.setAttribute("VariableId", variableId);
 		expElement.appendChild(variableIdElement);
 	}
-	
-	
+
 	private void generateApply(Element expElement, Expression expression, String tipusExpressioPare) {
-		
+
 		String nom = formatFunctionId(expression);
 		expElement.setAttribute("FunctionId", nom);
-		
+
 		String tipus = tipusFunction(nom);
 		List<Expression> expressionCollection = (List<Expression>) expression.getSubexpression();
-		Collections.sort(expressionCollection, new Comparator<Expression>(){
+		Collections.sort(expressionCollection, new Comparator<Expression>() {
 			public int compare(Expression e1, Expression e2) {
 				return e1.getOrder().compareTo(e2.getOrder());
-			}	
+			}
 		});
-		if(tipus != null && !tipus.isEmpty())
+		if (tipus != null && !tipus.isEmpty())
 			tipusExpressioPare = tipus;
-		for(Iterator<Expression> it = expressionCollection.iterator(); it.hasNext();)
-		{
+		for (Iterator<Expression> it = expressionCollection.iterator(); it.hasNext();) {
 			Expression subExpression = it.next();
 			generateExpression(expElement, subExpression, tipusExpressioPare);
 		}
 	}
-	
-	
+
 	private void generateFunctio(Element expElement, String functio) {
 		expElement.setAttribute("Function", functio);
 	}
-	
-	
-	private void generateVariableDefinition(Element node,
-			VariableDefinition variableDefinition) {
+
+	private void generateVariableDefinition(Element node, VariableDefinition variableDefinition) {
 		Element varDefElement = doc.createElement("VariableDefinition");
 		varDefElement.setAttribute("VariableId", variableDefinition.getVariableId());
-		
-		Expression expression =  variableDefinition.getExpression();
+
+		Expression expression = variableDefinition.getExpression();
 		generateExpression(varDefElement, expression, null);
 		node.appendChild(varDefElement);
 	}
-	
-	
-	
-	private void generateTarget(Element node, Target target)
-	{
+
+	private void generateTarget(Element node, Target target) {
 		Element tar = doc.createElement("Target");
-		
+
 		Collection<SubjectMatch> subjectMatchCollection = target.getSubjectMatch();
-		if(subjectMatchCollection != null && !subjectMatchCollection.isEmpty())
-		{
+		if (subjectMatchCollection != null && !subjectMatchCollection.isEmpty()) {
 			Element subjects = doc.createElement("Subjects");
 			Element subject = doc.createElement("Subject");
-			for(Iterator<SubjectMatch> it = subjectMatchCollection.iterator(); it.hasNext();)
-			{
+			for (Iterator<SubjectMatch> it = subjectMatchCollection.iterator(); it.hasNext();) {
 				SubjectMatch subjectMatch = (SubjectMatch) it.next();
 				generateSubjectMatch(subject, subjectMatch);
-				
+
 			}
 			subjects.appendChild(subject);
 			tar.appendChild(subjects);
 		}
-		
+
 		Collection<ResourceMatch> resourceMatchCollection = target.getResourceMatch();
-		if(resourceMatchCollection != null && !resourceMatchCollection.isEmpty())
-		{
+		if (resourceMatchCollection != null && !resourceMatchCollection.isEmpty()) {
 			Element resources = doc.createElement("Resources");
 			Element resource = doc.createElement("Resource");
-			for(Iterator<ResourceMatch> it = resourceMatchCollection.iterator(); it.hasNext();)
-			{
+			for (Iterator<ResourceMatch> it = resourceMatchCollection.iterator(); it.hasNext();) {
 				ResourceMatch resourceMatch = (ResourceMatch) it.next();
 				generateResourceMatch(resource, resourceMatch);
 			}
 			resources.appendChild(resource);
 			tar.appendChild(resources);
 		}
-		
+
 		Collection<ActionMatch> actionMatchCollection = target.getActionMatch();
-		if(actionMatchCollection != null && !actionMatchCollection.isEmpty())
-		{
+		if (actionMatchCollection != null && !actionMatchCollection.isEmpty()) {
 			Element actions = doc.createElement("Actions");
 			Element action = doc.createElement("Action");
-			for(Iterator<ActionMatch> it = actionMatchCollection.iterator(); it.hasNext();)
-			{
+			for (Iterator<ActionMatch> it = actionMatchCollection.iterator(); it.hasNext();) {
 				ActionMatch actionMatch = (ActionMatch) it.next();
 				generateActionMatch(action, actionMatch);
 			}
 			actions.appendChild(action);
 			tar.appendChild(actions);
 		}
-		
+
 		Collection<EnvironmentMatch> environmentMatchCollection = target.getEnvironmentMatch();
-		if(environmentMatchCollection != null && !environmentMatchCollection.isEmpty())
-		{
+		if (environmentMatchCollection != null && !environmentMatchCollection.isEmpty()) {
 			Element environments = doc.createElement("Environments");
 			Element environment = doc.createElement("Environment");
-			for(Iterator<EnvironmentMatch> it = environmentMatchCollection.iterator(); it.hasNext();)
-			{
+			for (Iterator<EnvironmentMatch> it = environmentMatchCollection.iterator(); it.hasNext();) {
 				EnvironmentMatch environmentMatch = (EnvironmentMatch) it.next();
 				generateEnvironmentMatch(environment, environmentMatch);
 			}
@@ -531,197 +558,199 @@ public class XACMLGenerator {
 		}
 		node.appendChild(tar);
 	}
-	
-	
-	private void generateSubjectMatch(Element subject, SubjectMatch subjectMatch)
-	{
+
+	private void generateDummyTarget(Element node) {
+		Element tar = doc.createElement("Target");
+
+		node.appendChild(tar);
+	}
+
+	private void generateSubjectMatch(Element subject, SubjectMatch subjectMatch) {
 		Element subMatch = doc.createElement("SubjectMatch");
-		String matchId = calculateMatchId(subjectMatch.getMatchId().toString().toLowerCase(), subjectMatch.getDataTypeAttributeValue());
+		String matchId = calculateMatchId(subjectMatch.getMatchId().toString().toLowerCase(),
+				subjectMatch.getDataTypeAttributeValue());
 		matchId = matchId.replace('_', '-');
 		matchId = selectFunctionVersion(matchId);
 		subMatch.setAttribute("MatchId", matchId);
 		generateAttributeValue(subMatch, subjectMatch.getAttributeValue(), subjectMatch.getDataTypeAttributeValue());
 		String selector = subjectMatch.getAttributeSelector();
-		if(selector != null && !selector.isEmpty())
+		if (selector != null && !selector.isEmpty())
 			generateAttributeSelector(subMatch, selector, "http://www.w3.org/2001/XMLSchema#string");
 		else
-			generateSubjectAttributeDesignator(subMatch, subjectMatch.getSubjectAttributeDesignator(), subjectMatch.getDataTypeSubjectDesignator());
+			generateSubjectAttributeDesignator(subMatch, subjectMatch.getSubjectAttributeDesignator(),
+					subjectMatch.getDataTypeSubjectDesignator());
 		subject.appendChild(subMatch);
 	}
-	
+
 	private String selectFunctionVersion(String nom) {
-		if(nom.startsWith("time-in-range") || nom.startsWith("string-concatenate") || nom.startsWith("anyURI-regexp-match")
-				|| nom.startsWith("ipAddress-regexp-match") || nom.startsWith("dnsName-regexp-match") 
-				|| nom.startsWith("uri-string-concatenate") || nom.startsWith("rfc822Name-regexp-match")
-				|| nom.startsWith("x500Name-regexp-match"))
+		if (nom.startsWith("time-in-range") || nom.startsWith("string-concatenate")
+				|| nom.startsWith("anyURI-regexp-match") || nom.startsWith("ipAddress-regexp-match")
+				|| nom.startsWith("dnsName-regexp-match") || nom.startsWith("uri-string-concatenate")
+				|| nom.startsWith("rfc822Name-regexp-match") || nom.startsWith("x500Name-regexp-match"))
 			nom = function20 + nom;
 		else
 			nom = function10 + nom;
 		return nom;
 	}
 
-	//Aquesta funció hauria de controlar el tipus segons el dataType del segon atribut i no passar sempre String!!
-	private String calculateMatchId(String matchId,
-			DataType dataTypeAttributeValue) {
+	// Aquesta funció hauria de controlar el tipus segons el dataType del segon
+	// atribut i no passar sempre String!!
+	private String calculateMatchId(String matchId, DataType dataTypeAttributeValue) {
 		String finalMatchId = new String();
 		matchId = matchId.substring(4);
 		String dataType = dataTypeAttributeValue.getValue();
-		if(dataType.equals("S")){
-			if(matchId.equals("_match"))
+		if (dataType.equals("S")) {
+			if (matchId.equals("_match"))
 				finalMatchId = "string-regexp";
 			else
 				finalMatchId = "string";
-		}else if(dataType.equals("B")){
+		} else if (dataType.equals("B")) {
 			finalMatchId = "boolean";
-		}else if(dataType.equals("I")){
+		} else if (dataType.equals("I")) {
 			finalMatchId = "integer";
-		}else if(dataType.equals("DO")){
+		} else if (dataType.equals("DO")) {
 			finalMatchId = "double";
-		}else if(dataType.equals("DT")){
+		} else if (dataType.equals("DT")) {
 			finalMatchId = "dateTime";
-		}else if(dataType.equals("DATE")){
+		} else if (dataType.equals("DATE")) {
 			finalMatchId = "date";
-		}else if(dataType.equals("T")){
+		} else if (dataType.equals("T")) {
 			finalMatchId = "time";
-		}else if(dataType.equals("H")){
+		} else if (dataType.equals("H")) {
 			finalMatchId = "hexBinary";
-		}else if(dataType.equals("ANY")){
-			if(matchId.equals("_match"))
+		} else if (dataType.equals("ANY")) {
+			if (matchId.equals("_match"))
 				finalMatchId = "anyURI-regexp";
 			else
 				finalMatchId = "anyURI";
-		}else if(dataType.equals("YM")){
+		} else if (dataType.equals("YM")) {
 			finalMatchId = "yearMonthDuration";
-		}else if(dataType.equals("D")){
+		} else if (dataType.equals("D")) {
 			finalMatchId = "dayTimeDuration";
-		}else if(dataType.equals("B64")){
+		} else if (dataType.equals("B64")) {
 			finalMatchId = "base64Binary";
-		}else if(dataType.equals("X")){
-			if(matchId.equals("_match"))
+		} else if (dataType.equals("X")) {
+			if (matchId.equals("_match"))
 				finalMatchId = "x500Name-regexp";
 			else
 				finalMatchId = "x500Name";
-		}else if(dataType.equals("R")){
-			if(matchId.equals("_match"))
+		} else if (dataType.equals("R")) {
+			if (matchId.equals("_match"))
 				finalMatchId = "rfc822Name-regexp";
 			else
 				finalMatchId = "rfc822Name";
 		}
-		
+
 		return finalMatchId + matchId;
 	}
 
-	private void generateSubjectAttributeDesignator(Element subMatch, String subjectAttributeDesignator, DataType dataType) {
+	private void generateSubjectAttributeDesignator(Element subMatch, String subjectAttributeDesignator,
+			DataType dataType) {
 		Element subjectAttribute = doc.createElement("SubjectAttributeDesignator");
 		subjectAttribute.setAttribute("AttributeId", subjectAttributeDesignator);
 		subjectAttribute.setAttribute("DataType", tipusDada(dataType));
 		subMatch.appendChild(subjectAttribute);
 	}
-	
-	
+
 	private void generateAttributeSelector(Element subMatch, String selector, String dataType) {
 		Element attributeSelector = doc.createElement("AttributeSelector");
 		attributeSelector.setAttribute("RequestContextPath", selector);
 		attributeSelector.setAttribute("DataType", dataType);
 		subMatch.appendChild(attributeSelector);
 	}
-	
-	
+
 	private void generateAttributeValue(Element match, String attributeValue, DataType dataType) {
 		Element attribute = doc.createElement("AttributeValue");
 		attribute.setAttribute("DataType", tipusDada(dataType));
 		attribute.setTextContent(attributeValue);
 		match.appendChild(attribute);
 	}
-	
-	
-	private void generateResourceMatch(Element resource, ResourceMatch resourceMatch)
-	{
+
+	private void generateResourceMatch(Element resource, ResourceMatch resourceMatch) {
 		Element resMatch = doc.createElement("ResourceMatch");
-		String matchId = calculateMatchId(resourceMatch.getMatchId().toString().toLowerCase(), resourceMatch.getDataTypeAttributeValue());
+		String matchId = calculateMatchId(resourceMatch.getMatchId().toString().toLowerCase(),
+				resourceMatch.getDataTypeAttributeValue());
 		matchId = matchId.replace('_', '-');
 		matchId = selectFunctionVersion(matchId);
 		resMatch.setAttribute("MatchId", matchId);
 		generateAttributeValue(resMatch, resourceMatch.getAttributeValue(), resourceMatch.getDataTypeAttributeValue());
 		String selector = resourceMatch.getAttributeSelector();
-		if(selector != null && !selector.isEmpty())
+		if (selector != null && !selector.isEmpty())
 			generateAttributeSelector(resMatch, selector, "http://www.w3.org/2001/XMLSchema#string");
 		else
-			generateResourceAttributeDesignator(resMatch, resourceMatch.getResourceAttributeDesignator(), resourceMatch.getDataTypeResourceDesignator());
+			generateResourceAttributeDesignator(resMatch, resourceMatch.getResourceAttributeDesignator(),
+					resourceMatch.getDataTypeResourceDesignator());
 		resource.appendChild(resMatch);
 	}
-	
-	
-	private void generateResourceAttributeDesignator(Element resMatch, 
-			String resourceAttributeDesignator, DataType dataType) {
+
+	private void generateResourceAttributeDesignator(Element resMatch, String resourceAttributeDesignator,
+			DataType dataType) {
 		Element resourceAttribute = doc.createElement("ResourceAttributeDesignator");
 		resourceAttribute.setAttribute("AttributeId", resourceAttributeDesignator);
 		resourceAttribute.setAttribute("DataType", tipusDada(dataType));
 		resMatch.appendChild(resourceAttribute);
 	}
-	
-	
-	private void generateActionMatch(Element action, ActionMatch actionMatch)
-	{
+
+	private void generateActionMatch(Element action, ActionMatch actionMatch) {
 		Element actMatch = doc.createElement("ActionMatch");
-		String matchId = calculateMatchId(actionMatch.getMatchId().toString().toLowerCase(), actionMatch.getDataTypeAttributeValue());
+		String matchId = calculateMatchId(actionMatch.getMatchId().toString().toLowerCase(),
+				actionMatch.getDataTypeAttributeValue());
 		matchId = matchId.replace('_', '-');
 		matchId = selectFunctionVersion(matchId);
 		actMatch.setAttribute("MatchId", matchId);
 		generateAttributeValue(actMatch, actionMatch.getAttributeValue(), actionMatch.getDataTypeAttributeValue());
 		String selector = actionMatch.getAttributeSelector();
-		if(selector != null && !selector.isEmpty())
+		if (selector != null && !selector.isEmpty())
 			generateAttributeSelector(actMatch, selector, "http://www.w3.org/2001/XMLSchema#string");
 		else
-			generateActionAttributeDesignator(actMatch, actionMatch.getActionAttributeDesignator(), actionMatch.getDataTypeActionDesignator());
+			generateActionAttributeDesignator(actMatch, actionMatch.getActionAttributeDesignator(),
+					actionMatch.getDataTypeActionDesignator());
 		action.appendChild(actMatch);
 	}
-	
-	
-	private void generateActionAttributeDesignator(Element actMatch, String actionAttributeDesignator, DataType dataType) {
+
+	private void generateActionAttributeDesignator(Element actMatch, String actionAttributeDesignator,
+			DataType dataType) {
 		Element actionAttribute = doc.createElement("ActionAttributeDesignator");
 		actionAttribute.setAttribute("AttributeId", actionAttributeDesignator);
 		actionAttribute.setAttribute("DataType", tipusDada(dataType));
 		actMatch.appendChild(actionAttribute);
 	}
-	
-	
-	private void generateEnvironmentMatch(Element environment, EnvironmentMatch environmentMatch)
-	{
+
+	private void generateEnvironmentMatch(Element environment, EnvironmentMatch environmentMatch) {
 		Element envMatch = doc.createElement("EnvironmentMatch");
-		String matchId = calculateMatchId(environmentMatch.getMatchId().toString().toLowerCase(), environmentMatch.getDataTypeAttributeValue());
+		String matchId = calculateMatchId(environmentMatch.getMatchId().toString().toLowerCase(),
+				environmentMatch.getDataTypeAttributeValue());
 		matchId = matchId.replace('_', '-');
 		matchId = selectFunctionVersion(matchId);
 		envMatch.setAttribute("MatchId", matchId);
-		generateAttributeValue(envMatch, environmentMatch.getAttributeValue(), environmentMatch.getDataTypeAttributeValue());
+		generateAttributeValue(envMatch, environmentMatch.getAttributeValue(),
+				environmentMatch.getDataTypeAttributeValue());
 		String selector = environmentMatch.getAttributeSelector();
-		if(selector != null && !selector.isEmpty())
+		if (selector != null && !selector.isEmpty())
 			generateAttributeSelector(envMatch, selector, "http://www.w3.org/2001/XMLSchema#string");
 		else
-			generateEnvironmentAttributeDesignator(envMatch, environmentMatch.getEnvironmentAttributeDesignator(), environmentMatch.getDataTypeEnvironmentDesignator());
+			generateEnvironmentAttributeDesignator(envMatch, environmentMatch.getEnvironmentAttributeDesignator(),
+					environmentMatch.getDataTypeEnvironmentDesignator());
 		environment.appendChild(envMatch);
 	}
-	
-	
-	private void generateEnvironmentAttributeDesignator(Element envMatch,  
-			String environmentAttributeDesignator, DataType dataType) {
+
+	private void generateEnvironmentAttributeDesignator(Element envMatch, String environmentAttributeDesignator,
+			DataType dataType) {
 		Element environmentAttribute = doc.createElement("EnvironmentAttributeDesignator");
 		environmentAttribute.setAttribute("AttributeId", environmentAttributeDesignator);
 		environmentAttribute.setAttribute("DataType", tipusDada(dataType));
-		envMatch.appendChild(environmentAttribute);	
+		envMatch.appendChild(environmentAttribute);
 	}
-	
-	
+
 	private String formatFunctionId(Expression expression) {
 		String nom = new String();
 		nom = expression.getName().toString().toLowerCase();
 		nom = nom.replace('_', '-');
-		if(nom.startsWith("type"))
-		{
+		if (nom.startsWith("type")) {
 			nom = nom.substring(4);
 			nom = expression.getAttributeDesignator().toLowerCase() + nom;
 		}
-		if(nom.startsWith("datetime"))
+		if (nom.startsWith("datetime"))
 			nom = "dateTime" + nom.substring(8);
 		else if (nom.startsWith("dayTimeDuration"))
 			nom = "dayTimeDuration" + nom.substring(15);
@@ -741,25 +770,24 @@ public class XACMLGenerator {
 			nom = "ipAddress" + nom.substring(9);
 		else if (nom.startsWith("dnsname"))
 			nom = "dnsName" + nom.substring(7);
-		
-		if(nom.startsWith("time-in-range") || nom.startsWith("string-concatenate") || nom.startsWith("anyURI-regexp-match")
-				|| nom.startsWith("ipAddress-regexp-match") || nom.startsWith("dnsName-regexp-match") 
-				|| nom.startsWith("uri-string-concatenate") || nom.startsWith("rfc822Name-regexp-match")
-				|| nom.startsWith("x500Name-regexp-match"))
+
+		if (nom.startsWith("time-in-range") || nom.startsWith("string-concatenate")
+				|| nom.startsWith("anyURI-regexp-match") || nom.startsWith("ipAddress-regexp-match")
+				|| nom.startsWith("dnsName-regexp-match") || nom.startsWith("uri-string-concatenate")
+				|| nom.startsWith("rfc822Name-regexp-match") || nom.startsWith("x500Name-regexp-match"))
 			nom = function20 + nom;
 		else
 			nom = function10 + nom;
-		
+
 		return nom;
 	}
-	
-	
+
 	private String tipusFunction(String nom) {
 		String tipus = new String();
-		int i  = nom.indexOf('-');
-		if(i>0)
+		int i = nom.indexOf('-');
+		if (i > 0)
 			nom = nom.substring(0, i);
-		if(nom.equals("string"))
+		if (nom.equals("string"))
 			tipus = DATATYPESTRING;
 		else if (nom.equals("boolean"))
 			tipus = DATATYPEBOOLEAN;
@@ -791,16 +819,15 @@ public class XACMLGenerator {
 			tipus = DATATYPEDNSNAME;
 		else
 			tipus = DATATYPESTRING;
-		
+
 		return tipus;
 	}
-	
-	private String tipusDada(DataType tipus){
+
+	private String tipusDada(DataType tipus) {
 		String torna = new String();
-		if (tipus != null)
-		{	
+		if (tipus != null) {
 			String nom = tipus.getValue();
-			if(nom.equals("S"))
+			if (nom.equals("S"))
 				torna = DATATYPESTRING;
 			else if (nom.equals("B"))
 				torna = DATATYPEBOOLEAN;
@@ -827,8 +854,28 @@ public class XACMLGenerator {
 			else
 				torna = DATATYPESTRING;
 		}
-	
+
 		return torna;
+	}
+
+	private void generateDummyPolicy(Element node) {
+		Element policy;
+		policy = doc.createElement("Policy");
+		policy.setAttribute("PolicyId", "!!dummy-policy!!");
+		policy.setAttribute("Version", "1.0");
+		policy.setAttribute("RuleCombiningAlgId",
+				"urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:permit-overrides");
+
+		Element pdef = doc.createElement("PolicyDefaults");
+		Element xpv = doc.createElement("XPathVersion");
+		xpv.setTextContent("http://www.w3.org/TR/1999/Rec-xpath-19991116");
+		pdef.appendChild(xpv);
+		policy.appendChild(pdef);
+
+		generateDummyTarget(policy);
+		generateDummyRule(policy);
+
+		node.appendChild(policy);
 	}
 
 }

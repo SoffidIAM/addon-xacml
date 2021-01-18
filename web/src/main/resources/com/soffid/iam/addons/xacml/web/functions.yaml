@@ -1,0 +1,216 @@
+# Copmarison
+- name: Comparison
+  functions:
+   - name: EQUAL
+     min: 2
+     max: 2
+     operator: == 
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: GREATER_THAN
+     min: 2
+     max: 2
+     operator: ">"
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT"]
+   - name: GREATER_THAN_OR_EQUAL
+     min: 2
+     max: 2
+     operator: =
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT"]
+   - name: LESS_THAN
+     min: 2
+     max: 2
+     operator: "<"
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT"]
+   - name: LESS_THAN_OR_EQUAL
+     min: 2
+     max: 2
+     operator: <=
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT"]
+   - name: TIME_IN_RANGE
+     min: 3
+     max: 3
+   - name: REGEXP_MATCH
+     min: 2
+     max: 2
+     qualifiers: ["S", "ANY", "IPADDRESS", "DNSNAME", "X", "R"]
+   - name: MATCH
+     min: 2
+     max: 2
+     operator: ~
+     qualifiers: ["X509NAME", "R"]
+# Arithmetic
+- name: Arithmetic
+  functions:
+   - name: ADD
+     min: 2
+     max: -1
+     operator: +
+     qualifiers: ["I", "DOBLE"]
+   - name: SUBTRACT
+     min: 2
+     max: -1
+     operator: "-"
+     qualifiers: ["I", "DOBLE"]
+   - name: MULTIPLY
+     min: 2
+     max: -1
+     operator: "*"
+     qualifiers: ["I", "DOBLE"]
+   - name: DIVIDE
+     min: 2
+     max: -1
+     operator: /
+     qualifiers: ["I", "DOBLE"]
+   - name: MOD
+     min: 2
+     max: 2
+     operator: "%"
+     qualifiers: ["I"]
+   - name: ABS
+     min: 1
+     max: 1
+     qualifiers: ["I", "DOBLE"]
+   - name: ROUND
+     min: 1
+     max: 1
+   - name: FLOOR
+     min: 1
+     max: 1
+   - name: ADD_DAYTIMEDURATION
+     min: 2
+     max: 2
+     qualifiers: ["DT"]
+   - name: ADD_YEARMONTHDURATION
+     min: 2
+     max: 2
+     qualifiers: ["DATE", "DT"]
+   - name: SUBTRACT_DAYTIMEDURATION
+     min: 2
+     max: 2
+     qualifiers: ["DT"]
+   - name: SUBTRACT_YEARMONTHDURATION
+     min: 2
+     max: 2
+     qualifiers: ["DATE", "DT"]     
+# Conversions
+- name: Conversions
+  functions:
+   - name: STRING_NORMALIZE_SPACE
+     min: 1
+     max: 1
+     
+   - name: STRING_NORMALIZE_TO_LOWER_CASE
+     min: 1 
+     max: 1
+     
+   - name: DOUBLE_TO_INTEGER
+     min: 1
+     max: 1
+     
+   - name: INTEGER_TO_DOUBLE
+     min: 1
+     max: 1
+     
+# Boolean
+- name: BooleanOperators
+  functions:
+   - name: AND
+     min: 2
+     max: -1
+     operator: "&&"
+   - name: OR
+     min: 2
+     max: -1
+     operator: "||"
+   - name: N_OF
+     min: 2
+     max: -1
+     
+   - name: NOT
+     min: 1
+     max: 1
+     operator: !
+# String
+- name: StringFunctions
+  functions:
+   - name: STRING_CONCATENATE
+     min: 2
+     max: -1
+   - name: URI_STRING_CONCATENATE
+     min: 2
+     max: -1
+# Set
+- name: SetFunctions
+  functions:
+   - name: INTERSECTION
+     min: 2
+     max: 2
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: AT_LEAST_ONE_MEMBER_OF
+     min: 2
+     max: 2
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: UNION
+     min: 2
+     max: -1
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: SUBSET
+     min: 2
+     max: 2
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: SET_EQUALS
+     min: 2
+     max: 2
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+# Bag
+- name: BagFunctions
+  functions:
+   - name: ONE_AND_ONLY
+     min: 1
+     max: 1
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: BAG_SIZE
+     min: 1
+     max: 1
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: IS_IN
+     min: 2
+     max: 2
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+   - name: BAG
+     min: 1
+     max: -1
+     qualifiers: ["I", "DO", "S", "T", "DATE", "DT", "X", "R", "ANY", "D", "YM", "B", "H", "B64"]
+# High order bag
+- name: HigherOrderBagFunctions
+  functions:
+   - name: ANY_OF
+     min: 3
+     max: 3
+   - name: ALL_OF
+     min: 3
+     max: 3
+   - name: ANY_OF_ANY
+     min: 3
+     max: 3
+   - name: ALL_OF_ANY
+     min: 3
+     max: 3
+   - name: ANY_OF_ALL
+     min: 3
+     max: 3
+   - name: ALL_OF_ALL
+     min: 3
+     max: 3
+# XPATH
+- name: XPath
+  functions:
+   - name: XPATH_NODE_COUNT
+     min: 1
+     max: 1
+   - name: XPATH_NODE_EQUAL
+     min: 2
+     max: 2
+   - name: XPATH_NODE_MATCH
+     min: 2
+     max: 2

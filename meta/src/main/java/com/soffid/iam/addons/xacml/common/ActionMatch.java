@@ -21,11 +21,13 @@ public class ActionMatch {
 	public com.soffid.iam.addons.xacml.common.DataType dataTypeAttributeValue;
 
 	@Nullable
+	@Attribute(synonyms = {"dataTypeDesignator"})
 	public com.soffid.iam.addons.xacml.common.DataType dataTypeActionDesignator;
 
 	public java.lang.String attributeValue;
 
 	@Nullable
+	@Attribute(synonyms = {"attributeDesignator"})
 	public java.lang.String actionAttributeDesignator;
 
 }

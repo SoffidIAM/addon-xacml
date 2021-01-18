@@ -26,7 +26,7 @@ public class Rule {
 	public java.util.Collection<com.soffid.iam.addons.xacml.common.Target> target;
 
 	@Nullable
-	public java.util.Collection<com.soffid.iam.addons.xacml.common.Condition> condicion;
+	public java.util.Collection<com.soffid.iam.addons.xacml.common.Condition> condition;
 
 	public java.lang.Long policyId;
 

@@ -10,7 +10,6 @@ import com.soffid.mda.annotation.*;
 
 @Entity (table="SCX_POLICY" )
 @Depends ({com.soffid.iam.addons.xacml.common.Policy.class,
-	com.soffid.iam.addons.xacml.model.ObligationsEntity.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class,
 	com.soffid.iam.addons.xacml.model.RuleEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicyDefaults.class,
@@ -21,9 +20,6 @@ import com.soffid.mda.annotation.*;
 public abstract class PolicyEntity {
 	@Column (name="POL_TEN_ID")
 	TenantEntity tenant;
-
-	@ForeignKey (foreignColumn="OBS_POLICY")
-	public java.util.Collection<com.soffid.iam.addons.xacml.model.ObligationsEntity> obligations;
 
 	@ForeignKey (foreignColumn="TAR_POLICY")
 	public java.util.Collection<com.soffid.iam.addons.xacml.model.TargetEntity> target;

@@ -16,7 +16,7 @@ public class Policy {
 	public java.lang.String policyId;
 
 	@Nullable
-	@Attribute(defaultValue = "\"1.0\"")
+	@Attribute(defaultValue = "\"1\"")
 	public java.lang.String version;
 
 	public com.soffid.iam.addons.xacml.common.PolicyCombiningAlgorithm ruleCombiningAlgId;
@@ -36,5 +36,8 @@ public class Policy {
 
 	@Nullable
 	public java.util.Collection<com.soffid.iam.addons.xacml.common.Rule> rule;
+
+	@Nullable
+	public java.util.Collection<com.soffid.iam.addons.xacml.common.Obligation> obligation;
 
 }

@@ -133,8 +133,9 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 	protected void handleUpdate(Target vo) throws Exception {
 		TargetEntity te = targetToEntity(vo);
 		super.update (te);
-		for (SubjectMatchEntity subjectE: te.getSubjectMatch())
+		for (Iterator<SubjectMatchEntity> it = te.getSubjectMatch().iterator(); it.hasNext();)
 		{
+			SubjectMatchEntity subjectE = it.next();
 			boolean found = false;
 			for (SubjectMatch subject : vo.getSubjectMatch())
 			{
@@ -144,22 +145,27 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getSubjectMatchEntityDao().remove(subjectE);
+				it.remove();
+			}
 		}
 		for (SubjectMatch subject : vo.getSubjectMatch())
 		{
-			if (subject.getId() == null){
+			if (subject.getId() == null  || getSubjectMatchEntityDao().load(subject.getId()) == null){
 				SubjectMatchEntity sm = getSubjectMatchEntityDao().create(subject, te);
 				sm.setTarget(te);
 				getSubjectMatchEntityDao().create(sm);
 				subject.setId(sm.getId());
+				te.getSubjectMatch().add(sm);
 			}else
 				getSubjectMatchEntityDao().update(subject);
 		}
 		
-		for (ResourceMatchEntity resourceE: te.getResourceMatch())
+		for (Iterator<ResourceMatchEntity> it = te.getResourceMatch().iterator();
+				it.hasNext();)
 		{
+			ResourceMatchEntity resourceE = it.next();
 			boolean found = false;
 			for (ResourceMatch resource : vo.getResourceMatch())
 			{
@@ -169,22 +175,27 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getResourceMatchEntityDao().remove(resourceE);
+				it.remove();
+			}
+				
 		}
 		for (ResourceMatch resource : vo.getResourceMatch())
 		{
-			if (resource.getId() == null){
+			if (resource.getId() == null  || getResourceMatchEntityDao().load(resource.getId()) == null){
 				ResourceMatchEntity rm = getResourceMatchEntityDao().create(resource, te);
 				rm.setTarget(te);
 				getResourceMatchEntityDao().update(rm);
 				resource.setId(rm.getId());
+				te.getResourceMatch().add(rm);
 			}else
 				getResourceMatchEntityDao().update(resource);
 		}
 		
-		for (ActionMatchEntity actionE: te.getActionMatch())
+		for (Iterator<ActionMatchEntity> it = te.getActionMatch().iterator(); it.hasNext();)
 		{
+			ActionMatchEntity actionE = it.next();
 			boolean found = false;
 			for (ActionMatch action : vo.getActionMatch())
 			{
@@ -194,22 +205,27 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getActionMatchEntityDao().remove(actionE);
+				it.remove();
+			}
 		}
 		for (ActionMatch action : vo.getActionMatch())
 		{
-			if (action.getId() == null){
+			if (action.getId() == null || getActionMatchEntityDao().load(action.getId()) == null){
 				ActionMatchEntity ae = getActionMatchEntityDao().create(action, te);
 				ae.setTarget(te);
 				getActionMatchEntityDao().update(ae);
 				action.setId(ae.getId());
+				te.getActionMatch().add(ae);
 			}else
 				getActionMatchEntityDao().update(action);
 		}
 		
-		for (EnvironmentMatchEntity environmentE: te.getEnvironmentMatch())
+		for (Iterator<EnvironmentMatchEntity> it = te.getEnvironmentMatch().iterator();
+				it.hasNext();)
 		{
+			EnvironmentMatchEntity environmentE = it.next();
 			boolean found = false;
 			for (EnvironmentMatch environment : vo.getEnvironmentMatch())
 			{
@@ -219,16 +235,19 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getEnvironmentMatchEntityDao().remove(environmentE);
+				it.remove();
+			}
 		}
 		for (EnvironmentMatch environment : vo.getEnvironmentMatch())
 		{
-			if (environment.getId() == null){
+			if (environment.getId() == null || getEnvironmentMatchEntityDao().load(environment.getId()) == null){
 				EnvironmentMatchEntity ee = getEnvironmentMatchEntityDao().create(environment, te);
 				ee.setTarget(te);
 				getEnvironmentMatchEntityDao().update(ee);
 				environment.setId(ee.getId());
+				te.getEnvironmentMatch().add(ee);
 			}else
 				getEnvironmentMatchEntityDao().update(environment);
 		}

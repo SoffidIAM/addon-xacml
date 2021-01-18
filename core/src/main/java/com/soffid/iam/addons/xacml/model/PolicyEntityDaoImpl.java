@@ -7,6 +7,7 @@ package com.soffid.iam.addons.xacml.model;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -14,6 +15,7 @@ import java.util.LinkedList;
 import com.soffid.iam.addons.xacml.common.ActionMatch;
 import com.soffid.iam.addons.xacml.common.Condition;
 import com.soffid.iam.addons.xacml.common.EnvironmentMatch;
+import com.soffid.iam.addons.xacml.common.Obligation;
 import com.soffid.iam.addons.xacml.common.Policy;
 import com.soffid.iam.addons.xacml.common.ResourceMatch;
 import com.soffid.iam.addons.xacml.common.Rule;
@@ -42,11 +44,18 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 		}
 		
 		// Incompatible types source.rule and target.rule
-		targetPolicy.setRule(new LinkedList<Rule>());
+		LinkedList<Rule> rules = new LinkedList<Rule>();
 		for (RuleEntity ruleEntity: sourceEntity.getRule())
 		{
-			targetPolicy.getRule().add(getRuleEntityDao().toRule(ruleEntity));
+			rules.add(getRuleEntityDao().toRule(ruleEntity));
 		}
+		Collections.sort(rules, new Comparator<Rule>() {
+			public int compare(Rule o1, Rule o2) {
+				return o1.getOrder().compareTo(o2.getOrder());
+			}
+		});
+		targetPolicy.setRule(rules);
+		
 		
 		// Incompatible types source.variableDefinition and target.variableDefinition
 		targetPolicy.setVariableDefinition(new LinkedList<VariableDefinition>());
@@ -59,6 +68,10 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 			PolicySetEntity policySetEntity = sourceEntity.getPolicySet();
 			targetPolicy.setPolicySetId(policySetEntity.getId());
 		}				
+		targetPolicy.setObligation(new LinkedList<Obligation>());
+		for (ObligationEntity oe: sourceEntity.getObligation()) {
+			targetPolicy.getObligation().add(getObligationEntityDao().toObligation(oe));
+		}
 	}
 	
 	
@@ -134,6 +147,17 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 				getVariableDefinitionEntityDao().update(varE);
 			}
 		}
+
+		if (vo.getObligation() != null)
+		{
+			for (Obligation o : vo.getObligation())
+			{
+				ObligationEntity oe = getObligationEntityDao().create(o);
+				oe.setPolicy(pe);
+				getObligationEntityDao().update(oe);
+				pe.getObligation().add(oe);
+			}
+		}
 		return pe;
 	}
 
@@ -142,7 +166,7 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 	protected void handleUpdate(Policy vo) throws Exception {
 		PolicyEntity pe = policyToEntity(vo);
 		super.update (pe);
-		for (TargetEntity targetE: pe.getTarget())
+		for (TargetEntity targetE: new LinkedList<TargetEntity>( pe.getTarget()) )
 		{
 			boolean found = false;
 			for (Target target : vo.getTarget())
@@ -153,21 +177,24 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getTargetEntityDao().remove(targetE);
+				pe.getTarget().remove(targetE);
+			}
 		}
 		for (Target target : vo.getTarget())
 		{
-			if (target.getId() == null){
+			if (target.getId() == null || getTargetEntityDao().load(target.getId()) == null){
 				TargetEntity te = getTargetEntityDao().create(target);
 				te.setPolicy(pe);
 				getTargetEntityDao().update(te);
-			}else
+				pe.getTarget().add(te);
+			}else 
 				getTargetEntityDao().update(target);
 		}
 		
 		
-		for(RuleEntity ruleE: pe.getRule())
+ 		for(RuleEntity ruleE: new LinkedList<RuleEntity>(pe.getRule()))
 		{
 			boolean found = false;
 			for(Rule rule : vo.getRule())
@@ -178,22 +205,25 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getRuleEntityDao().remove(ruleE);
+				pe.getRule().remove(ruleE);
+			}
 		}
 		for (Rule rule : vo.getRule())
 		{
-			if(rule.getId() == null){
+			if(rule.getId() == null || getRuleEntityDao().load(rule.getId()) == null){
 				rule.setPolicyId(pe.getId());
 				RuleEntity re = getRuleEntityDao().create(rule, pe);
 				rule.setId(re.getId());
+				pe.getRule().add(re);
 			}else if(rule.getId() != null){
 				rule.setPolicyId(pe.getId());
 				getRuleEntityDao().update(rule);
 			}
 		}
 		
-		for (VariableDefinitionEntity varE: pe.getVariableDefinition())
+		for (VariableDefinitionEntity varE: new LinkedList<VariableDefinitionEntity> (pe.getVariableDefinition()))
 		{
 			boolean found = false;
 			for (VariableDefinition var : vo.getVariableDefinition())
@@ -204,18 +234,44 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getVariableDefinitionEntityDao().remove(varE);
+				pe.getVariableDefinition().remove(varE);
+			}
 		}
 		for (VariableDefinition var : vo.getVariableDefinition())
 		{
-			if (var.getId() == null){
+			if (var.getId() == null || getVariableDefinitionEntityDao().load(var.getId()) == null){
 				VariableDefinitionEntity ve = getVariableDefinitionEntityDao().create(var, pe);
 				pe.getVariableDefinition().add(ve);
-				//update(pe);
-				//var.setId(ve.getId());
 			}else
 				getVariableDefinitionEntityDao().update(var);
+		}
+		for (ObligationEntity oe: new LinkedList<ObligationEntity>( pe.getObligation()))
+		{
+			boolean found = false;
+			for (Obligation o : vo.getObligation())
+			{
+				if (oe.getId().equals (o.getId()))
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				getObligationEntityDao().remove(oe);
+				pe.getObligation().remove(oe);
+			}
+		}
+		for (Obligation o : vo.getObligation())
+		{
+			if (o.getId() == null || getObligationEntityDao().load(o.getId()) == null){
+				ObligationEntity oe = getObligationEntityDao().create(o);
+				oe.setPolicy(pe);
+				getObligationEntityDao().update(oe);
+			}else {
+				getObligationEntityDao().update(o);
+			}
 		}
 	}
 
@@ -235,6 +291,8 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 		{
 			getVariableDefinitionEntityDao().remove(varE);
 		}
+		for (ObligationEntity oe: pse.getObligation())
+			getObligationEntityDao().remove(oe);
 		super.remove (pse);
 	}
 }

@@ -12,6 +12,7 @@ public class PolicyStatus {
 	boolean enabled;
 	String policyId;
 	String policyVersion;
+	boolean debug;
 	
 	public PolicyStatus() {
 	
@@ -21,6 +22,7 @@ public class PolicyStatus {
 		enabled = authPolicy.enabled;
 		policyId = authPolicy.policyId;
 		policyVersion = authPolicy.policyVersion;
+		debug = authPolicy.debug;
 	}
 	
 	public boolean isEnabled() {
@@ -49,7 +51,16 @@ public class PolicyStatus {
 			config = new PDPConfiguration();
 			PDPPolicySetReference ref = new PDPPolicySetReference(policyId, policyVersion);
 			config.setPolicies(Collections.singletonList(ref));
+			config.setDebug(debug);
 		}
 		return config;
+	}
+
+	public boolean isDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 }	

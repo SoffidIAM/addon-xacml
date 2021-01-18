@@ -8,6 +8,7 @@ package com.soffid.iam.addons.xacml.model;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.soffid.iam.addons.xacml.common.ActionMatch;
@@ -40,6 +41,9 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 				return o1.getOrder().compareTo(o2.getOrder());
 			}
 			});
+			for (int i = 0; i < expressionList.size(); i++) {
+				expressionList.get(i).setOrder(i);
+			}
 			target.setSubexpression(expressionList);
 		}
 		else
@@ -105,7 +109,7 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 		}
 		else
 			super.update(ee);
-		for (ExpressionEntity subE: ee.getSubexpression())
+		for (ExpressionEntity subE: new LinkedList<ExpressionEntity>( ee.getSubexpression()) )
 		{
 			boolean found = false;
 			for (Expression exp : expression.getSubexpression())
@@ -116,17 +120,19 @@ public class ExpressionEntityDaoImpl extends ExpressionEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getExpressionEntityDao().remove(subE);
+				ee.getSubexpression().remove(subE);
+			}
 		}
 		for (Expression sub : expression.getSubexpression())
 		{
-			if (sub.getId() == null){
+			if (sub.getId() == null || load(sub.getId()) == null){
 				ExpressionEntity se = getExpressionEntityDao().create(sub);
 				se.setExpression(ee);
 				ee.getSubexpression().add(se);
-				getExpressionEntityDao().update(ee);
 				getExpressionEntityDao().update(se);
+				sub.setId(se.getId());
 			}else{
 				getExpressionEntityDao().update(sub);
 			}
