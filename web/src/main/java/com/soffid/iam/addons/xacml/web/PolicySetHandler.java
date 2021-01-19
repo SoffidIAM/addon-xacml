@@ -1,14 +1,23 @@
 package com.soffid.iam.addons.xacml.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.LinkedList;
 
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.zkoss.zk.ui.Path;
+import org.zkoss.zk.ui.UiException;
 import org.zkoss.zk.ui.event.Event;
+import org.zkoss.zk.ui.event.UploadEvent;
+import org.zkoss.zul.Filedownload;
 import org.zkoss.zul.Radio;
 import org.zkoss.zul.Radiogroup;
 import org.zkoss.zul.Textbox;
+import org.zkoss.zul.Treeitem;
 
 import com.soffid.iam.addons.xacml.common.IdReference;
 import com.soffid.iam.addons.xacml.common.Policy;
@@ -17,12 +26,16 @@ import com.soffid.iam.addons.xacml.common.PolicySet;
 import com.soffid.iam.addons.xacml.common.PolicySetIdReference;
 import com.soffid.iam.addons.xacml.common.Target;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetService;
+import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
 import com.soffid.iam.web.component.FrameHandler;
+import com.soffid.iam.web.popup.FileUpload2;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
+import es.caib.zkib.component.DataTree;
 import es.caib.zkib.component.DataTree2;
 import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datamodel.DataNodeCollection;
+import es.caib.zkib.datamodel.xml.XmlDataNode;
 import es.caib.zkib.datasource.CommitException;
 import es.caib.zkib.datasource.XPathUtils;
 import es.caib.zkib.jxpath.JXPathContext;
@@ -432,33 +445,6 @@ public class PolicySetHandler extends FrameHandler {
 		}
 	}
 	
-	void importPolicySet(){
-		org.zkoss.util.media.Media m = org.zkoss.zul.Fileupload.get();
-		if(m!=null){
-        	org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
-        	org.dom4j.Document document;
-        	java.io.InputStream in;
-			if (m.inMemory())
-			{
-				if (m.isBinary())
-					in = new java.io.ByteArrayInputStream(m.getByteData());
-				else
-					in = new java.io.ByteArrayInputStream(m.getStringData().getBytes());
-			}
-			else
-			{
-				if (m.isBinary())
-					in = m.getStreamData();
-				else
-					in = m.getReaderData();
-			}
-			javax.naming.Context context = new javax.naming.InitialContext();
-			policySetService = context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
-			policySetService.importXACMLPolicySet(in);
-			refrescaArbre();
-		}
-	}
-	
 	void noEmpty(Textbox tb){
 		String value = tb.getValue();
 		if(value == null || value.isEmpty()){
@@ -766,5 +752,63 @@ public class PolicySetHandler extends FrameHandler {
 			((Textbox)getFellow("rangeVersion")).setValue(null);
 			((Textbox)getFellow("rangeVersion2")).setValue(null);
 		}
+	}
+	
+	public void importPolicySet(Event event){
+		FileUpload2.get((event2) -> {
+			org.zkoss.util.media.Media m = ((UploadEvent)event2).getMedia();
+			if(m!=null){
+				org.dom4j.io.SAXReader reader = new org.dom4j.io.SAXReader();
+				org.dom4j.Document document;
+				java.io.InputStream in;
+				if (m.inMemory())
+				{
+					if (m.isBinary())
+						in = new java.io.ByteArrayInputStream(m.getByteData());
+					else
+						in = new java.io.ByteArrayInputStream(m.getStringData().getBytes());
+				}
+				else
+				{
+					if (m.isBinary())
+						in = m.getStreamData();
+					else
+						throw new UiException("The uploaded file seems to be text. It should be uploaded as binary");
+				}
+				javax.naming.Context context = new javax.naming.InitialContext();
+				PolicySetService policySetService = (PolicySetService) context.lookup(com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome.JNDI_NAME);
+				policySetService.importXACMLPolicySet(in);
+				getModel().refresh();
+			}
+			
+		});
+	}
+
+	public void exportPolicySet(Event event) throws NamingException {
+		Object o = XPathUtils.eval(getForm(), "/instance");
+		PolicySet polset = new PolicySet();
+		Policy pol = new Policy();
+		if (o instanceof PolicySet)
+			polset = (PolicySet) o;
+		else
+			pol = (Policy) o;
+		
+		PolicySetService pss = (PolicySetService) new InitialContext().lookup(PolicySetServiceHome.JNDI_NAME);
+	 
+		try {
+			File xmltemp = File.createTempFile("xmltemp", ".xml"); //Crea un fichero temporal tipo xml
+			OutputStream out = new FileOutputStream(xmltemp.getPath());
+			if(polset.getPolicySetId() != null)
+				pss.exportXACMLPolcySet(polset.getPolicySetId(), polset.getVersion(), out);
+			else
+				pss.exportXACMLPolicy(pol.getPolicyId(), pol.getVersion(), out);
+			out.close();
+			Filedownload.save(new FileInputStream(xmltemp), "text/xml", 
+					"policy-"+((PolicySet)polset).getPolicySetId()+".xml");
+			xmltemp.deleteOnExit();
+		} catch (Exception e) {
+			throw new UiException("Error generating xml file: " + e.getMessage());
+		} 
+		
 	}
 }
