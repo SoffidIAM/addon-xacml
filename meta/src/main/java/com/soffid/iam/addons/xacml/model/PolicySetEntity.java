@@ -11,7 +11,6 @@ import com.soffid.mda.annotation.*;
 @Entity (table="SCX_POLSET" )
 @Depends ({com.soffid.iam.addons.xacml.common.PolicySet.class,
 	com.soffid.iam.addons.xacml.model.PolicySetEntity.class,
-	com.soffid.iam.addons.xacml.model.ObligationsEntity.class,
 	com.soffid.iam.addons.xacml.model.TargetEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicyEntity.class,
 	com.soffid.iam.addons.xacml.model.PolicySetDefaults.class,
@@ -34,9 +33,6 @@ public abstract class PolicySetEntity {
 
 	@ForeignKey (foreignColumn="PSE_PARENT")
 	public java.util.Collection<com.soffid.iam.addons.xacml.model.PolicySetEntity> childrenPolicySet;
-
-	@ForeignKey (foreignColumn="OBS_POLSET")
-	public java.util.Collection<com.soffid.iam.addons.xacml.model.ObligationsEntity> obligations;
 
 	@ForeignKey (foreignColumn="TAR_POLSET")
 	public java.util.Collection<com.soffid.iam.addons.xacml.model.TargetEntity> target;

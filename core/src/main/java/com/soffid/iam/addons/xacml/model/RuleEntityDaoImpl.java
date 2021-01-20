@@ -51,10 +51,10 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 		target.setTarget(new HashSet<Target>());
 		target.getTarget().add(t);
 		
-		// Incompatible types source.condicion and target.condicion!!!!!!!!!!!!!!!!!!!!
-		target.setCondicion(new LinkedList<Condition>());
-		for (ConditionEntity conEntity: source.getCondicion()){
-			target.getCondicion().add(getConditionEntityDao().toCondition(conEntity));
+		// Incompatible types source.Condition and target.Condition!!!!!!!!!!!!!!!!!!!!
+		target.setCondition(new LinkedList<Condition>());
+		for (ConditionEntity conEntity: source.getCondition()){
+			target.getCondition().add(getConditionEntityDao().toCondition(conEntity));
 		}
 
 	}
@@ -77,7 +77,7 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 		{
 			getTargetEntityDao().remove(target);
 		}
-		for (ConditionEntity con: entity.getCondicion()){
+		for (ConditionEntity con: entity.getCondition()){
 			getConditionEntityDao().remove(con);
 		}
 		super.remove(entity);
@@ -109,12 +109,12 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 			getTargetEntityDao().update(te);
 			re.getTarget().add(te);
 		}
-		if(vo.getCondicion() != null){
-			for (Condition con : vo.getCondicion()){
+		if(vo.getCondition() != null){
+			for (Condition con : vo.getCondition()){
 				ConditionEntity conE = getConditionEntityDao().create(con, re);
 				conE.setRule(re);
 				getConditionEntityDao().update(conE);
-				re.getCondicion().add(conE);
+				re.getCondition().add(conE);
 			}
 		}
 		return re;
@@ -132,7 +132,7 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 		}
 		else
 			super.update (re);
-		for (TargetEntity targetE: re.getTarget())
+		for (TargetEntity targetE: new LinkedList<TargetEntity> (re.getTarget()))
 		{
 			boolean found = false;
 			for (Target target : vo.getTarget())
@@ -143,37 +143,39 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getTargetEntityDao().remove(targetE);
+				re.getTarget().remove(targetE);
+			}
 		}
 		for (Target target : vo.getTarget())
 		{
-			if (target.getId() == null){
+			if (target.getId() == null || getTargetEntityDao().load(target.getId()) == null){
 				TargetEntity te = getTargetEntityDao().create(target);
 				te.setRule(re);
 				getTargetEntityDao().update(te);
+				re.getTarget().add(te);
 			}else
 				getTargetEntityDao().update(target);
 		}
 		
-		for (ConditionEntity conE : re.getCondicion()){
+		for (ConditionEntity conE : new LinkedList<ConditionEntity> (re.getCondition())) {
 			boolean found = false;
-			for (Condition con : vo.getCondicion()){
+			for (Condition con : vo.getCondition()){
 				if (conE.getId().equals(con.getId())){
 					found = true;
 					break;
 				}
 			}
-			if (!found)
+			if (!found) {
 				getConditionEntityDao().remove(conE);
+				re.getCondition().remove(conE);
+			}
 		}
-		for (Condition con : vo.getCondicion()){
-			if (con.getId() == null && con.getConditionId() != null){
+		for (Condition con : vo.getCondition()){
+			if (con.getId() == null || getConditionEntityDao().load(con.getId()) == null){
 				ConditionEntity ce = getConditionEntityDao().create(con, re);
-				//ce.setRule(re);
-				//getConditionEntityDao().update(ce);
-				re.getCondicion().add(ce);
-				//update(re);
+				re.getCondition().add(ce);
 			}else if(con.getId() != null)
 				getConditionEntityDao().update(con);
 		}
@@ -186,7 +188,7 @@ public class RuleEntityDaoImpl extends RuleEntityDaoBase
 		{
 			getTargetEntityDao().remove(targetE);
 		}
-		for (ConditionEntity conE : re.getCondicion()){
+		for (ConditionEntity conE : re.getCondition()){
 			getConditionEntityDao().remove(conE);
 		} 
 		super.remove (re);

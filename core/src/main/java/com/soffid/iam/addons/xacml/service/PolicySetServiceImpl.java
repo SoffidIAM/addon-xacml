@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -350,16 +351,32 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 	protected void handleExportXACMLPolcySet(String policySetId, String version,
 			OutputStream outputStream) throws Exception {
 		XACMLGenerator xacmlGenerator = new XACMLGenerator(this);
-		xacmlGenerator.generate(outputStream, policySetId, version);
+		xacmlGenerator.generate(outputStream, policySetId, version, true);
+	}
+	
+	@Override
+	protected void handleExportXACMLPolicySet(String policySetId, String version,
+			OutputStream outputStream,
+			boolean childPolicies) throws Exception {
+		XACMLGenerator xacmlGenerator = new XACMLGenerator(this);
+		xacmlGenerator.generate(outputStream, policySetId, version, childPolicies);
 	}
 	
 	@Override
 	protected void handleExportXACMLPolicy (String policyId, String version,
 			OutputStream outputStream) throws Exception {
 		XACMLGenerator xacmlGenerator = new XACMLGenerator(this);
-		xacmlGenerator.generatePolicy(outputStream, policyId, version);
+		xacmlGenerator.generatePolicy(outputStream, policyId, version, false, true, 0);
 	}
 
+	@Override
+	protected void handleExportXACMLPolicy (String policyId, String version,
+			OutputStream outputStream,
+			boolean dummyPolicySet,
+			boolean allRules, Integer ruleNumber) throws Exception {
+		XACMLGenerator xacmlGenerator = new XACMLGenerator(this);
+		xacmlGenerator.generatePolicy(outputStream, policyId, version, dummyPolicySet, allRules, ruleNumber == null ? -1: ruleNumber.intValue());
+	}
 
 	
 	MultiPDPHandler handler = new MultiPDPHandler(this);
@@ -368,7 +385,7 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 			RequestContext requestContext) throws Exception {
 		return handler.handle(config, requestContext);
 	}
-
+	
 
 	@Override
 	protected Collection<Account> handleFindFolderAccounts(String folder) throws Exception {
@@ -454,6 +471,12 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 						follow = true;
 					}
 				} while (follow);
+				StringBuffer text = new StringBuffer();
+				FileReader reader = new FileReader(f);
+				for (int i = reader.read(); i >= 0; i = reader.read())
+					text.append((char) i);
+				reader.close();
+				log.warn("Error generating policy file\n"+ text);
 				if (e instanceof InternalErrorException) throw (InternalErrorException) e;
 				else throw new InternalErrorException("Error validating policy "+policySet.getPolicySetId(), e);
 			} finally {
@@ -495,6 +518,12 @@ public class PolicySetServiceImpl extends com.soffid.iam.addons.xacml.service.Po
 				SoffidPDP jbossPDP = new SoffidPDP(new ByteArrayInputStream(result.getBytes("UTF-8")));
 				testPDP (jbossPDP);
 			} catch (Throwable e) {
+				StringBuffer text = new StringBuffer();
+				FileReader reader = new FileReader(f);
+				for (int i = reader.read(); i >= 0; i = reader.read())
+					text.append((char) i);
+				reader.close();
+				log.warn("Error generating policy file\n"+ text);
 				boolean follow = false;
 				do {
 					follow = false;

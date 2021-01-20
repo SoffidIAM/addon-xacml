@@ -18,6 +18,7 @@
 		<custom-attribute name="name">return instance[0]</custom-attribute>
 		<custom-attribute name="value">return instance[1]</custom-attribute>
 	</datanode>
+
 	<datanode name="root">
 		<finder name="world" type="world">
 			<script-finder>
@@ -81,29 +82,7 @@
 		</finder>
 		<finder name="metadata" type="metadata">
 			<script-finder>
-			{
-				import org.zkoss.util.resource.Labels;
-				java.util.List l = new java.util.LinkedList ();
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Select"), ""});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.User"), "urn:com:soffid:xacml:subject:user"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.SubjectId"), "urn:oasis:names:tc:xacml:1.0:subject:subject-id"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Roles"), "urn:oasis:names:tc:xacml:2.0:subject:role"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.Groups"), "urn:com:soffid:xacml:subject:group"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.PrimaryGroup"), "urn:com:soffid:xacml:subject:primaryGroup"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.SubjectIdQualifier"), "urn:oasis:names:tc:xacml:1.0:subject:subject-id-qualifier"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.IPaddress"), "urn:oasis:names:tc:xacml:1.0:subject:authn-locality:ip-address"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OperatingSystem"), "urn:com:soffid:host:os"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.DhcpParams"), "urn:com:soffid:host:dhcp"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.HostName"), "urn:oasis:names:tc:xacml:1.0:subject:authn-locality:dns-name"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdIssuer"), "urn:com:soffid:oidc:iss"});
-				l.add ( new String [] { Labels.getLabel ("xacml_policySet.OpenIdAudience"), "urn:com:soffid:oidc:aud"});
-				ejb = new javax.naming.InitialContext(). lookup ("java:comp/env/ejb/DadesAddicionalsEJB");
-				for ( es.caib.seycon.ng.comu.TipusDada tipusDada: ejb.findTipusDadesByCodi("%"))
-				{
-					l.add (new String [] { tipusDada.getLabel(), "urn:com:soffid:xacml:subject:user:att:"+tipusDada.getCodi()});
-				}
-				return l;
-			}
+			return com.soffid.iam.addons.xacml.web.ExpressionHelper.getSubjects();
 			</script-finder>
 		</finder>
 	</datanode>
@@ -170,9 +149,14 @@
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.PolicyIdReference"> 
 			</new-instance-bean>
 		</finder>
-		<finder name="target" type="target" refreshAfterCommit="true">
+		<finder name="target" type="target"  executeOnNewObjects="true" refreshAfterCommit="true">
 			<collection-finder collection="${instance.target}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="obligation" type="obligation"  executeOnNewObjects="true" refreshAfterCommit="true">
+			<collection-finder collection="${instance.obligation}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Obligation"> 
 			</new-instance-bean>
 		</finder>
 		<script-handler>
@@ -223,9 +207,14 @@
 	</datanode>
 
 	<datanode name="policy">	
-		<finder name="target" type="target" refreshAfterCommit="true">
+		<finder name="target" type="target" executeOnNewObjects="true" refreshAfterCommit="true">
 			<collection-finder collection="${instance.target}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Target"> 
+			</new-instance-bean>
+		</finder>
+		<finder name="obligation" type="obligation"  executeOnNewObjects="true" refreshAfterCommit="true">
+			<collection-finder collection="${instance.obligation}"/>
+			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Obligation"> 
 			</new-instance-bean>
 		</finder>
 		<script-handler>
@@ -250,17 +239,17 @@
 				<parameter value="${instance}" />
 			</update-method>
 		</ejb-handler>
-		<finder name="variableDefinition" type="variableDefinition" refreshAfterCommit="true">
+		<finder name="variableDefinition" type="variableDefinition" refreshAfterCommit="true" executeOnNewObjects="true">
 			<collection-finder collection="${instance.variableDefinition}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.VariableDefinition"> 
 			</new-instance-bean>
 		</finder>
-		<finder name="rule" type="rule">
+		<finder name="rule" type="rule" executeOnNewObjects="true" >
 			<collection-finder collection="${instance.rule}"/>
 			<new-instance-script>
 				 obj = new com.soffid.iam.addons.xacml.common.Rule();
 				 obj.setTarget(new java.util.LinkedList());
-				 obj.setCondicion(new java.util.LinkedList());
+				 obj.setCondition(new java.util.LinkedList());
 				 return obj;
 			</new-instance-script>
 		</finder>
@@ -279,28 +268,32 @@
 	
 	<datanode name="target">
 		<collection-handler collection="${instance.target}"/>
-		<finder name="subjectMatch" type="subjectMatch">
+		<finder name="subjectMatch" type="subjectMatch" executeOnNewObjects="true">
 			<collection-finder collection="${instance.subjectMatch}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.SubjectMatch"> 
 			</new-instance-bean>
 		</finder>
-		<finder name="resourceMatch" type="resourceMatch">
+		<finder name="resourceMatch" type="resourceMatch" executeOnNewObjects="true">
 			<collection-finder collection="${instance.resourceMatch}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.ResourceMatch"> 
 			</new-instance-bean>
 		</finder>
-		<finder name="actionMatch" type="actionMatch">
+		<finder name="actionMatch" type="actionMatch" executeOnNewObjects="true">
 			<collection-finder collection="${instance.actionMatch}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.ActionMatch"> 
 			</new-instance-bean>
 		</finder>
-		<finder name="environmentMatch" type="environmentMatch">
+		<finder name="environmentMatch" type="environmentMatch" executeOnNewObjects="true">
 			<collection-finder collection="${instance.environmentMatch}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.EnvironmentMatch"> 
 			</new-instance-bean>
 		</finder>
 	</datanode>
 	
+	<datanode name="obligation">
+		<collection-handler collection="${instance.obligation}"/>
+	</datanode>
+
 	<datanode name="subjectMatch">
 		<collection-handler collection="${instance.subjectMatch}"/>
 		<validator>
@@ -401,7 +394,7 @@
 	
 	<datanode name="rule">
 		<collection-handler collection="${instance.rule}"/>
-		<finder name="target" type="target">
+		<finder name="target" type="target"  executeOnNewObjects="true">
 			<collection-finder collection="${instance.target}"/>
 			<new-instance-script>
 				 target = new com.soffid.iam.addons.xacml.common.Target();
@@ -412,8 +405,8 @@
 				 return target;
 			</new-instance-script>
 		</finder>
-		<finder name="condicion" type="condicion" refreshAfterCommit="true">
-			<collection-finder collection="${instance.condicion}"/>
+		<finder name="condition" type="condition" refreshAfterCommit="true" executeOnNewObjects="true">
+			<collection-finder collection="${instance.condition}"/>
 			<new-instance-bean className="com.soffid.iam.addons.xacml.common.Condition"> 
 			</new-instance-bean>
 		</finder>
@@ -430,8 +423,8 @@
 		</validator>
 	</datanode>
 	
-	<datanode name="condicion">
-		<collection-handler collection="${instance.condicion}"/>
+	<datanode name="condition">
+		<collection-handler collection="${instance.condition}"/>
 		<validator>
 			<attribute-validator expr="${instance.conditionId}" notNull="true" friendlyName="xacml.ConditionIdNotNull"/>
 		</validator>

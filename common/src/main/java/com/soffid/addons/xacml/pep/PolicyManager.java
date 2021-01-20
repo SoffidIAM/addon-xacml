@@ -80,6 +80,8 @@ public class PolicyManager {
 		config = ConfigurationCache.getProperty(policyEnableProperty);
 		if (config != null && config.equals("true")) { //$NON-NLS-1$
 			ps.setEnabled(true);
+			config = ConfigurationCache.getMasterProperty(policyEnableProperty+".debug");
+			ps.setDebug("true".equals(config));
 		}
 	}
 
@@ -122,6 +124,7 @@ public class PolicyManager {
 			}
 		}
 
+		applyProperty(configuracioService, policyEnableProperty+".debug", Boolean.toString(ps.isDebug()));
 		applyProperty(configuracioService, policyEnableProperty, Boolean.toString(ps.isEnabled()));
 		applyProperty(configuracioService, policySetProperty, ps.getPolicyId());
 		applyProperty(configuracioService, policyVersionProperty, ps.getPolicyVersion());

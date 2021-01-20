@@ -1,560 +1,242 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
-<?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
-<?component name="input_dada" macro-uri="/comu/input_dada.zul" ?>
-<zk xmlns:h="http://www.w3.org/1999/xhtml">
-	<separator />
-	<hbox sclass="fonsBlanc" width="100%">	
-		<vbox sclass="fonsBlanc" width="100%">
-			<hbox widths="20%, 3%, *" width="100%" sclass="fonsBlanc">
-				<input_etiqueta value="${c:l('xacml_policySet.Subjects')}"/>
-				<imageclic id="addSubsPS" src="~./img/list-add.gif">
-					<attribute name="onClick">
-						createNew(gridSubjects);
-					</attribute>
-				</imageclic>
-				<label value="${c:l('xacml_policySet.AddNew')} "/>
-			</hbox>
-			<hbox width="100%" sclass="fonsBlanc">
-				<grid dataPath="subjectMatch" fixedLayout="true" id="gridSubjects" sclass="xacmlgrid">
-					<attribute name="onNewRow"><![CDATA[
-						int number = self.getRows().getChildren().size();
-						for(int i=0; i<number; i++)
-						{
-							Radiogroup r = self.getRows().getChildren().get(i).getChildren().get(1).getChildren().get(1).getChildren().get(0);
-							String t = r.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
-							Hbox designator = r.getChildren().get(0).getChildren().get(0);
-							Hbox selector = r.getChildren().get(0).getChildren().get(1);
-							if(t == null || t.trim().equals("")){
-								r.setSelectedIndex(0);
-								// designator.getChildren().get(2).setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(false);
-								selector.getChildren().get(4).setVisible(false);
-								selector.getChildren().get(5).setVisible(false);
-								selector.getChildren().get(6).setVisible(false);
-								selector.setWidths("8%, *");
-								designator.getChildren().get(2).setVisible(true);
-								designator.getChildren().get(4).setVisible(true);
-								designator.getChildren().get(5).setVisible(true);
-								designator.getChildren().get(6).setVisible(true);
-								designator.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-							else
-							{
-								// designator.getChildren().get(2).setSelectedIndex(0);
-								r.setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(true);
-								selector.getChildren().get(4).setVisible(true);
-								selector.getChildren().get(5).setVisible(true);
-								selector.getChildren().get(6).setVisible(true);
-								designator.getChildren().get(2).setVisible(false);
-								designator.getChildren().get(4).setVisible(false);
-								designator.getChildren().get(5).setVisible(false);
-								designator.getChildren().get(6).setVisible(false);
-								designator.setWidths("8%, *");
-								selector.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-						}
-					]]></attribute>
-					<columns sclass="senseBorder2">
-						<column width="5%"/>
-						<column width="*"/>
-					</columns>
-					<datarow sclass="senseBorder2">
-						<label value=""/>
-						<vbox sclass="senseBorder2" width="100%">
-							<hbox width="100%" widths="2%, 1%, 28%, 1%, *" sclass="senseBorder2">
-								<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
-								</imageclic>
-								<separator/>
-								<label use="com.soffid.addons.xacml.utils.Inputlabel"/>
-								<separator/>
-								<imageclic src="~./img/list-remove.gif" align="rigth" onClick="removeDataRow(self)">
-								</imageclic>
-							</hbox>
-							<hbox visible="false" width="100%" sclass="senseBorder2">
-								<radiogroup>
-									<vbox width="100%" sclass="senseBorder2">
-										<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder2">
-											<separator />
-											<radio label="  ${c:l('xacml_policySet.SubjectAttribute')}" checked="true" onCheck="selectAttributeType(self)"/>
-											<listbox bind="@subjectAttributeDesignator" mold="select" width="85px" style="font-size: 10px" onSelect="setDataType(self)"
-												dataPath="/model:/metadata">
-												<dataitem bind="@value">
-													<listcell bind="@name"/>
-													<listcell bind="@value"/>
-												</dataitem>
-											</listbox>
-											<separator />
-											<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-											<listbox visible="true" bind="@dataTypeSubjectDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-												<dataitem bind="@value">
-													<listcell bind="@literal"/>
-												</dataitem>
-											</listbox>
-											<label value="*"/>
-										</hbox>
-										<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder">
-											<separator/>
-											<radio label=" ${c:l('xacml_policySet.AttributeSelector')}" onCheck="selectAttributeType(self)"/>
-											<textbox bind="@attributeSelector"/>
-											<separator />
-											<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-											<listbox visible="true" bind="@dataTypeSubjectDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-												<dataitem bind="@value">
-													<listcell bind="@literal"/>
-												</dataitem>
-											</listbox>
-											<label value="*"/>
-										</hbox>
-										<separator/>
-										<hbox widths="8%, 22%, 15%, *" width="100%" sclass="senseBorder">
-											<separator/>
-											<label value=" ${c:l('xacml_policySet.Function')}"/>
-											<listbox bind="@matchId" mold="select" style="font-size: 10px" dataPath="/model:/matchId">
-												<dataitem bind="@value">
-													<listcell bind="@literal"/>
-												</dataitem>
-											</listbox>
-											<label value="*"/>
-										</hbox>
-										<separator/>
-										<hbox widths="8%, 22%, 30%, 1%, 10%, 15%, *" width="100%" sclass="senseBorder">
-											<separator/>
-											<label value=" ${c:l('xacml_policySet.Value')}"/>
-											<input_dada bind="@attributeValue" width_custom="100%"/>
-											<label value="*"/>
-											<separator />
-											<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-											<listbox bind="@dataTypeAttributeValue" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-												<dataitem bind="@value">
-													<listcell bind="@literal"/>
-												</dataitem>
-											</listbox>
-											<label value="*"/>
-										</hbox>
-									</vbox>
-									<separator/>
-								</radiogroup>
-							</hbox>
-						</vbox>
-					</datarow>
-				</grid>
-			</hbox>
-		</vbox>
-	</hbox>
-	<separator />
-	<hbox sclass="fonsBlanc" width="100%">
-		<vbox sclass="fonsBlanc" width="100%">
-			<hbox widths="20%, 3%, *" sclass="fonsBlanc" width="100%">
-				<input_etiqueta value="${c:l('xacml_policySet.Resources')}"/>
-				<imageclic id="addResPS" src="~./img/list-add.gif">
-					<attribute name="onClick">
-						createNew(gridResources);
-					</attribute>
-				</imageclic>
-				<label value="${c:l('xacml_policySet.AddNew')} "/>
-			</hbox>
-				<hbox sclass="fonsBlanc" width="100%">
-					<grid dataPath="resourceMatch" fixedLayout="true" id="gridResources" sclass="xacmlgrid">
-						<attribute name="onNewRow"><![CDATA[	
-							int number = self.getRows().getChildren().size();
-						for(int i=0; i<number; i++)
-						{
-							Radiogroup r = self.getRows().getChildren().get(i).getChildren().get(1).getChildren().get(1).getChildren().get(0);
-							String t = r.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
-							Hbox designator = r.getChildren().get(0).getChildren().get(0);
-							Hbox selector = r.getChildren().get(0).getChildren().get(1);
-							if(t == null || t.trim().equals("")){
-								r.setSelectedIndex(0);
-								//designator.getChildren().get(2).setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(false);
-								selector.getChildren().get(4).setVisible(false);
-								selector.getChildren().get(5).setVisible(false);
-								selector.getChildren().get(6).setVisible(false);
-								selector.setWidths("8%, *");
-								designator.getChildren().get(2).setVisible(true);
-								designator.getChildren().get(4).setVisible(true);
-								designator.getChildren().get(5).setVisible(true);
-								designator.getChildren().get(6).setVisible(true);
-								designator.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-							else
-							{
-								//designator.getChildren().get(2).setSelectedIndex(0);
-								r.setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(true);
-								selector.getChildren().get(4).setVisible(true);
-								selector.getChildren().get(5).setVisible(true);
-								selector.getChildren().get(6).setVisible(true);
-								designator.getChildren().get(2).setVisible(false);
-								designator.getChildren().get(4).setVisible(false);
-								designator.getChildren().get(5).setVisible(false);
-								designator.getChildren().get(6).setVisible(false);
-								designator.setWidths("8%, *");
-								selector.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-						}
-						]]></attribute>
-						<columns>
-							<column width="5%"/>
-							<column width="*"/>
-						</columns>
-						<datarow sclass="senseBorder2">
-							<label value=""/>
-							<vbox width="100%" sclass="senseBorder2">
-								<hbox widths="2%, 1%, 28%, 1%, *" width="100%" sclass="senseBorder2">
-									<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
-									</imageclic>
-									<separator/>
-									<label use="com.soffid.addons.xacml.utils.Inputlabel"/>
-									<separator/>
-									<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
-									</imageclic>
-								</hbox>
-								<hbox visible="false" width="100%" sclass="senseBorder2">
-									<radiogroup>
-										<vbox sclass="senseBorder2" width="100%">
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder2">
-												<separator/>
-												<radio label="  ${c:l('xacml_policySet.ResourceAttribute')}" checked="true" onCheck="selectAttributeType(self)"/>
-												<listbox bind="@resourceAttributeDesignator" mold="select" onSelect="setDataType(self)" style="font-size: 10px" width="85px">
-													<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
-													<listitem label="${c:l('xacml_policySet.Url')}" value="urn:oasis:names:tc:xacml:1.0:resource:resource-location"/>
-													<listitem label="${c:l('xacml_policySet.SoffidObject')}" value="com:soffid:iam:xacml:1.0:resource:soffid-object"/>
-													<listitem label="${c:l('xacml_policySet.AccountName')}" value="urn:com:soffid:xacml:subject:account"/>
-													<listitem label="${c:l('xacml_policySet.SystemName')}" value="urn:com:soffid:xacml:subject:system"/>
-												</listbox>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeResourceDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<radio label=" ${c:l('xacml_policySet.AttributeSelector')}" onCheck="selectAttributeType(self)"/>
-												<textbox bind="@attributeSelector" width="43%"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeResourceDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Function')}"/>
-												<listbox bind="@matchId" mold="select" style="font-size: 10px" dataPath="/model:/matchId">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 30%, 1%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Value')}"/>
-												<input_dada bind="@attributeValue" width_custom="100%"/><label value="*"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox bind="@dataTypeAttributeValue" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-										</vbox>
-										<separator/>
-									</radiogroup>
-								</hbox>
-							</vbox>
-						</datarow>
-					</grid>
-				</hbox>
-			</vbox>
-		</hbox>
-		<separator />
-		<hbox sclass="fonsBlanc" width="100%">
-			<vbox sclass="fonsBlanc" width="100%">
-				<hbox widths="20%, 3%, *" width="100%" sclass="fonsBlanc">
-					<input_etiqueta value="${c:l('xacml_policySet.Actions')}"/>
-					<imageclic id="addActPS" src="~./img/list-add.gif">
-						<attribute name="onClick">
-							createNew(gridActions);
-						</attribute>
-					</imageclic>
-					<label value="${c:l('xacml_policySet.AddNew')} "/>
-				</hbox>
-				<hbox width="100%" sclass="fonsBlanc">
-					<grid dataPath="actionMatch" fixedLayout="true" id="gridActions" sclass="xacmlgrid">
-						<attribute name="onNewRow"><![CDATA[	
-							int number = self.getRows().getChildren().size();
-						for(int i=0; i<number; i++)
-						{
-							Radiogroup r = self.getRows().getChildren().get(i).getChildren().get(1).getChildren().get(1).getChildren().get(0);
-							String t = r.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
-							Hbox designator = r.getChildren().get(0).getChildren().get(0);
-							Hbox selector = r.getChildren().get(0).getChildren().get(1);
-							if(t == null || t.trim().equals("")){
-								r.setSelectedIndex(0);
-								//designator.getChildren().get(2).setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(false);
-								selector.getChildren().get(4).setVisible(false);
-								selector.getChildren().get(5).setVisible(false);
-								selector.getChildren().get(6).setVisible(false);
-								selector.setWidths("8%, *");
-								designator.getChildren().get(2).setVisible(true);
-								designator.getChildren().get(4).setVisible(true);
-								designator.getChildren().get(5).setVisible(true);
-								designator.getChildren().get(6).setVisible(true);
-								designator.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-							else
-							{
-								//designator.getChildren().get(2).setSelectedIndex(0);
-								r.setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(true);
-								selector.getChildren().get(4).setVisible(true);
-								selector.getChildren().get(5).setVisible(true);
-								selector.getChildren().get(6).setVisible(true);
-								designator.getChildren().get(2).setVisible(false);
-								designator.getChildren().get(4).setVisible(false);
-								designator.getChildren().get(5).setVisible(false);
-								designator.getChildren().get(6).setVisible(false);
-								designator.setWidths("8%, *");
-								selector.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-						}
-						]]></attribute>
-						<columns>
-							<column width="5%"/>
-							<column width="*"/>
-						</columns>
-						<datarow sclass="senseBorder2">
-							<label value=""/>
-							<vbox sclass="senseBorder2" width="100%" >
-								<hbox widths="2%, 1%, 28%, 1%, *" width="100%" sclass="senseBorder2">
-									<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
-									</imageclic>
-									<separator/>
-									<label use="com.soffid.addons.xacml.utils.Inputlabel"/>
-									<separator/>
-									<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
-									</imageclic>
-								</hbox>
-								<hbox visible="false" width="100%" sclass="senseBorder2">
-									<radiogroup>
-										<vbox sclass="senseBorder2" width="100%">
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder2">
-												<separator/>
-												<radio label="  ${c:l('xacml_policySet.ActionAttribute')}" checked="true" onCheck="selectAttributeType(self)"/>
-												<listbox bind="@actionAttributeDesignator" mold="select" onSelect="setDataType(self)" style="font-size: 10px" width="85px">
-													<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
-													<listitem label="${c:l('xacml_policySet.Method')}" value="urn:com:soffid:xacml:action:method"/>
-												</listbox>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeActionDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<radio label=" ${c:l('xacml_policySet.AttributeSelector')}" onCheck="selectAttributeType(self)"/>
-												<textbox bind="@attributeSelector" width="43%"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeActionDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Function')}"/>
-												<listbox bind="@matchId" mold="select" style="font-size: 10px" dataPath="/model:/matchId">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 30%, 1%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Value')}"/>
-												<input_dada bind="@attributeValue" width_custom="100%"/><label value="*"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox bind="@dataTypeAttributeValue" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-										</vbox>
-										<separator/>
-									</radiogroup>
-								</hbox>
-							</vbox>
-						</datarow>
-					</grid>
-				</hbox>
-			</vbox>
-		</hbox>
-		<separator />
-		<hbox sclass="fonsBlanc" width="100%">
-			<vbox sclass="fonsBlanc" width="100%">
-				<hbox widths="20%, 3%, *" width="100%" sclass="fonsBlanc">
-					<input_etiqueta value="${c:l('xacml_policySet.Environments')}"/>
-					<imageclic id="addEnvPS" src="~./img/list-add.gif">
-						<attribute name="onClick">
-							createNew(gridEnvironments);
-						</attribute>
-					</imageclic>
-					<label value="${c:l('xacml_policySet.AddNew')} "/>
-				</hbox>
-				<hbox width="100%" sclass="fonsBlanc">
-					<grid dataPath="environmentMatch" fixedLayout="true" id="gridEnvironments" sclass="xacmlgrid">
-						<attribute name="onNewRow"><![CDATA[	
-							int number = self.getRows().getChildren().size();
-						for(int i=0; i<number; i++)
-						{
-							Radiogroup r = self.getRows().getChildren().get(i).getChildren().get(1).getChildren().get(1).getChildren().get(0);
-							String t = r.getChildren().get(0).getChildren().get(1).getChildren().get(2).getValue();
-							Hbox designator = r.getChildren().get(0).getChildren().get(0);
-							Hbox selector = r.getChildren().get(0).getChildren().get(1);
-							if(t == null || t.trim().equals("")){
-								r.setSelectedIndex(0);
-								//designator.getChildren().get(2).setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(false);
-								selector.getChildren().get(4).setVisible(false);
-								selector.getChildren().get(5).setVisible(false);
-								selector.getChildren().get(6).setVisible(false);
-								selector.setWidths("8%, *");
-								designator.getChildren().get(2).setVisible(true);
-								designator.getChildren().get(4).setVisible(true);
-								designator.getChildren().get(5).setVisible(true);
-								designator.getChildren().get(6).setVisible(true);
-								designator.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-							else
-							{
-								//designator.getChildren().get(2).setSelectedIndex(0);
-								r.setSelectedIndex(1);
-								selector.getChildren().get(2).setVisible(true);
-								selector.getChildren().get(4).setVisible(true);
-								selector.getChildren().get(5).setVisible(true);
-								selector.getChildren().get(6).setVisible(true);
-								designator.getChildren().get(2).setVisible(false);
-								designator.getChildren().get(4).setVisible(false);
-								designator.getChildren().get(5).setVisible(false);
-								designator.getChildren().get(6).setVisible(false);
-								designator.setWidths("8%, *");
-								selector.setWidths("8%, 22%, 30%, 10%, 15%, *");
-							}
-						}
-						]]></attribute>
-						<columns>
-							<column width="5%"/>
-							<column width="*"/>
-						</columns>
-						<datarow sclass="senseBorder2">
-							<label value=""/>
-							<vbox sclass="senseBorder2" width="100%" >
-								<hbox widths="2%, 1%, 28%, 1%, *" width="100%" sclass="senseBorder2">
-									<imageclic src="~./img/fletxa.gif" use="com.soffid.addons.xacml.utils.ImageExpand">
-									</imageclic>
-									<separator/>
-									<label use="com.soffid.addons.xacml.utils.Inputlabel"/>
-									<separator/>
-									<imageclic src="~./img/list-remove.gif" onClick="removeDataRow(self)">
-									</imageclic>
-								</hbox>
-								<hbox visible="false" width="100%" sclass="senseBorder2">
-									<radiogroup>
-										<vbox sclass="senseBorder2" width="100%">
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder2">
-												<separator/>
-												<radio label="  ${c:l('xacml_policySet.EnvironmentAttribute')}" checked="true" onCheck="selectAttributeType(self)"/>
-												<listbox bind="@environmentAttributeDesignator" mold="select" onSelect="setDataType(self)" style="font-size: 10px" width="85px">
-													<listitem label="${c:l('xacml_policySet.Select')}" value=""/>
-													<listitem label="${c:l('xacml_policySet.Country')}" value="urn:com:soffid:xacml:environment:country"/>
-													<listitem label="${c:l('xacml_policySet.CurrentTime')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-time"/>
-													<listitem label="${c:l('xacml_policySet.CurrentDate')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-date"/>
-													<listitem label="${c:l('xacml_policySet.CurrentDateTime')}" value="urn:oasis:names:tc:xacml:1.0:environment:current-dateTime"/>
-												</listbox>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeEnvironmentDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<hbox widths="8%, 22%, 30%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<radio label=" ${c:l('xacml_policySet.AttributeSelector')}" onCheck="selectAttributeType(self)"/>
-												<textbox bind="@attributeSelector" width="43%"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox visible="true" bind="@dataTypeEnvironmentDesignator" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Function')}"/>
-												<listbox bind="@matchId" mold="select" style="font-size: 10px" dataPath="/model:/matchId">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-											<separator/>
-											<hbox widths="8%, 22%, 30%, 1%, 10%, 15%, *" width="100%" sclass="senseBorder">
-												<separator/>
-												<label value=" ${c:l('xacml_policySet.Value')}"/>
-												<input_dada bind="@attributeValue" width_custom="100%"/><label value="*"/>
-												<separator />
-												<label value="${c:l('xacml_policySet.DataTypeValue')}"/>
-												<listbox bind="@dataTypeAttributeValue" mold="select" style="font-size: 10px" dataPath="/model:/dataType">
-													<dataitem bind="@value">
-														<listcell bind="@literal"/>
-													</dataitem>
-												</listbox>
-												<label value="*"/>
-											</hbox>
-										</vbox>
-										<separator/>
-									</radiogroup>
-								</hbox>
-							</vbox>		
-						</datarow>
-					</grid>
-				</hbox>
-			</vbox>
-		</hbox>
-</zk>
+<div xmlns:h="http://www.w3.org/1999/xhtml"
+	use="com.soffid.iam.addons.xacml.web.TargetHandler" id="handler">
+	<style>
+		div.datatable.target-mattrix {
+			width:100%;
+			width: calc( 100% - 48px );
+			display: inline-block;
+			vertical-align: top;
+		}
+	</style>
+	<div sclass="section">
+		<datatable  sclass="target-mattrix datatable" dataPath="subjectMatch" id="gridSubjects" enablefilter="false" multiselect="true" translatelabels="true"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('xacml_policySet.Subjects')}
+  template: #{attributeDesignator == null ? attributeSelector: attributeDesignator}
+- name:  ${c:l('xacml_target.operator') }
+  value: matchId
+  className: statusColumn
+- name:  ${c:l('xacml_policySet.Value') }
+  value: attributeValue
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<div sclass="section">
+		<datatable dataPath="resourceMatch" enablefilter="false" multiselect="true" translatelabels="true"
+			sclass="target-mattrix datatable"
+			id="gridResources"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('xacml_policySet.Resources')}
+  template: #{attributeDesignator == null ? attributeSelector: attributeDesignator}
+- name:  ${c:l('xacml_target.operator') }
+  value: matchId
+  className: statusColumn
+- name:  ${c:l('xacml_policySet.Value') }
+  value: attributeValue
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<div sclass="section">
+		<datatable dataPath="actionMatch" enablefilter="false" multiselect="true" translatelabels="true"
+			sclass="target-mattrix datatable"
+			id="gridActions"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('xacml_policySet.Actions')}
+  template: #{attributeDesignator == null ? attributeSelector: attributeDesignator}
+- name:  ${c:l('xacml_target.operator') }
+  value: matchId
+  className: statusColumn
+- name:  ${c:l('xacml_policySet.Value') }
+  value: attributeValue
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<div sclass="section">
+		<datatable dataPath="environmentMatch" enablefilter="false" multiselect="true" translatelabels="true"
+			id="gridEnvironments"
+			sclass="target-mattrix datatable"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('xacml_policySet.Environments')}
+  template: #{attributeDesignator == null ? attributeSelector: attributeDesignator}
+- name:  ${c:l('xacml_target.operator') }
+  value: matchId
+  className: statusColumn
+- name:  ${c:l('xacml_policySet.Value') }
+  value: attributeValue
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<window id="add" closable="false" title="New object" visible="false" fulfill="add.onOpen" style="min-width: 500px; width: 90%; max-width: 1500px">
+		<form2 dataPath="../gridSubjects:/" id="form">
+			<wizard id="wizard">
+			<attribute name="steps"><![CDATA[
+				- ${c:l("xacml_target.selectAttribute")}
+				- ${c:l("xacml_target.selectOperator")}
+				- ${c:l("xacml_target.enterValue")}
+			]]></attribute>
+				<div id="step1">
+					<radiogroup id="radiogroup" onCheck="ref:handler.changeAttributeType(event)">
+						<div>
+							<radio
+								label="${c:l('xacml_policySet.attributeDesignator')}"
+								checked="true"/>
+							<customfield3 bind="@attributeDesignator" noLabel="true"
+								sclass="inline databox"
+								keysPath="/model:/metadata/value"
+								required="true"
+								id="attributeDesignator"
+								dataType="STRING"
+								onChange="ref:handler.onSetAttributeDesignator"
+								valuesPath="/model:/metadata/name"
+								style="margin-left: 24px;  min-width: 85px" onChangexx="ref:handler.setDataType" />
+							<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+								sclass="right-label inline databox"
+								dataType="STRING" 
+								readonly="true"
+								enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true"
+								bind="@dataTypeDesignator"/> 
+						</div>
+						<div>
+							<radio
+								label=" ${c:l('xacml_policySet.AttributeSelector')}" />
+							<textbox bind="@attributeSelector"
+									maxlength="100"
+									style="margin-left: 24px; width: 400px"
+									id="attributeSelector" visible="false"/>
+							<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+								sclass="right-label inline databox" visible="false"
+								dataType="STRING"
+								enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true"
+								bind="@dataTypeDesignator"/> 
+						</div>
+					</radiogroup>
+					<div style="text-align: right; width: 100%">
+						<button image="/img/undo-r.svg" label="${c:l('task.filter.lblVolver')}" 
+							onClick="ref:handler.wizardRollback" />
+						<button image="/img/next-r.svg" label="${c:l('aplicaIntranet_autoritzacio.Next') }"
+							onClick="ref:handler.wizardNext"/>
+					</div>
+				</div>
+				<div id="step2">
+					<customfield3 label=" ${c:l('xacml_policySet.Function')}"
+						dataType="STRING"
+						enumeration="com.soffid.iam.addons.xacml.common.MatchIdEnumeration" required="true"
+						bind="@matchId"/> 
+					<div style="text-align: right; width: 100%">
+						<button image="/img/undo-r.svg" label="${c:l('task.filter.lblVolver')}" 
+							onClick="ref:handler.wizardBack" />
+						<button image="/img/next-r.svg" label="${c:l('aplicaIntranet_autoritzacio.Next') }"
+							onClick="ref:handler.wizardNext"/>
+					</div>
+				</div>
+				<div id="step3">
+					<customfield3 label=" ${c:l('xacml_policySet.Value')}" dataType="STRING"
+						bind="@attributeValue" required="true"/>
+					<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+						sclass="right-label inline databox"
+						readonly='true'
+						dataType="STRING" 
+						enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true"
+						bind="@dataTypeDesignator"/> 
+					<div style="text-align: right; width: 100%">
+						<button image="/img/undo-r.svg" label="${c:l('task.filter.lblVolver')}" 
+							onClick="ref:handler.wizardBack" />
+						<button image="/img/ok-r.svg" label="${c:l('common.apply') }"
+							onClick="ref:handler.wizardApply"/>
+					</div>
+				</div>
+			</wizard>
+		</form2>
+	</window>
+	
+	<window id="modify" closable="false" title="New object" visible="false" fulfill="modify.onOpen" style="min-width: 500px; width: 90%; max-width: 1500px">
+		<form2 dataPath="../gridSubjects:/" id="form">
+			<radiogroup id="radiogroup" onCheck="ref:handler.changeAttributeType(event)">
+				<div>
+					<radio
+						label="${c:l('xacml_policySet.attributeDesignator')}"
+						checked="true"/>
+					<customfield3 bind="@attributeDesignator" noLabel="true"
+							id="attributeDesignator"
+							sclass="inline databox"
+							keysPath="/model:/metadata/value"
+							required="true"
+							dataType="STRING"
+							onChange="ref:handler.onSetAttributeDesignator"
+							valuesPath="/model:/metadata/name"
+							style="margin-left: 24px;  min-width: 85px" onChangexx="ref:handler.setDataType" />
+					<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+						sclass="right-label inline databox"
+						readonly='true'
+						dataType="STRING" 
+						enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true"
+						bind="@dataTypeDesignator"/> 
+				</div>
+				<div>
+					<radio
+						label=" ${c:l('xacml_policySet.AttributeSelector')}" />
+					<textbox bind="@attributeSelector"
+							maxlength="100"
+							style="margin-left: 24px; width: 400px"
+							id="attributeSelector" visible="false"/>
+					<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+						sclass="right-label inline databox" visible="false"
+						dataType="STRING"
+						enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true"
+						bind="@dataTypeDesignator"/> 
+				</div>
+			</radiogroup>
+			<customfield3 label=" ${c:l('xacml_policySet.Function')}"
+				dataType="STRING"
+				enumeration="com.soffid.iam.addons.xacml.common.MatchIdEnumeration" required="true"
+				bind="@matchId"/> 
+			<customfield3 label=" ${c:l('xacml_policySet.Value')}" dataType="STRING"
+				bind="@attributeValue" required="true"/>
+			<div style="text-align: right; width: 100%">
+				<button image="/img/undo-r.svg" label="${c:l('task.filter.lblVolver')}" 
+					onClick="ref:handler.modifyBack" />
+				<button image="/img/save-r.svg" label="${c:l('common.apply') }"
+					onClick="ref:handler.modifyApply"/>
+			</div>
+		</form2>
+	</window>
+	
+</div>

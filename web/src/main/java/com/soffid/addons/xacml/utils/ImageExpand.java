@@ -43,7 +43,7 @@ public class ImageExpand extends ImageClic implements AfterCompose {
 	
 	private void expandCollapse()
 	{
-		Box grandpa = (Box) getParent().getParent();
+		Component grandpa = getParent().getParent();
 			
 		if(collapsed)
 		{

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+
+<?component name="targetSubjects" macro-uri="targetSubject.zul"?>
+<?component name="conditions" macro-uri="conditions.zul"?>
+
+<div xmlns:h="http://www.w3.org/1999/xhtml"
+	use="com.soffid.iam.addons.xacml.web.RuleHandler" id="handler"
+	dataPath="${arg.dataPath}">
+	<style>
+		div.datatable.rule-matrix {
+			width:100%;
+			width: calc( 100% - 48px );
+			display: inline-block;
+			vertical-align: top;
+		}
+	</style>
+	<div sclass="section" width="100%">
+		<customfield3 label="${c:l('xacml_policySet.Rules')}" dataType="SEPARATOR"/>
+		<datatable  sclass="rule-matrix datatable" dataPath="${arg.dataPath}" id="gridRules" enablefilter="false" multiselect="true" 
+			translatelabels="true"
+			reorder="true"
+			onReorder="ref:handler.reorder"
+			onSelect="ref:handler.edit"
+			onMultiSelect="ref:handler.multiSelect">
+		<attribute name="columns"><![CDATA[
+- name:  ${c:l('policySet.Rule')}
+  value: ruleId
+- name:  ${c:l('policySet.Descripcia')}
+  value: description
+- name:  ${c:l('xacml_policySet.Effect') }
+  value: effectType
+			]]></attribute>
+		</datatable>
+		<div style="display: inline-block; vertical-align:top">
+			<button image="/img/add.svg" onlyIcon="true" style="display: block"
+				onClick="ref:handler.createNew" label="${c:l('xacml_policySet.AddNew')} " />
+			<button image="/img/remove.svg" visible="false"
+				onClick="ref:handler.delete"  onlyIcon="true"  style="display: block"
+				label="${c:l('policySet.Delete')} " />
+		</div>
+	</div>
+	<window id="rule" closable="false" title="${c:l('policySet.Rule') }"
+		position="top,center" 
+		visible="false" 
+		fulfill="rule.onOpen" 
+		style="min-width: 500px; width: 90%; max-width: 1500px">
+		<form2 dataPath="../gridRules:/" id="form">
+			<customfield3 bind="ruleId" maxlength="50" required="true" label="${c:l('policySet.Rule') }" dataType="STRING"/>
+			<customfield3 bind="description" maxlength="250" required="true" label="${c:l('policySet.Descripcia') }" dataType="STRING"/>
+			<customfield3 bind="effectType" maxlength="50" required="true" label="${c:l('xacml_policySet.Effect') }" 
+				enumeration="com.soffid.iam.addons.xacml.common.EffectTypeEnumeration" dataType="STRING"/>
+			<div class="section" width="100%">
+				<customfield3 label="${c:l('xacml_policySet.Target')}" dataType="SEPARATOR"/>
+				<datadiv dataPath="target" >
+					<targetSubjects/>
+				</datadiv>
+				<conditions dataPath="condition"/>
+			</div>
+			<div style="text-align: right; width: 100%">
+				<button image="/img/undo-r.svg" label="${c:l('common.undo')}" 
+					onClick="ref:handler.wizardBack" />
+				<button image="/img/ok-r.svg" label="${c:l('error.zul.Tancar') }"
+					onClick="ref:handler.wizardApply"/>
+			</div>
+		</form2>
+	</window>
+	
+</div>

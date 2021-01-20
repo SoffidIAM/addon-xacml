@@ -28,6 +28,7 @@
 							<targetServer>tomee</targetServer>
 							<translate>true</translate>
 							<translateEntities>true</translateEntities>
+							<generateDoc>true</generateDoc>
 							<pluginName>xacml</pluginName>
 						</configuration>
 					</execution>

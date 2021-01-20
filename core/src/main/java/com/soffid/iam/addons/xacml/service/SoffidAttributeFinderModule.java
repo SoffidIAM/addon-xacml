@@ -86,11 +86,14 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 	public static final String USER_IDENTIFIER = "urn:com:soffid:xacml:subject:user";
 	public static final String ACCOUNT_IDENTIFIER = "urn:com:soffid:xacml:subject:account";
 	public static final String SYSTEM_IDENTIFIER = "urn:com:soffid:xacml:subject:system";
+	public static final String VAULT_IDENTIFIER = "urn:com:soffid:xacml:resource:vault";
+	public static final String LOGIN_IDENTIFIER = "urn:com:soffid:xacml:resource:login";
+	public static final String ACCESS_LEVEL_IDENTIFIER = "urn:com:soffid:xacml:resource:access-level";
 	public static final String ROLE_IDENTIFIER = "urn:oasis:names:tc:xacml:2.0:subject:role";
 	public static final String GROUP_IDENTIFIER = "urn:com:soffid:xacml:subject:groups";
 	public static final String PRIMARY_GROUP_IDENTIFIER = "urn:com:soffid:xacml:subject:primaryGroup";
 	public static final String CUSTOM_ATTRIBUTE_PREFIX = "urn:com:soffid:xacml:subject:user:att:";
-
+	public static final String URL_RESOURCE_IDENTIFIER = "urn:com:soffid:xacml:resource:server-url";
 	// subject-id standard identifier
 	private static URI SUBJECT_IDENTIFIER_URI = null;
 

@@ -629,7 +629,7 @@ public class ImportData {
 	
 	private Rule importRule(Element ruleElement, Policy policy) throws InternalErrorException{
 		Rule rule = new Rule();
-		rule.setCondicion(new HashSet<Condition>());
+		rule.setCondition(new HashSet<Condition>());
 		rule.setPolicyId(policy.getId());
 		String ruleId = ruleElement.attributeValue("RuleId"); //$NON-NLS-1$
 		if(ruleId != null && !ruleId.isEmpty())
@@ -662,7 +662,7 @@ public class ImportData {
 				i++;
 				Condition condition = importCondition(element);
 				condition.setConditionId("Condition" + i); //$NON-NLS-1$
-				rule.getCondicion().add(condition);
+				rule.getCondition().add(condition);
 			}
 		}
 		

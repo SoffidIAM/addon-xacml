@@ -59,7 +59,7 @@ public class IdReferenceEntityDaoImpl extends IdReferenceEntityDaoBase
 	public PolicySetIdReferenceEntity policySetIdReferenceToEntity(
 			PolicySetIdReference instance) {
 		PolicySetIdReferenceEntity entity;
-		if (instance.getId() == null) 
+		if (instance.getId() == null || load(instance.getId()) == null) 
 			entity = newPolicySetIdReferenceEntity();
 		else
 			entity = (PolicySetIdReferenceEntity) load (instance.getId());
@@ -70,7 +70,7 @@ public class IdReferenceEntityDaoImpl extends IdReferenceEntityDaoBase
 	public PolicyIdReferenceEntity policyIdReferenceToEntity(
 			PolicyIdReference instance) {
 		PolicyIdReferenceEntity entity;
-		if (instance.getId() == null) 
+		if (instance.getId() == null || load(instance.getId()) == null) 
 			entity = newPolicyIdReferenceEntity();
 		else
 			entity = (PolicyIdReferenceEntity) load (instance.getId());

@@ -1,242 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><?page id="policySetNew" title="Create New"?>
 <?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
-<?component name="input_criteri" macro-uri="/comu/input_criteri.zul"?>
-<?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
-<zk xmlns:h="http://www.w3.org/1999/xhtml">
 
-<style src="~./styles/estil.css"/>
-
-<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacml.xml"/>
-
-<zscript>
-	<![CDATA[
-	    import com.soffid.iam.addons.xacml.common.PolicyCombiningAlgorithm;
-	         
-		void cleanWindow(){
-			esquema.visible=false;			
-		}
-		
-		void selectVersion(Radio r){
-			Radiogroup rg = r.getRadiogroup();
-			int i = rg.getSelectedIndex();
-			Component vbox_psID = esquema.getFellow("dades").getFellow("v_psID");
-			if(i==0){
-				vbox_psID.getFellow("psID_version").setDisabled(true);
-				vbox_psID.getFellow("psID_earliest").setValue("");
-				vbox_psID.getFellow("psID_latest").setValue("");
-				vbox_psID.getFellow("psID_earliest").setDisabled(false);
-				vbox_psID.getFellow("psID_latest").setDisabled(false);
-			}else if(i==1){
-				vbox_psID.getFellow("psID_version").setValue("");
-				vbox_psID.getFellow("psID_version").setDisabled(false);
-				vbox_psID.getFellow("psID_earliest").setDisabled(true);
-				vbox_psID.getFellow("psID_latest").setDisabled(true);
-			}else{
-				vbox_psID.getFellow("psID_version").setValue("");
-				vbox_psID.getFellow("psID_earliest").setValue("");
-				vbox_psID.getFellow("psID_latest").setValue("");
-				vbox_psID.getFellow("psID_earliest").setDisabled(true);
-				vbox_psID.getFellow("psID_latest").setDisabled(true);
-				vbox_psID.getFellow("psID_version").setDisabled(true);
-			}
-		}
-		
-		void acceptaDada(){
-			if(esquema.getFellow("dades").getFellow("v_ps").isVisible())
-			{
-				Component vbox_ps = esquema.getFellow("dades").getFellow("v_ps");
-				String policySetId = (String)vbox_ps.getFellow("ps_id").getValue();
-				String descript = (String)vbox_ps.getFellow("ps_desc").getValue();
-				String versio = (String)vbox_ps.getFellow("ps_vers").getValue();
-				if(vbox_ps.getFellow("lbPolicyCombiningAlgorithm").getSelectedItem() != null){
-					PolicyCombiningAlgorithm combo = vbox_ps.getFellow("lbPolicyCombiningAlgorithm").getSelectedItem().getValue();
-					Object[] dades = {policySetId, descript, versio, combo, ""};
-					Events.postEvent ("onActualitza", desktop.getPage("creacioPolicy").getFellow("esquemaPolicy").getFellow("finishButton"), dades);
-					cleanWindow();
-				}else{
-					Missatgebox.error(org.zkoss.util.resource.Labels.getLabel("policySetNew.NoBuit"),
-							org.zkoss.util.resource.Labels.getLabel("policySetNew.Error"));
-				}
-			} 
-			else if(esquema.getFellow("dades").getFellow("v_po").isVisible())
-			{
-				Component vbox_po = esquema.getFellow("dades").getFellow("v_po");
-				String policyId = (String)vbox_po.getFellow("po_id").getValue();
-				String descript = (String)vbox_po.getFellow("po_desc").getValue();
-				String versio = (String)vbox_po.getFellow("po_vers").getValue();
-				if(vbox_po.getFellow("rule").getSelectedItem() != null){
-					PolicyCombiningAlgorithm combo = vbox_po.getFellow("rule").getSelectedItem().getValue();
-					Object[] dades = {policyId, descript, versio, combo, ""};
-					Events.postEvent ("onActualitza", desktop.getPage("creacioPolicy").getFellow("esquemaPolicy").getFellow("finishButton"), dades);
-					cleanWindow();
-				}else{
-					Missatgebox.error(org.zkoss.util.resource.Labels.getLabel("policySetNew.NoBuit2"),
-							org.zkoss.util.resource.Labels.getLabel("policySetNew.Error"));
-				}
-				
-			}
-			else
-			{
-				Component vbox_psID = esquema.getFellow("dades").getFellow("v_psID");
-				String idReferenceType = (String)vbox_psID.getFellow("psID_reference_type").getValue();
-				String early = (String)vbox_psID.getFellow("psID_earliest").getValue();
-				String late = (String)vbox_psID.getFellow("psID_latest").getValue();
-				String version = (String)vbox_psID.getFellow("psID_version").getValue();
-				Object[] dades = {idReferenceType, early, late, version, ""};
-				Events.postEvent ("onActualitza", desktop.getPage("creacioPolicy").getFellow("esquemaPolicy").getFellow("finishButton"), dades);
-				cleanWindow();
-			}
-		}
-		
-	]]>
-</zscript>
-
-<window closable="true" id="esquema" position="center, center" title="${c:l('policySetNew.Titol')}" visible="true" width="600px">
-	<attribute name="onCreate">
-	<![CDATA[
-		Object tipus =  Executions.getCurrent().getParameter("param1") ;
-		Component vbox_ps = esquema.getFellow("dades").getFellow("v_ps");
-		Component vbox_po = esquema.getFellow("dades").getFellow("v_po");
-		Component vbox_psID = esquema.getFellow("dades").getFellow("v_psID");
-		vbox_ps.setVisible(false);
-		vbox_po.setVisible(false);
-		vbox_psID.setVisible(false);
-		if(tipus.equals("policySet")){
-			esquema.setTitle(org.zkoss.util.resource.Labels.getLabel("policySetNew.NewPolicySet"));
-			Listbox l = vbox_ps.getFellow("lbPolicyCombiningAlgorithm");
-			l.setSelectedIndex(0);
-			vbox_ps.setVisible(true);		
-		}else if(tipus.equals("policy")){
-			esquema.setTitle(org.zkoss.util.resource.Labels.getLabel("policySetNew.NewPolicy"));
-			Listbox l = vbox_ps.getFellow("rule");
-			l.setSelectedIndex(0);
-			vbox_po.setVisible(true);	
-		}else if(tipus.equals("policySetIdRef")){
-			esquema.setTitle(org.zkoss.util.resource.Labels.getLabel("policySetNew.NewPolicySetIdReference"));
-			vbox_psID.setVisible(true);	
-			vbox_psID.getFellow("psID_earliest").setDisabled(true);
-			vbox_psID.getFellow("psID_latest").setDisabled(true);
-		}else if(tipus.equals("policyIdRef")){
-			esquema.setTitle(org.zkoss.util.resource.Labels.getLabel("policySetNew.NewPolicyIdReference"));
-			vbox_psID.setVisible(true);
-			vbox_psID.getFellow("psID_earliest").setDisabled(true);
-			vbox_psID.getFellow("psID_latest").setDisabled(true);	
-		}
-		pageScope.put("contextComponent", event.data);
-		if(self.mode.compareToIgnoreCase("highlighted") != 0){
-			self.setMode("highlighted");
-		}else{
-			self.visible = true;
-		}   
-		]]>
-	</attribute>
-	<attribute name="onClose">
-		cleanWindow();
-		event.stopPropagation ();
-	</attribute>
-	<detalls id="dades" width="99%" style="border:0px">
-		<form id="form" align="center" width="100%">
-			<separator spacing="5px"/>
-			<vbox align="center" visible="false" id="v_ps">
-				<grid>
-					<rows>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.PolicySetId')} "/>
-							<textbox constraint="no empty" id="ps_id"/>
-							<label value="*"/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Description')} "/>
-							<textbox id="ps_desc"/>
-							<label value=""/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Version')} "/>
-							<textbox id="ps_vers" value="1" maxlength="25"/>
-							<label value=""/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Alg')} "/>
-							<listbox id="lbPolicyCombiningAlgorithm" mold="select" dataPath="/model:/type">
-								<dataitem bind="@value">
-									<listcell bind="@literal"/>
-								</dataitem>
-							</listbox>
-							<label value="*"/>
-						</row>
-					</rows>
-				</grid>
-			</vbox>
-			<vbox visible="false" align="center" id="v_po">
-				<grid>
-					<rows>							
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Name')} "/>
-							<textbox constraint="no empty" id="po_id"/>
-							<label value="*"/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Description')} "/>
-							<textbox  id="po_desc"/>
-							<label value=""/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Version')} "/>
-							<textbox  id="po_vers" value="1" maxlength="25"/>
-							<label value=""/>
-						</row>
-						<row>
-							<input_etiqueta value="${c:l('policySetNew.Rule')} "/>
-							 <listbox id="rule" mold="select" dataPath="/model:/type">
-								<dataitem bind="@value">
-									<listcell bind="@literal"/>
-								</dataitem>
-							</listbox>
-							<label value="*"/>
-						</row>
-					</rows>
-				</grid>
-			</vbox>
-			<vbox visible="false" align="center" id="v_psID" width="98%">
-				<grid>
-					<rows>							
-						<row>
-							<hbox width="100%" widths="22%, *">
-								<label value="${c:l('policySetNew.IdRefType')} "/>
-								<textbox constraint="no empty" id="psID_reference_type"/>
-								<label value="*"/>
-							</hbox>
-						</row>
-						<row>
-							<radiogroup id="radio_version" orient="vertical">
-								<hbox width="100%" widths="22%, 28%, 15%, *">
-									<radio label="${c:l('policySetNew.Earliest')} " onCheck="selectVersion(self)"/>
-									<textbox id="psID_earliest" maxlength="25"/>
-									<label value="${c:l('policySetNew.Latest')} "/>
-									<textbox id="psID_latest" maxlength="25"/>
-								</hbox>
-								<separator />
-								<hbox width="100%" widths="22%, *">
-									<radio label="${c:l('policySetNew.Version')} " onCheck="selectVersion(self)" checked="true"/>
-									<textbox id="psID_version" maxlength="25"/>
-								</hbox>
-								<separator />
-								<radio label="${c:l('xacml_policySet.AnyVersion')} " onCheck="selectVersion(self)"/>
-							</radiogroup>
-						</row>
-					</rows>
-				</grid>
-			</vbox>
-		</form>
-	</detalls>
+<window  id="newItem" position="top, center" title="${c:l('policySetNew.Titol')}" 
+	width="600px" closable="false"
+	visible="false"
+	use="com.soffid.addons.xacml.web.NewPolicySetHandler">
+	<form2 id="form" width="100%">
+		<div visible="false" id="v_ps">
+			<customfield3 label="${c:l('policySetNew.PolicySetId')}" required="true" id="ps_id" dataType="STRING"/>
+			<customfield3 label="${c:l('policySetNew.Description')}" required="false" id="ps_desc" dataType="STRING"/>
+			<customfield3 label="${c:l('policySetNew.Version')}" required="true" id="ps_vers" maxlength="25" dataType="NUMBER" value="1"/>
+			<customfield3 label="${c:l('policySetNew.Alg')}" required="true" id="lbPolicyCombiningAlgorithm" maxlength="25" dataType="STRING" 
+				enumeration="com.soffid.iam.addons.xacml.common.PolicyCombiningAlgorithm" 
+				/>
+		</div>
+		<div visible="false" align="center" id="v_po">
+			<customfield3 label="${c:l('policySetNew.Name')}" required="true" id="po_id" dataType="STRING"/>
+			<customfield3 label="${c:l('policySetNew.Description')}" required="false" id="po_desc" dataType="STRING"/>
+			<customfield3 label="${c:l('policySetNew.Version')}" required="true" id="po_vers" maxlength="25" dataType="NUMBER" value="1"/>
+			<customfield3 label="${c:l('policySetNew.Rule')}" required="true" id="rule" maxlength="25" dataType="STRING"
+				enumeration="com.soffid.iam.addons.xacml.common.PolicyCombiningAlgorithm" 
+				/>
+		</div>
+		<div visible="false" align="center" id="v_psID">
+			<customfield3 label="${c:l('policySetNew.IdRefType')}" required="true" id="psID_reference_type" dataType="STRING"/>
+			<radiogroup id="radio_version" orient="vertical">
+				<hbox width="100%" widths="22%, 28%, 15%, *">
+					<radio label="${c:l('policySetNew.Earliest')} " onCheck="ref:newItem.selectVersion"/>
+					<textbox id="psID_earliest" maxlength="25"/>
+					<label value="${c:l('policySetNew.Latest')} "/>
+					<textbox id="psID_latest" maxlength="25"/>
+				</hbox>
+				<separator />
+				<hbox width="100%" widths="22%, *">
+					<radio label="${c:l('policySetNew.Version')} " onCheck="ref:newItem.selectVersion" checked="true"/>
+					<textbox id="psID_version" maxlength="25"/>
+				</hbox>
+				<separator />
+				<radio label="${c:l('xacml_policySet.AnyVersion')} " onCheck="ref:newItem.selectVersion"/>
+			</radiogroup>
+		</div>
+	</form2>
 	<separator spacing="5px"/>
-		<hbox style="margin-left:auto; margin-right:auto">
-			<button id="finishButton" label="${c:l('policySetNew.Accepta')}">
-				<attribute name="onClick">
-					acceptaDada();
-				</attribute>
-			</button>
-			<button label="${c:l('policySetNew.Cancel')}" onClick="cleanWindow()"/>			
-		</hbox>
+	<hbox style="margin-left:auto; margin-right:auto">
+		<button id="finishButton" label="${c:l('policySetNew.Accepta')}" onClick="ref:newItem.apply"/>
+		<button label="${c:l('policySetNew.Cancel')}" onClick="ref:newItem.cleanWindow()"/>			
+	</hbox>
 </window>
-</zk>

@@ -69,14 +69,15 @@ public class VariableDefinitionEntityDaoImpl extends VariableDefinitionEntityDao
 	protected void handleUpdate(VariableDefinition variable) throws Exception {
 		VariableDefinitionEntity vde = variableDefinitionToEntity(variable);
 		Expression exp = variable.getExpression();
-		if(vde.getExpression() != null && vde.getExpression().getId() != null && exp.getId() != null)
+		if(vde.getExpression() != null)
 		{
 			if (!vde.getExpression().getId().equals (exp.getId()))	
 				getExpressionEntityDao().remove(vde.getExpression());
 		}
-		if (exp.getId() == null){
+		if (exp.getId() == null || getExpressionEntityDao().load(exp.getId()) == null){
 			ExpressionEntity ee = getExpressionEntityDao().create(exp, vde);
 			ee.setVariableDefinition(vde);
+			exp.setId(ee.getId());
 		}else
 			getExpressionEntityDao().update(exp);
 		super.update (vde);

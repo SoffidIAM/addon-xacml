@@ -4,180 +4,80 @@
 <?component name="input_etiqueta" macro-uri="/comu/input_etiqueta.zul"?>
 
 
-
 <frame xmlns:h="http://www.w3.org/1999/xhtml"
-	title="Enforce XACML rules" saveContent="true" 
-	style="padding: 100px 0 0 10px; width:800px; text-align: center; vertical-align: middle; margin: 0 auto;">
+    use="com.soffid.iam.addons.xacml.web.ApplyPolicyHandler"
+	title="Enforce XACML rules" saveContent="true" >
 	
+	<div use="com.soffid.iam.web.component.NavigationBar" frame="frame">
+	</div>
+
 	<datamodel id="model" rootNode="root" src="addon/xacml/descriptorxacmlconfig.xml"
 		onCommit="" onChange=""/>
-	<zscript><![CDATA[
-	    import com.soffid.addons.xacml.pep.*;
-	    
-		void apply ()
-		{
-			PepConfiguration config =  model.getJXPathContext().getValue("/config[1]").getInstance();
-			config.setTesting(false);
-			new PolicyManager().apply(config);
-		}
-		
-		void onCheckWeb ()
-		{
-			wp.setDisabled(!wc.isChecked()); wv.setDisabled(!wc.isChecked());
-		}
-		
-		void onCheckRole ()
-		{
-			rp.setDisabled(!rc.isChecked()); rv.setDisabled(!rc.isChecked());
-		}
-		
-		void onCheckAuth ()
-		{
-			ap.setDisabled(!ac.isChecked()); av.setDisabled(!ac.isChecked());
-		}
-		
-		void onCheckExternal ()
-		{
-			ep.setDisabled(!ec.isChecked()); ev.setDisabled(!ec.isChecked());
-		}
-		
-		void onCheckVault ()
-		{
-			vp.setDisabled(!vc.isChecked()); vv.setDisabled(!vc.isChecked());
-		}
-		
-		void applyTest ()
-		{
-			PepConfiguration config =  model.getJXPathContext().getValue("/config[1]").getInstance();
-			config.setTesting(true);
-			new WebPolicyManager().apply(config);
-			es.caib.zkib.zkiblaf.Missatgebox.avis("A cookie has been sent to your browser to enforce XACML rules for your browser.\nRemove it or restart console to enable default behaviour.\nMind only one user can test XACML policies at a time");
-		}
-	]]>
-	</zscript>
-	<style src="~./styles/estil.css"/>
-	<style src="/css/localSEU.css"/>
-	<form dataPath="/model:/config[1]" onCreate="onCheckRole(); onCheckAuth(); onCheckWeb();">
-		<div>
-			<label value="Web Policy Enforcement Point"/>
-			<hbox widths="30em, *">
-				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
-				<checkbox id="wc" bind="/webPolicy/enabled" onCheck="onCheckWeb(); "></checkbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
-				<textbox id="wp" bind="/webPolicy/policyId"></textbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
-				<textbox id="wv" bind="/webPolicy/policyVersion"></textbox>
-			</hbox>
+	<form2 dataPath="/model:/config[1]">
+		<div sclass="section">
+			<customfield3 dataType="SEPARATOR" label="Web Policy Enforcement Point"/>
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_enablePolicy') }" 
+				id="wc" bind="/webPolicy/enabled" onChange="ref:frame.onCheckWeb()"/>
+			<customfield3  dataType="STRING" label="${c:l('xacml_applyPolicy') }"
+				id="wp" bind="/webPolicy/policyId" />
+			<customfield3  dataType="NUMBER" label="${c:l('xacml_applyPolicyVersion') }"
+				id="wv" bind="/webPolicy/policyVersion" />
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_debugPolicy') }" 
+				id="wd" bind="/webPolicy/debug" onChange="ref:frame.onCheckWeb()"/>
 		</div>
 	
-		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
-			<label value="Role centric Policy Enforcement Point"/>
-			<hbox widths="30em, *">
-				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
-				<checkbox id="rc" bind="/rolePolicy/enabled" onCheck="onCheckRole(); "></checkbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
-				<textbox id="rp" bind="/rolePolicy/policyId"></textbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
-				<textbox id="rv" bind="/rolePolicy/policyVersion"></textbox>
-			</hbox>
+		<div sclass="section">
+			<customfield3 dataType="SEPARATOR" label="Role centric Policy Enforcement Point"/>
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_enablePolicy') }" 
+				id="rc" bind="/rolePolicy/enabled" onChange="ref:frame.onCheckRole()"/>
+			<customfield3  dataType="STRING" label="${c:l('xacml_applyPolicy') }"
+				id="rp" bind="/rolePolicy/policyId" />
+			<customfield3  dataType="NUMBER" label="${c:l('xacml_applyPolicyVersion') }"
+				id="rv" bind="/rolePolicy/policyVersion" />
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_debugPolicy') }" 
+				id="rd" bind="/rolePolicy/debug" onChange="ref:frame.onCheckWeb()"/>
 		</div>
 	
-		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
-			<label value="Dynamic role Policy Enforcement Point" style=""/>
-			<hbox widths="30em, *">
-				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
-				<checkbox id="ac" bind="/authPolicy/enabled" onCheck="onCheckAuth() "></checkbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
-				<textbox id="ap" bind="/authPolicy/policyId"></textbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
-				<textbox id="av" bind="/authPolicy/policyVersion"></textbox>
-			</hbox>
+		<div sclass="section">
+			<customfield3 dataType="SEPARATOR" label="Dynamic role Policy Enforcement Point"/>
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_enablePolicy') }" 
+				id="ac" bind="/authPolicy/enabled" onChange="ref:frame.onCheckAuth()"/>
+			<customfield3  dataType="STRING" label="${c:l('xacml_applyPolicy') }"
+				id="ap" bind="/authPolicy/policyId" />
+			<customfield3  dataType="NUMBER" label="${c:l('xacml_applyPolicyVersion') }"
+				id="av" bind="/authPolicy/policyVersion" />
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_debugPolicy') }" 
+				id="ad" bind="/authPolicy/debug" onChange="ref:frame.onCheckWeb()"/>
 		</div>
 	
-		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
-			<zscript><![CDATA[
-			    String url = "";
-				for ( com.soffid.iam.api.Server server: com.soffid.iam.EJBLocator.getDispatcherService().findAllServers())
-				{
-					if (server.getType() == es.caib.seycon.ng.comu.ServerType.MASTERSERVER)
-					{
-						url = "( "+server.getUrl()+"/XACML/pep )";
-						break;						
-					}
-				}
-			]]>
-			</zscript>
-			<label value="External Policy Enforcement Point ${url }" style=""/>
-			<hbox widths="30em, *">
-				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
-				<checkbox id="ec" bind="/externalPolicy/enabled" onCheck="onCheckExternal() "></checkbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
-				<textbox id="ep" bind="/externalPolicy/policyId"></textbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
-				<textbox id="ev" bind="/externalPolicy/policyVersion"></textbox>
-			</hbox>
+		<div sclass="section">
+			<customfield3 dataType="SEPARATOR" label="External Policy Enforcement Point " id="el"/>
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_enablePolicy') }" 
+				id="ec" bind="/externalPolicy/enabled" onChange="ref:frame.onCheckExternal()"/>
+			<customfield3  dataType="STRING" label="${c:l('xacml_applyPolicy') }"
+				id="ep" bind="/externalPolicy/policyId" />
+			<customfield3  dataType="NUMBER" label="${c:l('xacml_applyPolicyVersion') }"
+				id="ev" bind="/externalPolicy/policyVersion" />
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_debugPolicy') }" 
+				id="ed" bind="/externalPolicy/debug" onChange="ref:frame.onCheckWeb()"/>
 		</div>
 	
-		<div style="width: 100%; border-top: solid 1px black; margin-top: 10px; margin-bottom: 10px; padding-top: 10px;">
-			<zscript><![CDATA[
-			    String url = "";
-				for ( com.soffid.iam.api.Server server: com.soffid.iam.EJBLocator.getDispatcherService().findAllServers())
-				{
-					if (server.getType() == es.caib.seycon.ng.comu.ServerType.MASTERSERVER)
-					{
-						url = "( "+server.getUrl()+"/XACML/vault )";
-						break;						
-					}
-				}
-			]]>
-			</zscript>
-			<label value="Password vault Policy Enforcement Point ${url }" style=""/>
-			<hbox widths="30em, *">
-				<label width="30em" value="${c:l('xacml_enablePolicy') }"></label>
-				<checkbox id="vc" bind="/vaultPolicy/enabled" onCheck="onCheckVault() "></checkbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicy') }"></label>
-				<textbox id="vp" bind="/vaultPolicy/policyId"></textbox>
-			</hbox>
-			<separator/>
-			<hbox widths="30em,*">
-				<label  width="30em"  value="${c:l('xacml_applyPolicyVersion') }"></label>
-				<textbox id="vv" bind="/vaultPolicy/policyVersion"></textbox>
-			</hbox>
+		<div sclass="section">
+			<customfield3 dataType="SEPARATOR" label="Password vault Policy Enforcement Point " id="vl"/>
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_enablePolicy') }" 
+				id="vc" bind="/vaultPolicy/enabled" onChange="ref:frame.onCheckVault()"/>
+			<customfield3  dataType="STRING" label="${c:l('xacml_applyPolicy') }"
+				id="vp" bind="/vaultPolicy/policyId" />
+			<customfield3  dataType="NUMBER" label="${c:l('xacml_applyPolicyVersion') }"
+				id="vv" bind="/vaultPolicy/policyVersion" />
+			<customfield3 dataType="BOOLEAN" label="${c:l('xacml_debugPolicy') }" 
+				id="vd" bind="/vaultPolicy/debug" onChange="ref:frame.onCheckWeb()"/>
 		</div>
 	
 
-		<separator/>
-		<hbox widths="30em,*">
-			<label value=""  width="30em" />
-			<button label="${c:l('xacml_applyTest') }" onClick="applyTest()"/>
-			<button label="${c:l('xacml_apply') }" onClick="apply()"/>
-		</hbox>
-	</form>
+		<div style="text-align: right; width: 100%">
+			<button label="${c:l('xacml_applyTest') }" onClick="ref:frame.applyTest()"/>
+			<button label="${c:l('xacml_apply') }" onClick="ref:frame.applyPolicy()"/>
+		</div>
+	</form2>
 </frame>

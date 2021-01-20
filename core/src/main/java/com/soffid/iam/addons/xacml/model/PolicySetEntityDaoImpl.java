@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.soffid.iam.addons.xacml.common.ActionMatch;
 import com.soffid.iam.addons.xacml.common.EnvironmentMatch;
+import com.soffid.iam.addons.xacml.common.Obligation;
 import com.soffid.iam.addons.xacml.common.PolicyIdReference;
 import com.soffid.iam.addons.xacml.common.PolicySetIdReference;
 import com.soffid.iam.addons.xacml.common.PolicySet;
@@ -50,6 +51,11 @@ public class PolicySetEntityDaoImpl extends PolicySetEntityDaoBase
 			target.setParentPolicySet(source.getParentPolicySet().getId());
 		}else{
 			target.setParentPolicySet(null);
+		}
+		
+		target.setObligation(new LinkedList<Obligation>());
+		for (ObligationEntity oe: source.getObligation()) {
+			target.getObligation().add(getObligationEntityDao().toObligation(oe));
 		}
 	}
 	
@@ -203,6 +209,17 @@ public class PolicySetEntityDaoImpl extends PolicySetEntityDaoBase
 			getTargetEntityDao().update(te);
 			pse.getTarget().add(te);
 		}
+
+		if (vo.getObligation() != null)
+		{
+			for (Obligation o : vo.getObligation())
+			{
+				ObligationEntity oe = getObligationEntityDao().create(o);
+				oe.setPolicySet(pse);
+				getObligationEntityDao().update(oe);
+				pse.getObligation().add(oe);
+			}
+		}
 		return pse;
 	}
 
@@ -226,12 +243,39 @@ public class PolicySetEntityDaoImpl extends PolicySetEntityDaoBase
 		}
 		for (Target target : vo.getTarget())
 		{
-			if (target.getId() == null){
+			if (target.getId() == null || getTargetEntityDao().load(target.getId()) == null){
 				TargetEntity te = getTargetEntityDao().create(target);
 				te.setPolicySet(pse);
 				getTargetEntityDao().update(te);
 			}else
 				getTargetEntityDao().update(target);
+		}
+		
+		for (ObligationEntity oe: new LinkedList<ObligationEntity>( pse.getObligation()))
+		{
+			boolean found = false;
+			for (Obligation o : vo.getObligation())
+			{
+				if (oe.getId().equals (o.getId()))
+				{
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				getObligationEntityDao().remove(oe);
+				pse.getObligation().remove(oe);
+			}
+		}
+		for (Obligation o : vo.getObligation())
+		{
+			if (o.getId() == null || getObligationEntityDao().load(o.getId()) == null){
+				ObligationEntity oe = getObligationEntityDao().create(o);
+				oe.setPolicySet(pse);
+				getObligationEntityDao().update(oe);
+			}else {
+				getObligationEntityDao().update(o);
+			}
 		}
 	}
 
@@ -242,6 +286,8 @@ public class PolicySetEntityDaoImpl extends PolicySetEntityDaoBase
 		{
 			getTargetEntityDao().remove(targetE);
 		}
+		for (ObligationEntity oe: pse.getObligation())
+			getObligationEntityDao().remove(oe);
 		super.remove (pse);
 		
 	}

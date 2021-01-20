@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><?page title="policySet" id="policySet"?>
+<?taglib uri="/WEB-INF/tld/web/core.dsp.tld" prefix="c" ?>
+<?taglib uri="/WEB-INF/tld/soffid.dsp.tld" prefix="soffid" ?>
+
+<div style="width: 100%; vertical-align: top" 
+	use="com.soffid.iam.addons.xacml.web.ExpressionEditor" 
+	id="handler" 
+	dataPath="${arg.dataPath }">
+	<div style="width: 50%; display: inline-block; vertical-align: top">
+		<datatree2 id="dt" header="${c:l('xacml_expression.Titol') }" 
+			onSelect="ref:handler.onSelect"
+			onAddExpression="ref:handler.addExpression">
+		<attribute name="finders"><![CDATA[
+- path: expression
+  value: value
+  leaf: #{leaf}
+  tail: #{tail}
+		]]></attribute>
+		</datatree2>
+	</div>
+	<div style="width: 50%; display: inline-block; vertical-align: top">
+		<div sclass="navigation-bar dummy">
+			<databutton image="/img/trash.svg" label="${c:l('agents.DeleteAgent') }" onClick="ref:handler.removeExpression" id="removeIcon" onlyIcon="true"/>
+		</div>
+		<customfield3 id="expressionType" label="${c:l('xacml_expressionPanel.Titol') }" dataType="STRING" onChange="ref:handler.updateExpressionType"/>
+		<customfield3 id="functionFamily" label="${c:l('xacml_expressionPanel.FunctionType') }" dataType="STRING" onChange="ref:handler.updateFunctionType" visible="false"/>
+		<customfield3 id="function" label="${c:l('xacml_expressionPanel.Function') }" dataType="STRING" onChange="ref:handler.updateFunction" visible="false"/>
+		<customfield3 id="attributeDesignator" label="${c:l('xacml_policySet.attributeDesignator') }" dataType="STRING" onChange="ref:handler.updateAttributeDesignator" visible="false"/>
+		<customfield3 id="attributeSelector" label="${c:l('xacml_expressionPanel.Selector') }" dataType="STRING" onChange="ref:handler.updateAttributeSelector" visible="false"/>
+		<customfield3 id="attributeValue" label="${c:l('xacml_policySet.Value') }" dataType="STRING" onChange="ref:handler.updateValue" visible="false"/>
+		<customfield3 id="variable" label="${c:l('xacml_expressionPanel.Variable') }" dataType="STRING" onChange="ref:handler.updateVariable" visible="false"/>
+		<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+			id="attributeValueDataType"
+			dataType="STRING" 
+			visible="false"
+			onChange="ref:handler.updateDataType"
+			enumeration="com.soffid.iam.addons.xacml.common.DataType" required="true" /> 
+		<customfield3 label=" ${c:l('xacml_policySet.DataTypeValue')}"
+			id="functionDataType"
+			visible="false"
+			dataType="STRING" 
+			onChange="ref:handler.updateFunctionQualifier" required="true" /> 
+	</div>
+</div>

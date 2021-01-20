@@ -46,6 +46,7 @@ import com.soffid.iam.addons.xacml.service.SoffidAttributeFinderModule;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyDocument;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidXPathBean;
+import com.soffid.iam.api.Account;
 import com.soffid.iam.api.Host;
 import com.soffid.iam.api.System;
 import com.soffid.iam.api.UserAccount;
@@ -213,6 +214,19 @@ public class XACMLEngine {
 		// Action
 		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.SYSTEM_IDENTIFIER), (String) null, null, 
 				new StringAttribute( system )));
+		
+		Account acc = ServiceLocator.instance().getAccountService().findAccount(account, system);
+		if (acc != null) {
+			if (acc.getVaultFolder() != null)
+				resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.VAULT_IDENTIFIER), (String) null, null, 
+					new StringAttribute( acc.getVaultFolder() )));
+
+			resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.LOGIN_IDENTIFIER), (String) null, null, 
+					new StringAttribute( acc.getLoginName() == null ? acc.getName(): acc.getLoginName() )));
+
+			resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.ACCESS_LEVEL_IDENTIFIER), (String) null, null, 
+					new StringAttribute( acc.getAccessLevel().getValue() )));
+		}
 		
 		return test(ps, remoteAddress, token, subjectAttributes, resourceAttributes, actionAttributes,
 				environmentAttributes, context);
