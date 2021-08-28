@@ -248,90 +248,95 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 	
 	private BagAttribute retrieveAttributtes(String accountName, String domain,
 			URI attributeType, URI attributeId) throws InternalErrorException {
-		BagAttribute returnBag = null;
-
-		UserService usuariService = ServiceLocator.instance()
-				.getUserService();
-		AccountService accountService = ServiceLocator.instance()
-				.getAccountService();
-		ApplicationService aplicacioService = ServiceLocator.instance()
-				.getApplicationService();
-		InternalPasswordService ips = ServiceLocator.instance()
-				.getInternalPasswordService();
-		GroupService grupService = ServiceLocator.instance().getGroupService();
-		String defaultDomain = ips.getDefaultDispatcher();
-		
-		Account account = accountService.findAccount(accountName, domain);
-		String userName = null;
-		if (account instanceof UserAccount)
-			userName = ((UserAccount)account).getUser();
-		
-		
-		Set set = new HashSet();
-		if (attributeId.toString().equals(ROLE_IDENTIFIER)) {
-			Collection<RoleGrant> grants;
-			if (userName == null)
-				grants = aplicacioService.findEffectiveRoleGrantByAccount(account.getId());
-			else
-			{
-				User usuari = usuariService.findUserByUserName(userName);
-				grants = aplicacioService.findEffectiveRoleGrantByUser(usuari.getId());
-			}
-			for (RoleGrant rg : grants) {
-				set.add(new StringAttribute(rg.getRoleName() + "@"
-						+ rg.getSystem()));
-				if (defaultDomain.equals(rg.getSystem()))
-					set.add(new StringAttribute(rg.getRoleName()));
-				if (rg.getDomainValue() != null
-						&& !rg.getDomainValue().isEmpty()) {
-					set.add(new StringAttribute(rg.getRoleName() + "/"
-							+ rg.getDomainValue() + "@"
+		Security.nestedLogin(Security.ALL_PERMISSIONS);
+		try {
+			BagAttribute returnBag = null;
+	
+			UserService usuariService = ServiceLocator.instance()
+					.getUserService();
+			AccountService accountService = ServiceLocator.instance()
+					.getAccountService();
+			ApplicationService aplicacioService = ServiceLocator.instance()
+					.getApplicationService();
+			InternalPasswordService ips = ServiceLocator.instance()
+					.getInternalPasswordService();
+			GroupService grupService = ServiceLocator.instance().getGroupService();
+			String defaultDomain = ips.getDefaultDispatcher();
+			
+			Account account = accountService.findAccount(accountName, domain);
+			String userName = null;
+			if (account instanceof UserAccount)
+				userName = ((UserAccount)account).getUser();
+			
+			
+			Set set = new HashSet();
+			if (attributeId.toString().equals(ROLE_IDENTIFIER)) {
+				Collection<RoleGrant> grants;
+				if (userName == null)
+					grants = aplicacioService.findEffectiveRoleGrantByAccount(account.getId());
+				else
+				{
+					User usuari = usuariService.findUserByUserName(userName);
+					grants = aplicacioService.findEffectiveRoleGrantByUser(usuari.getId());
+				}
+				for (RoleGrant rg : grants) {
+					set.add(new StringAttribute(rg.getRoleName() + "@"
 							+ rg.getSystem()));
 					if (defaultDomain.equals(rg.getSystem()))
+						set.add(new StringAttribute(rg.getRoleName()));
+					if (rg.getDomainValue() != null
+							&& !rg.getDomainValue().isEmpty()) {
 						set.add(new StringAttribute(rg.getRoleName() + "/"
-								+ rg.getDomainValue()));
-				}
-			}
-		} else if (attributeId.toString().equals(GROUP_IDENTIFIER) && userName != null) {
-			for (GroupUser grup : grupService
-					.findUsersGroupByUserName(userName)) {
-				set.add(new StringAttribute(grup.getGroup()));
-			}
-		} else if (attributeId.toString().equals(PRIMARY_GROUP_IDENTIFIER) && userName != null) {
-			User usuari = usuariService.findUserByUserName(userName);
-			set.add (new StringAttribute(usuari.getPrimaryGroup()));
-		} else if (attributeId.toString().equals(SUBJECT_IDENTIFIER) ||
-				attributeId.toString().equals(ACCOUNT_IDENTIFIER)) {
-			set.add (new StringAttribute(accountName));
-		} else if (attributeId.toString().equals(SYSTEM_IDENTIFIER) ||
-				attributeId.toString().equals(XACMLConstants.ATTRIBUTEID_SUBJECT_ID_QUALIFIER)) {
-			set.add (new StringAttribute(domain));
-		} else if (attributeId.toString().equals(USER_IDENTIFIER) && userName != null) {
-			set.add (new StringAttribute(userName));
-		} else if (attributeId.toString().startsWith(CUSTOM_ATTRIBUTE_PREFIX) && userName != null)
-		{
-			String metaData = attributeId.toString().substring(CUSTOM_ATTRIBUTE_PREFIX.length()+1);
-			Map<String, Object> atts = usuariService.findUserAttributes(userName);
-			Object v = atts.get(metaData);
-			if (userName != null && v == null)
-			{
-				atts = usuariService.findUserAttributes(userName);
-				v = atts.get(metaData);
-			}
-			if (v != null)
-			{
-				if (v instanceof Collection)
-				{
-					for (Object vv: (Collection) v)
-					{
-						addValue (set, vv);
+								+ rg.getDomainValue() + "@"
+								+ rg.getSystem()));
+						if (defaultDomain.equals(rg.getSystem()))
+							set.add(new StringAttribute(rg.getRoleName() + "/"
+									+ rg.getDomainValue()));
 					}
 				}
-				else
-					addValue (set, v);
+			} else if (attributeId.toString().equals(GROUP_IDENTIFIER) && userName != null) {
+				for (GroupUser grup : grupService
+						.findUsersGroupByUserName(userName)) {
+					set.add(new StringAttribute(grup.getGroup()));
+				}
+			} else if (attributeId.toString().equals(PRIMARY_GROUP_IDENTIFIER) && userName != null) {
+				User usuari = usuariService.findUserByUserName(userName);
+				set.add (new StringAttribute(usuari.getPrimaryGroup()));
+			} else if (attributeId.toString().equals(SUBJECT_IDENTIFIER) ||
+					attributeId.toString().equals(ACCOUNT_IDENTIFIER)) {
+				set.add (new StringAttribute(accountName));
+			} else if (attributeId.toString().equals(SYSTEM_IDENTIFIER) ||
+					attributeId.toString().equals(XACMLConstants.ATTRIBUTEID_SUBJECT_ID_QUALIFIER)) {
+				set.add (new StringAttribute(domain));
+			} else if (attributeId.toString().equals(USER_IDENTIFIER) && userName != null) {
+				set.add (new StringAttribute(userName));
+			} else if (attributeId.toString().startsWith(CUSTOM_ATTRIBUTE_PREFIX) && userName != null)
+			{
+				String metaData = attributeId.toString().substring(CUSTOM_ATTRIBUTE_PREFIX.length()+1);
+				Map<String, Object> atts = usuariService.findUserAttributes(userName);
+				Object v = atts.get(metaData);
+				if (userName != null && v == null)
+				{
+					atts = usuariService.findUserAttributes(userName);
+					v = atts.get(metaData);
+				}
+				if (v != null)
+				{
+					if (v instanceof Collection)
+					{
+						for (Object vv: (Collection) v)
+						{
+							addValue (set, vv);
+						}
+					}
+					else
+						addValue (set, v);
+				}
 			}
+			return new BagAttribute(attributeType, set);
+		} finally {
+			Security.nestedLogoff();
 		}
-		return new BagAttribute(attributeType, set);
 	}
 
 	private void addValue(Set set, Object v) {

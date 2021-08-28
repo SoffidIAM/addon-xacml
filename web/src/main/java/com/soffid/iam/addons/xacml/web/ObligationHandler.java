@@ -60,11 +60,12 @@ public class ObligationHandler extends Div {
 		Window var = (Window) getFellow("var");
 		if (var.getChildren().isEmpty())
 			Events.sendEvent(new Event("onOpen", var));
+		var.getFellow("back").setVisible(true);
 		var.doHighlighted();
 	}
 	
 	public void wizardBack(Event event) throws Exception {
-		Window add = (Window) getFellow("rule");
+		Window add = (Window) getFellow("var");
 		if (newObject)
 			currentTable.delete();
 		else {
@@ -129,6 +130,7 @@ public class ObligationHandler extends Div {
 		if (modify.getChildren().isEmpty())
 			Events.sendEvent(new Event("onOpen", modify));
 		
+		modify.getFellow("back").setVisible(false);
 		modify.doHighlighted();
 	}
 

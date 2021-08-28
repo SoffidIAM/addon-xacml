@@ -85,9 +85,7 @@ public class TargetHandler extends Div {
 	}
 	
 	public void wizardBack(Event event) {
-		Window add = (Window) getFellow("add");
-		currentTable.delete();
-		Wizard w = (Wizard) add.getFellow("wizard");
+		Wizard w = (Wizard) event.getTarget().getFellow("wizard");
 		w.previous();
 	}
 

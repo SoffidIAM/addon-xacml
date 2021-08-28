@@ -53,17 +53,20 @@
     <button class="small-button" onclick="zkDatatree2.sendClientAction(this, 'onAddPolicySetId')">${c:l('policySet.addPolicySetId')}</button>
 - path: /policy
   value: etiqueta
-  leaf: false
+  leaf: true
+  icon: /addon/xacml/img/policy.svg
   columns:
   - value: description
 - path: /policySetIdRef
+  icon: /addon/xacml/img/policyset-link.svg
   value: idReferenceTypeValue
-  leaf: false
+  leaf: true
   columns:
   - value: description
 - path: /policyIdRef
+  icon: /addon/xacml/img/policy-link.svg
   value: idReferenceTypeValue
-  leaf: false
+  leaf: true
   columns:
   - value: description
 ]]>

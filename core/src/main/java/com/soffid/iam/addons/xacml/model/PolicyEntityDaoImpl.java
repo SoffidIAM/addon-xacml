@@ -137,6 +137,7 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 				re.setPolicy(pe);
 				//rule.setId(re.getId());
 				getRuleEntityDao().update(re);
+				pe.getRule().add(re);
 			}
 		}
 		
@@ -145,6 +146,7 @@ public class PolicyEntityDaoImpl extends PolicyEntityDaoBase
 				VariableDefinitionEntity varE = getVariableDefinitionEntityDao().create(var, pe);
 				varE.setPolicy(pe);
 				getVariableDefinitionEntityDao().update(varE);
+				pe.getVariableDefinition().add(varE);
 			}
 		}
 

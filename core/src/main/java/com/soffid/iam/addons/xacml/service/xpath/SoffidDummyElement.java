@@ -1,5 +1,14 @@
 package com.soffid.iam.addons.xacml.service.xpath;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -11,9 +20,17 @@ import org.w3c.dom.TypeInfo;
 import org.w3c.dom.UserDataHandler;
 
 public class SoffidDummyElement implements Element {
-
+	String tag;
 	private Document document;
 	private Object underlyingObject;
+	private SoffidDummyElement parent;
+	
+	public SoffidDummyElement(Document doc, SoffidDummyElement parent, String tag, Object value) {
+		this.document = doc;
+		this.tag =tag;
+		this.underlyingObject = value;
+		this.parent = parent;
+	}
 	
 	public Object getUnderlyingObject() {
 		return underlyingObject;
@@ -24,46 +41,100 @@ public class SoffidDummyElement implements Element {
 	}
 
 	public String getNodeName() {
-		return "Request";
+		return tag;
 	}
 
 	public String getNodeValue() throws DOMException {
-		return null;
+		return  underlyingObject == null ? "" : underlyingObject.toString();
 	}
 
 	public void setNodeValue(String nodeValue) throws DOMException {
 	}
 
 	public short getNodeType() {
-		return Node.ENTITY_NODE;
+		return Node.ELEMENT_NODE;
 	}
 
 	public Node getParentNode() {
 		return null;
 	}
 
+	SoffidNodeList children = null;
+	private SoffidNodeList getChildren () {
+		if (children == null)
+			children = new SoffidNodeList();
+		PropertyUtilsBean bean = new PropertyUtilsBean();
+		Map prop;
+		try {
+			prop = bean.describe(underlyingObject);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		for (Object p: prop.keySet()) {
+			Object v;
+			try {
+				v = bean.getProperty(bean, p.toString());
+				if (v == null) {
+					// Nothing to do
+				} else if (v instanceof Collection) {
+					for (Object vv: (Collection)v) {
+						children.add(new SoffidDummyElement(document, parent, p.toString(), vv));
+					}
+				} else if (v.getClass().isArray()) {
+					for (int i = 0; i < Array.getLength(v); i++) {
+						children.add(new SoffidDummyElement(document, parent, p.toString(), Array.get(v, i)));
+					}
+				} else {
+					children.add(new SoffidDummyElement(document, parent, p.toString(), v));
+				}
+			} catch (Exception e) {
+			}
+		}
+		return children;
+		
+	}
+	
 	public NodeList getChildNodes() {
-		return new SoffidDummyNodeList(null);
+		return getChildren();
 	}
 
 	public Node getFirstChild() {
-		return null;
+		NodeList l = getChildNodes();
+		if (l.getLength() > 0) return l.item(0);
+		else return null;
 	}
 
 	public Node getLastChild() {
-		return null;
+		NodeList l = getChildNodes();
+		if (l.getLength() > 0) return l.item(l.getLength()-1);
+		else return null;
 	}
 
 	public Node getPreviousSibling() {
-		return null;
+		if (parent == null)
+			return null;
+		SoffidNodeList l = parent.getChildren();
+		Node previous = null;
+		for (int i = 0; i < l.getLength(); i++)
+			if (l.item(i) == this) 
+				break;
+			else
+				previous = l.item(i);
+		return previous;
 	}
 
 	public Node getNextSibling() {
-		return null;
+		if (parent == null)
+			return null;
+		SoffidNodeList l = parent.getChildren();
+		int i = 0;
+		while (i < l.getLength() && l.item(i) != this)
+			i++;
+		return l.item(i);
 	}
 
 	public NamedNodeMap getAttributes() {
-		return null;
+		return new SoffidNamedNodeMap();
 	}
 
 	public Document getOwnerDocument() {
@@ -119,7 +190,7 @@ public class SoffidDummyElement implements Element {
 	}
 
 	public String getLocalName() {
-		return null;
+		return tag;
 	}
 
 	public boolean hasAttributes() {
@@ -135,14 +206,14 @@ public class SoffidDummyElement implements Element {
 	}
 
 	public String getTextContent() throws DOMException {
-		return "";
+		return underlyingObject == null ? null: underlyingObject.toString();
 	}
 
 	public void setTextContent(String textContent) throws DOMException {
 	}
 
 	public boolean isSameNode(Node other) {
-		return false;
+		return other == this;
 	}
 
 	public String lookupPrefix(String namespaceURI) {
@@ -158,7 +229,7 @@ public class SoffidDummyElement implements Element {
 	}
 
 	public boolean isEqualNode(Node arg) {
-		return false;
+		return arg == this;
 	}
 
 	public Object getFeature(String feature, String version) {
@@ -200,7 +271,15 @@ public class SoffidDummyElement implements Element {
 	}
 
 	public NodeList getElementsByTagName(String name) {
-		return null;
+		SoffidNodeList nl = new SoffidNodeList();
+		SoffidNodeList nl2 = new SoffidNodeList();
+		for (int i = 0; i < nl.getLength(); i++)
+		{
+			Node n = nl.item(i);
+			if (n instanceof Element && ((Element)n).getTagName().equals(name))
+				nl2.add(n);
+		}
+		return nl2;
 	}
 
 	public String getAttributeNS(String namespaceURI, String localName)

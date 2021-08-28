@@ -36,6 +36,7 @@ public class ExpressionHelper {
 	public static JSONArray data = null;
 	
 	static JSONObject findFunction(String fn) throws JSONException, IOException {
+		JSONObject jsonObject = null;
 		parse();
 		for (int i = 0; i < data.length(); i++) {
 			JSONObject o = data.getJSONObject(i);
@@ -44,8 +45,10 @@ public class ExpressionHelper {
 				String name = f.getJSONObject(j).optString("name");
 				if (fn.endsWith(name))
 				{
-					return f.getJSONObject(j);
+					jsonObject = f.getJSONObject(j);
 				}
+				if (fn.equals(name))
+					return jsonObject;
 			}
 		}
 		return null;
@@ -176,7 +179,7 @@ public class ExpressionHelper {
 			description = Labels.getLabel("xacml_expressionPanel.Environment")+" "+e.getAttributeDesignator();
 		}
 		if (e.getExpressionType().equals("attributeSelector")) {
-			description = Labels.getLabel("xacml_expressionPanel.Attribute")+" "+e.getAttributeSelector();
+			description = Labels.getLabel("xacml_expressionPanel.Selector")+" "+e.getAttributeSelector();
 		}
 		if (e.getExpressionType().equals("attributeValue")) {
 			description = "\""+e.getAttributeValue()+"\"";

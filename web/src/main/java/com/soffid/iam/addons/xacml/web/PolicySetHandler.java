@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.LinkedList;
 
 import javax.naming.InitialContext;
@@ -19,12 +20,21 @@ import org.zkoss.zul.Radiogroup;
 import org.zkoss.zul.Textbox;
 import org.zkoss.zul.Treeitem;
 
+import com.soffid.iam.addons.xacml.common.ActionMatch;
+import com.soffid.iam.addons.xacml.common.Condition;
+import com.soffid.iam.addons.xacml.common.EnvironmentMatch;
+import com.soffid.iam.addons.xacml.common.Expression;
 import com.soffid.iam.addons.xacml.common.IdReference;
+import com.soffid.iam.addons.xacml.common.Obligation;
 import com.soffid.iam.addons.xacml.common.Policy;
 import com.soffid.iam.addons.xacml.common.PolicyIdReference;
 import com.soffid.iam.addons.xacml.common.PolicySet;
 import com.soffid.iam.addons.xacml.common.PolicySetIdReference;
+import com.soffid.iam.addons.xacml.common.ResourceMatch;
+import com.soffid.iam.addons.xacml.common.Rule;
+import com.soffid.iam.addons.xacml.common.SubjectMatch;
 import com.soffid.iam.addons.xacml.common.Target;
+import com.soffid.iam.addons.xacml.common.VariableDefinition;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetService;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
 import com.soffid.iam.web.component.FrameHandler;
@@ -33,6 +43,7 @@ import com.soffid.iam.web.popup.FileUpload2;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkib.component.DataTree;
 import es.caib.zkib.component.DataTree2;
+import es.caib.zkib.datamodel.DataModelNode;
 import es.caib.zkib.datamodel.DataNode;
 import es.caib.zkib.datamodel.DataNodeCollection;
 import es.caib.zkib.datamodel.xml.XmlDataNode;
@@ -46,8 +57,6 @@ public class PolicySetHandler extends FrameHandler {
 		super();
 	}
 
-
-	
 	public void addNew()
 	{
 		int num = 1;
@@ -77,6 +86,309 @@ public class PolicySetHandler extends FrameHandler {
 		tree.setSelectedIndex(new int[0]);
 		tree.addNew("/policySet", child);
 		showDetails();
+	}
+
+	public void addNewVersion(Event ev) throws CommitException
+	{
+		int num = 1;
+		if (!applyNoClose(ev))
+			return;
+		
+		DataNode current = (DataNode) XPathUtils.eval(getForm(), "/.");
+		DataModelNode parent = current.getParent();
+
+		Object instance = current.getInstance();
+		if (instance instanceof PolicySet) {
+		
+			DataNodeCollection c = (DataNodeCollection) parent.getListModel("policySet");
+			
+			PolicySet policySet = (PolicySet) current.getInstance();
+			PolicySet n = duplicate(policySet);
+			c.add(n);
+			DataNode nextDataNode = (DataNode) c.get(c.getSize()-1);
+	
+			duplicatePolicyNode(current, nextDataNode);
+			duplicatePolicySetNode(current, nextDataNode);
+			
+			DataTree2 tree = (DataTree2) getListbox();
+			int[] s = tree.getSelectedItem();
+			s[s.length - 1] = c.getSize() - 1;
+			tree.setSelectedIndex(s);
+			
+			showDetails();
+
+		} else if (instance instanceof Policy) {
+			DataNodeCollection c = (DataNodeCollection) parent.getListModel("policy");
+			
+			Policy policy = (Policy) current.getInstance();
+			Policy n = duplicate(policy);
+			try {
+				n.setVersion( Long.toString( Long.decode(policy.getVersion()).longValue() + 1));
+			} catch (Exception e) {
+				// Parse exception
+			}
+	
+			c.add(n);
+	
+			DataTree2 tree = (DataTree2) getListbox();
+			int[] s = tree.getSelectedItem();
+			s[s.length - 1] = c.getSize() - 1;
+			tree.setSelectedIndex(s);
+			
+			showDetails();
+		}
+		
+	}
+
+	private void duplicatePolicySetNode(DataNode current, DataNode nextDataNode) {
+		DataNodeCollection p1 = (DataNodeCollection) current.getListModel("policySet");
+		DataNodeCollection p2 = (DataNodeCollection) nextDataNode.getListModel("policySet");
+		for (int i = 0; i < p1.getSize(); i++) {
+			DataNode dn1 = (DataNode) p1.get(i);
+			if (dn1 != null) {
+				PolicySet instance = duplicate ( ( PolicySet )dn1.getInstance());
+				p2.add(instance);
+				DataNode dn2 = (DataNode) p2.get(p2.getSize()-1);
+				duplicatePolicySetNode(dn1, dn2);
+				duplicatePolicyNode(dn1, dn2);
+			}
+		}
+	}
+
+	protected void duplicatePolicyNode(DataNode current, DataNode nextDataNode) {
+		DataNodeCollection p1 = (DataNodeCollection) current.getListModel("policy");
+		DataNodeCollection p2 = (DataNodeCollection) nextDataNode.getListModel("policy");
+		for (int i = 0; i < p1.getSize(); i++) {
+			DataNode dn1 = (DataNode) p1.get(i);
+			if (dn1 != null) {
+				Policy dn2 = duplicate ( ( Policy)dn1.getInstance());
+				p2.add(dn2);
+			}
+		}
+	}
+
+	private Policy duplicate(Policy policy) {
+		Policy n = new Policy(policy);
+		n.setId(null);
+		try {
+			n.setVersion( Long.toString( Long.decode(policy.getVersion()).longValue() + 1));
+		} catch (Exception e) {
+			// Parse exception
+		}
+		n.setTarget(duplicateTarget(policy.getTarget()));
+		n.setObligation(duplicateObligations(policy.getObligation()));
+		n.setVariableDefinition(duplicateVariable(n.getVariableDefinition()));
+		n.setRule(duplicateRule(n.getRule()));
+		return n;
+	}
+
+	private Collection<Rule> duplicateRule(Collection<Rule> rule) {
+		Collection<Rule> l = new LinkedList<>();
+		for (Rule t: rule) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private Rule duplicate(Rule t) {
+		Rule r = new Rule(t);
+		r.setId(null);
+		r.setCondition(duplicateCondition(r.getCondition()));
+		r.setTarget(duplicateTarget(t.getTarget()));
+		return r;
+	}
+
+	private Collection<Condition> duplicateCondition(Collection<Condition> condition) {
+		Collection<Condition> l = new LinkedList<>();
+		for (Condition t: condition) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private Condition duplicate(Condition t) {
+		Condition c = new Condition(t);
+		c.setId(null);
+		c.setExpression(duplicate(t.getExpression()));
+		return c;
+	}
+
+	private Collection<VariableDefinition> duplicateVariable(Collection<VariableDefinition> variableDefinition) {
+		Collection<VariableDefinition> l = new LinkedList<>();
+		for (VariableDefinition t: variableDefinition) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private VariableDefinition duplicate(VariableDefinition t) {
+		VariableDefinition d = new VariableDefinition(t);
+		d.setId(null);
+		t.setExpression(duplicate(d.getExpression()));
+		return d;
+	}
+
+	private Expression duplicate(Expression expression) {
+		Expression e = new Expression(expression);
+		e.setSubexpression(duplicateExpression(e.getSubexpression()));
+		return e;
+	}
+
+	private Collection<Expression> duplicateExpression(Collection<Expression> subexpression) {
+		Collection<Expression> l = new LinkedList<>();
+		for (Expression t: subexpression) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	protected PolicySet duplicate(PolicySet policySet) {
+		PolicySet n = new PolicySet(policySet);
+		n.setId(null);
+		try {
+			n.setVersion( Long.toString( Long.decode(policySet.getVersion()).longValue() + 1));
+		} catch (Exception e) {
+			// Parse exception
+		}
+		n.setTarget(duplicateTarget(policySet.getTarget()));
+		n.setObligation(duplicateObligations(policySet.getObligation()));
+		n.setPolicyIdReference(duplicatePolicyIdReference(policySet.getPolicyIdReference()));
+		n.setPolicySetIdReference(duplicatePolicySetIdReferency(policySet.getPolicySetIdReference()));
+		return n;
+	}
+
+
+
+	private Collection<Obligation> duplicateObligations(Collection<Obligation> obligation) {
+		Collection<Obligation> l = new LinkedList<>();
+		for (Obligation t: obligation) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private Obligation duplicate(Obligation t) {
+		Obligation o = new Obligation(t);
+		o.setId(null);
+		return o;
+	}
+
+	private Collection<PolicyIdReference> duplicatePolicyIdReference(Collection<PolicyIdReference> policyIdReference) {
+		Collection<PolicyIdReference> l = new LinkedList<>();
+		for (PolicyIdReference t: policyIdReference) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private PolicyIdReference duplicate(PolicyIdReference t) {
+		PolicyIdReference r = new PolicyIdReference(t);
+		r.setId(null);
+		return r;
+	}
+
+	private Collection<PolicySetIdReference> duplicatePolicySetIdReferency(
+			Collection<PolicySetIdReference> policySetIdReference) {
+		Collection<PolicySetIdReference> l = new LinkedList<>();
+		for (PolicySetIdReference t: policySetIdReference) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	private PolicySetIdReference duplicate(PolicySetIdReference t) {
+		PolicySetIdReference r = new PolicySetIdReference(t);
+		r.setId(null);
+		return r;
+	}
+
+	private Collection<Target> duplicateTarget(Collection<Target> target) {
+		Collection<Target> l = new LinkedList<>();
+		for (Target t: target) {
+			l.add(duplicate(t));
+		}
+		return l ;
+	}
+
+	protected Target duplicate(Target target) {
+		Target t2 = new Target(target);
+		t2.setId(null);
+		t2.setActionMatch(duplicate(target.getActionMatch()));
+		t2.setEnvironmentMatch(duplicateEnvironmentMatch(target.getEnvironmentMatch()));
+		t2.setResourceMatch(duplicateResourceMatch(target.getResourceMatch()));
+		t2.setSubjectMatch(duplicateSubjectMatch(target.getSubjectMatch()));
+		return t2;
+	}
+
+
+	private Collection<SubjectMatch> duplicateSubjectMatch(Collection<SubjectMatch> e) {
+		Collection<SubjectMatch> l = new LinkedList<>();
+		for (SubjectMatch em: e) {
+			l.add(duplicate(em));
+		}
+		return l ;
+	}
+
+
+
+	private SubjectMatch duplicate(SubjectMatch em) {
+		SubjectMatch e = new SubjectMatch(em);
+		e.setId(null);
+		return e;
+	}
+
+
+
+	private Collection<ResourceMatch> duplicateResourceMatch(Collection<ResourceMatch> e) {
+		Collection<ResourceMatch> l = new LinkedList<>();
+		for (ResourceMatch em: e) {
+			l.add(duplicate(em));
+		}
+		return l ;
+	}
+
+
+
+	private ResourceMatch duplicate(ResourceMatch em) {
+		ResourceMatch e = new ResourceMatch(em);
+		e.setId(null);
+		return e;
+	}
+
+
+
+	private Collection<EnvironmentMatch> duplicateEnvironmentMatch(Collection<EnvironmentMatch> e) {
+		Collection<EnvironmentMatch> l = new LinkedList<>();
+		for (EnvironmentMatch em: e) {
+			l.add(duplicate(em));
+		}
+		return l ;
+	}
+
+
+
+	private EnvironmentMatch duplicate(EnvironmentMatch em) {
+		EnvironmentMatch e = new EnvironmentMatch(em);
+		e.setId(null);
+		return e;
+	}
+
+
+
+	private Collection<ActionMatch> duplicate(Collection<ActionMatch> actionMatch) {
+		Collection<ActionMatch> l = new LinkedList<>();
+		for (ActionMatch am: actionMatch) {
+			l.add(duplicate(am));
+		}
+		return l ;
+	}
+
+
+
+	private ActionMatch duplicate(ActionMatch am) {
+		ActionMatch m2 = new ActionMatch(am);
+		m2.setId(null);
+		return m2;
 	}
 
 
@@ -666,7 +978,7 @@ public class PolicySetHandler extends FrameHandler {
 		int num = 1;
 		DataNodeCollection c = (DataNodeCollection) XPathUtils.eval(getListbox(), "/policy");
 		for (int i = 0; i < c.getSize(); i++) {
-			PolicySet ps = (PolicySet) ((DataNode) c.getDataModel(i)).getInstance();
+			Policy ps = (Policy) ((DataNode) c.getDataModel(i)).getInstance();
 			if (ps != null && ps.getOrder() != null &&
 				ps.getOrder().intValue() >= num)
 				num = ps.getOrder().intValue() + 1;

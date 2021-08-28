@@ -33,8 +33,6 @@ import org.jboss.security.xacml.sunxacml.ctx.RequestCtx;
 import org.jboss.security.xacml.sunxacml.ctx.ResponseCtx;
 import org.jboss.security.xacml.sunxacml.ctx.Result;
 import org.jboss.security.xacml.sunxacml.ctx.Subject;
-import org.zkoss.zk.ui.Execution;
-import org.zkoss.zk.ui.Executions;
 
 import com.soffid.addons.xacml.pep.PepConfiguration;
 import com.soffid.addons.xacml.pep.PolicyManager;
@@ -43,27 +41,27 @@ import com.soffid.iam.addons.xacml.service.PolicySetService;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyDocument;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidXPathBean;
+import com.soffid.iam.common.security.SoffidPrincipal;
+import com.soffid.iam.service.AuthorizationService;
 import com.soffid.iam.utils.Security;
 import com.soffid.iam.utils.SoffidAuthorization;
 
 import es.caib.seycon.ng.comu.AutoritzacioRol;
 import es.caib.seycon.ng.comu.ValorDomini;
 import es.caib.seycon.ng.exception.InternalErrorException;
-import es.caib.seycon.ng.servei.AutoritzacioService;
 
-public class AutoritzacioServiceInterceptor implements MethodInterceptor
+public class AuthorizationServiceInterceptor implements MethodInterceptor
 {
-	private static final String URN_OASIS_NAMES_TC_XACML_2_0_CONTEXT = "urn:oasis:names:tc:xacml:2.0:context";
 	// Service bean
 	private PolicySetService policySetService;
-	private AutoritzacioService autoritzacioService;
+	private AuthorizationService authorizationService;
 	
-	public AutoritzacioService getAutoritzacioService() {
-		return autoritzacioService;
+	public AuthorizationService getAuthorizationService() {
+		return authorizationService;
 	}
 
-	public void setAutoritzacioService(AutoritzacioService autoritzacioService) {
-		this.autoritzacioService = autoritzacioService;
+	public void setAutoritzacioService(AuthorizationService autoritzacioService) {
+		this.authorizationService = autoritzacioService;
 	}
 
 	public PolicySetService getPolicySetService() {
@@ -81,29 +79,12 @@ public class AutoritzacioServiceInterceptor implements MethodInterceptor
 		LinkedList<Attribute> actionAttributes = new LinkedList<Attribute>();
 		LinkedList<Attribute> environmentAttributes = new LinkedList<Attribute>();
 
-		Execution execution = Executions.getCurrent();
-		if (execution != null)
+		SoffidPrincipal principal = Security.getSoffidPrincipal();
+		if (principal != null)
 		{
-			HttpServletRequest httpRequest = (HttpServletRequest) execution.getNativeRequest();
-			// Subject
-			if (httpRequest != null)
-			{
-				InetAddress addr = InetAddress.getByName(httpRequest.getRemoteAddr());
-				if (addr instanceof Inet4Address)
-				{
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-						new IPv4AddressAttribute(addr)));
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new StringAttribute(addr.getHostAddress())));
-				}
-				if (addr instanceof Inet6Address)
-				{
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new IPv6AddressAttribute(addr)));
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new StringAttribute(addr.getHostAddress())));
-				}
-			}
+			String addr = Security.getClientIp();
+			subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
+							new StringAttribute(addr)));
 		}
 		
 		// Split authorization
@@ -133,14 +114,13 @@ public class AutoritzacioServiceInterceptor implements MethodInterceptor
 		
 		// Create empty document
 		SoffidDummyDocument d = new SoffidDummyDocument();
-		SoffidDummyElement e = new SoffidDummyElement();
+		SoffidDummyElement e = new SoffidDummyElement(d, null, "Request", targetObject);
 		e.setDocument(d);
 		d.setRootNode(e);
 		d.appendChild( d.createElement("Request") );
 		
 		RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
 				resourceAttributes, actionAttributes, environmentAttributes, e);
-		e.setUnderlyingObject(new SoffidXPathBean(ctx, targetObject));
 
 		RequestContext req = RequestResponseContextFactory.createRequestCtx();
 		req.set(XACMLConstants.REQUEST_CTX, ctx);
@@ -189,7 +169,7 @@ public class AutoritzacioServiceInterceptor implements MethodInterceptor
 		LinkedList<AutoritzacioRol> result = new LinkedList<AutoritzacioRol>();
 		
 		@SuppressWarnings("unchecked")
-		Collection<SoffidAuthorization> autList = getAutoritzacioService().findAuthorizations(null, null, null);
+		Collection<SoffidAuthorization> autList = getAuthorizationService().findAuthorizations(null, null, null);
 		
 		for ( SoffidAuthorization aut: autList)
 		{
@@ -231,7 +211,7 @@ public class AutoritzacioServiceInterceptor implements MethodInterceptor
 		LinkedList<String> result = new LinkedList<String>();
 		
 		@SuppressWarnings("unchecked")
-		Collection<SoffidAuthorization> autList = getAutoritzacioService().findAuthorizations(null, null, null);
+		Collection<SoffidAuthorization> autList = getAuthorizationService().findAuthorizations(null, null, null);
 		
 		Security.nestedLogin(user, auths);
 		try 

@@ -171,14 +171,13 @@ public class XACMLPamSecurityHandlerServiceImpl extends XACMLPamSecurityHandlerS
 				new StringAttribute(vaultFolder)));
 		// Create empty document
 		SoffidDummyDocument d = new SoffidDummyDocument();
-		SoffidDummyElement e = new SoffidDummyElement();
+		SoffidDummyElement e = new SoffidDummyElement(d, null, "Request", account);
 		e.setDocument(d);
 		d.setRootNode(e);
-		d.appendChild( d.createElement("Request") );
+		d.appendChild( e);
 		
 		RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
 				resourceAttributes, actionAttributes, environmentAttributes, e);
-		e.setUnderlyingObject(new SoffidXPathBean(ctx, account));
 
 		RequestContext req = RequestResponseContextFactory.createRequestCtx();
 		req.set(XACMLConstants.REQUEST_CTX, ctx);

@@ -59,7 +59,7 @@ public class PDPPool extends AbstractPool<SoffidPDP> {
 	public PDPPool(PDPConfiguration config, PolicySetService policySetService) {
 		super();
 		setMinSize(1);
-		setMaxSize(5);
+		setMaxSize(50);
 		this.config = config;
 		this.policySetService = policySetService;
 		String s = ConfigurationCache.getProperty ("soffid.xacml.pool.minSize");

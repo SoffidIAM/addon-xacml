@@ -76,55 +76,47 @@ public class TargetEntityDaoImpl extends TargetEntityDaoBase
 		super.create (te);
 		if (vo.getSubjectMatch() == null)
 		{
-			SubjectMatch sm;
-			sm = new SubjectMatch();
 			vo.setSubjectMatch(new HashSet<SubjectMatch>());
-			vo.getSubjectMatch().add(sm);
 		}
 		if (vo.getResourceMatch() == null)
 		{
-			ResourceMatch rm;
-			rm = new ResourceMatch();
 			vo.setResourceMatch(new HashSet<ResourceMatch>());
-			vo.getResourceMatch().add(rm);
 		}
 		if (vo.getActionMatch() == null)
 		{
-			ActionMatch am;
-			am = new ActionMatch();
 			vo.setActionMatch(new HashSet<ActionMatch>());
-			vo.getActionMatch().add(am);
 		}
 		if (vo.getEnvironmentMatch() == null)
 		{
-			EnvironmentMatch em;
-			em = new EnvironmentMatch();
 			vo.setEnvironmentMatch(new HashSet<EnvironmentMatch>());
-			vo.getEnvironmentMatch().add(em);
 		}
 		for (SubjectMatch subject : vo.getSubjectMatch())
 		{
 			SubjectMatchEntity sm = getSubjectMatchEntityDao().create(subject, te);
 			sm.setTarget(te);
 			getSubjectMatchEntityDao().update(sm);
+			te.getSubjectMatch().add(sm);
 		}
 		for (ResourceMatch resource : vo.getResourceMatch())
 		{
 			ResourceMatchEntity rm = getResourceMatchEntityDao().create(resource, te);
 			rm.setTarget(te);
 			getResourceMatchEntityDao().update(rm);
+			te.getResourceMatch().add(rm);
 		}
 		for (ActionMatch action : vo.getActionMatch())
 		{
 			ActionMatchEntity am = getActionMatchEntityDao().create(action, te);
 			am.setTarget(te);
 			getActionMatchEntityDao().update(am);
+			te.getActionMatch().add(am);
 		}
 		for (EnvironmentMatch environment : vo.getEnvironmentMatch())
 		{
 			EnvironmentMatchEntity em = getEnvironmentMatchEntityDao().create(environment, te);
 			em.setTarget(te);
 			getEnvironmentMatchEntityDao().update(em);
+			te.getEnvironmentMatch().add(em);
 		}
 		return te;
 	}

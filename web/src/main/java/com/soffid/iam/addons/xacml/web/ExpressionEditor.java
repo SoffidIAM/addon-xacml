@@ -10,9 +10,22 @@ import javax.ejb.CreateException;
 import javax.naming.NamingException;
 
 import org.bouncycastle.util.Arrays;
+import org.jboss.security.xacml.sunxacml.attr.Base64BinaryAttribute;
+import org.jboss.security.xacml.sunxacml.attr.BooleanAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DateAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DateTimeAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DayTimeDurationAttribute;
+import org.jboss.security.xacml.sunxacml.attr.DoubleAttribute;
+import org.jboss.security.xacml.sunxacml.attr.HexBinaryAttribute;
+import org.jboss.security.xacml.sunxacml.attr.IntegerAttribute;
+import org.jboss.security.xacml.sunxacml.attr.RFC822NameAttribute;
+import org.jboss.security.xacml.sunxacml.attr.TimeAttribute;
+import org.jboss.security.xacml.sunxacml.attr.X500NameAttribute;
+import org.jboss.security.xacml.sunxacml.attr.YearMonthDurationAttribute;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Node;
 import org.zkoss.util.resource.Labels;
 import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Page;
@@ -266,8 +279,69 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 	public void updateValue(Event event) throws JSONException, IOException {
 		activeExpression.setAttributeValue((String) attributeValue.getValue());
 		refreshActiveTree();
+		validateValue();
 	}
 	
+	private void validateValue() {
+		try {
+			attributeValue.setWarning(null, "");
+			String v = (String) attributeValue.getValue();
+			if (v != null) {
+				if (activeExpression.getDataTypeAttributeValue() == DataType.HEX_BINARY_TYPE)
+					HexBinaryAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.BASE_64BINARY_TYPE)
+					Base64BinaryAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.BOOLEAN_TYPE)
+					BooleanAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.DATE_TIME_TYPE)
+					DateTimeAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.DATE_TYPE)
+					DateAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.DAY_TIME_DURATION_TYPE)
+					DayTimeDurationAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.DOUBLE_TYPE)
+					DoubleAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.INTEGER_TYPE)
+					IntegerAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.RFC_822NAME_TYPE)
+					RFC822NameAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.TIME_TYPE)
+					TimeAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.X_500NAME_TYPE)
+					X500NameAttribute.getInstance(v);
+				if (activeExpression.getDataTypeAttributeValue() == DataType.YEAR_MONTH_DURATION_TYPE)
+					YearMonthDurationAttribute.getInstance(v);
+			}
+		} catch (Exception e) {
+			String msg = "Expected ";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.HEX_BINARY_TYPE)
+				msg += "hexadecimal data";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.BASE_64BINARY_TYPE)
+				msg += "base 64 data";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.BOOLEAN_TYPE)
+				msg += "true or false";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.DATE_TIME_TYPE)
+				msg += "yyyy-mm-ddThh:mm:ss[Z] format.\nFor instance, 1970-06-26T19:20:00Z";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.DATE_TYPE)
+				msg += "yyyy-mm-dd format.\nFor instance, 1970-06-26";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.DAY_TIME_DURATION_TYPE)
+				msg += "P[00D][00H][00M][00S] format.\nFor instance: P1H30M";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.DOUBLE_TYPE)
+				msg += "decimal number";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.INTEGER_TYPE)
+				msg += "integer number";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.RFC_822NAME_TYPE)
+				msg += "RFC822 name";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.TIME_TYPE)
+				msg += "hh:mm:ss[Z] format.\nFor instance 19:20:00Z";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.X_500NAME_TYPE)
+				msg += "X500 name";
+			if (activeExpression.getDataTypeAttributeValue() == DataType.YEAR_MONTH_DURATION_TYPE)
+				msg += "P[00Y][00M] format.\nFor instance, P1Y6M";
+			attributeValue.setWarning(null, msg);
+		}
+	}
+
 	public void updateVariable(Event event) throws JSONException, IOException {
 		activeExpression.setVariableId((String) variable.getValue());
 		refreshActiveTree();
@@ -383,7 +457,12 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 					functionFamily.setValue("");
 					function.setVisible(false);
 				}
-				String fn = activeExpression.getName().getValue();
+				String fn;
+				if ( activeExpression.getName() == null) {
+					fn = "EQUAL";
+				} else {
+					fn = activeExpression.getName().getValue();
+				}
 				JSONObject f = ExpressionHelper.findFunction(fn);
 				if (f != null) {
 					String name = f.optString("name");
@@ -487,39 +566,44 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 	public void updateQualifiers(String fn, JSONObject f) {
 		if (f.has("qualifiers")) {
 			JSONArray validQualifiers = f.getJSONArray("qualifiers");
-			
-			String q, qt = "STRING";
-			String cq = (String) functionDataType.getValue();
-			DataType cqt = dataTypeFromText(cq);
-			if (cqt != null && isValidType (cqt.toString(), validQualifiers))
-				q = cqt.toString();
-			else
-				q = validQualifiers.getString(0);
-			LinkedList<String> values = new LinkedList<>();
-			List<String> names = DataType.names();
-			List<String> literals = DataType.literals();
-			for (int i = 0; i < names.size(); i++) {
-				String name = names.get(i);
-				String literal = literals.get(i);
-				if (isValidType(literal, validQualifiers)) {
-					String s = name+":"+ Labels.getLabel("com.soffid.iam.addons.xacml.common.DataType."+name);
-					values.add(s);
-					if (q.equals(literal))
-						qt = name;
+
+			if (validQualifiers.isEmpty()) {
+				functionDataType.setVisible(false);
+				activeExpression.setName(FunctionEnumeration.fromString(fn));
+			} else {
+				String q, qt = "STRING";
+				String cq = (String) functionDataType.getValue();
+				DataType cqt = dataTypeFromText(cq);
+				if (cqt != null && isValidType (cqt.toString(), validQualifiers))
+					q = cqt.toString();
+				else
+					q = validQualifiers.getString(0);
+				LinkedList<String> values = new LinkedList<>();
+				List<String> names = DataType.names();
+				List<String> literals = DataType.literals();
+				for (int i = 0; i < names.size(); i++) {
+					String name = names.get(i);
+					String literal = literals.get(i);
+					if (isValidType(literal, validQualifiers)) {
+						String s = name+":"+ Labels.getLabel("com.soffid.iam.addons.xacml.common.DataType."+name);
+						values.add(s);
+						if (q.equals(literal))
+							qt = name;
+					}
 				}
+				functionDataType.setListOfValues(values.toArray(new String[values.size()]));
+				functionDataType.setValue(qt);
+				functionDataType.setVisible(true);
+				functionDataType.updateMetadata();
+				if (qt.endsWith("_TYPE"))
+					qt = qt.substring(0, qt.length()-5);
+				qt = qt.replaceAll("_", "");
+				if (FunctionEnumeration.literals().contains("TYPE_"+fn))
+					activeExpression.setName(FunctionEnumeration.fromString("TYPE_"+fn));
+				else
+					activeExpression.setName(FunctionEnumeration.fromString(qt+"_"+fn));
+				activeExpression.setAttributeDesignator(qt);
 			}
-			functionDataType.setListOfValues(values.toArray(new String[values.size()]));
-			functionDataType.setValue(qt);
-			functionDataType.setVisible(true);
-			functionDataType.updateMetadata();
-			if (qt.endsWith("_TYPE"))
-				qt = qt.substring(0, qt.length()-5);
-			qt = qt.replaceAll("_", "");
-			if (FunctionEnumeration.literals().contains("TYPE_"+fn))
-				activeExpression.setName(FunctionEnumeration.fromString("TYPE_"+fn));
-			else
-				activeExpression.setName(FunctionEnumeration.fromString(qt+"_"+fn));
-			activeExpression.setAttributeDesignator(qt);
 		} else {
 			functionDataType.setVisible(false);
 			activeExpression.setName(FunctionEnumeration.fromString(fn));
@@ -547,6 +631,7 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 		activeExpression.setDataTypeAttributeDesignator(dt);
 		activeExpression.setDataTypeAttributeValue(dt);
 		refreshActiveTree();
+		validateValue();
 	}
 
 	private boolean isValidType(String cqt, JSONArray validQualifiers) {

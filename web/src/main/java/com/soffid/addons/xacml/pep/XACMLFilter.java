@@ -46,6 +46,7 @@ import org.jboss.security.xacml.sunxacml.ctx.Subject;
 
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetService;
 import com.soffid.iam.addons.xacml.service.ejb.PolicySetServiceHome;
+import com.soffid.iam.utils.Security;
 
 public class XACMLFilter implements Filter {
 
@@ -69,7 +70,8 @@ public class XACMLFilter implements Filter {
 		try {
 			PepConfiguration pc  = policyManager.getCurrentPolicy(httpRequest);
 			PolicyStatus ps = pc.getWebPolicy();
-			if (ps != null && ps.isEnabled())
+			String account = Security.getCurrentAccount();
+			if (account != null && ps != null && ps.isEnabled())
 			{
 				
 				URL originalUrl;
@@ -154,7 +156,7 @@ public class XACMLFilter implements Filter {
 						if (result.getResource() != null)
 						{
 							out.print("<p>Resource: ");
-							out.print(result.getResource());
+							out.print(originalUri);
 							out.println("</p>");
 						}
 						if (result.getStatus().getMessage() != null)
