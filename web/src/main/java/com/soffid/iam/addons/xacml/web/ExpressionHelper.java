@@ -14,12 +14,8 @@ import javax.naming.NamingException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.zkoss.io.URLReader;
 import org.zkoss.util.resource.Labels;
-import org.zkoss.zk.ui.Executions;
-import org.zkoss.zk.ui.Path;
 
-import com.ibm.icu.util.BytesTrie.Iterator;
 import com.soffid.iam.EJBLocator;
 import com.soffid.iam.addons.xacml.common.Expression;
 import com.soffid.iam.addons.xacml.common.FunctionEnumeration;
@@ -29,8 +25,6 @@ import com.soffid.iam.web.component.CustomField3;
 
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.zkdb.yaml.Yaml2Json;
-import es.caib.zkib.component.DataModel;
-import es.caib.zkib.datamodel.DataNodeCollection;
 
 public class ExpressionHelper {
 	public static JSONArray data = null;

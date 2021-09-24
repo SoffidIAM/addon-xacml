@@ -424,6 +424,9 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 				functionDataType.setValue(activeExpression.getAttributeDesignator());
 				if (activeExpression.getName() != null) {
 					JSONObject f = ExpressionHelper.findFunction(activeExpression.getName().getValue());
+					if (f == null) {
+						f = ExpressionHelper.findFunction("EQUAL");
+					}
 					String name = f.getString("name");
 					String category = ExpressionHelper.getFunctionCategory(name);
 					functionFamily.setValue(category);
