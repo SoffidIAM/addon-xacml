@@ -67,6 +67,11 @@ public class TargetHandler extends Div {
 		Radio r = (Radio) event.getTarget();
 		Radiogroup rg = r.getRadiogroup();
 		enableRadioElements (rg); 
+		if (rg.getSelectedIndex() == 1) {
+			XPathUtils.setValue( currentTable, "attributeDesignator", null);
+		} else {
+			XPathUtils.setValue( currentTable, "attributeSelector", null);
+		}
 	}
 
 	private void enableRadioElements(Radiogroup rg) {
