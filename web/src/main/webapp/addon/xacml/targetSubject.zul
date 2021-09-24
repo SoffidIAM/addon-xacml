@@ -213,7 +213,7 @@
 				<div>
 					<radio
 						label=" ${c:l('xacml_policySet.AttributeSelector')}" />
-					<textbox bind="@attributeSelector"
+					<textbox bind="attributeSelector"
 							maxlength="100"
 							style="margin-left: 24px; width: 400px"
 							id="attributeSelector" visible="false"/>
