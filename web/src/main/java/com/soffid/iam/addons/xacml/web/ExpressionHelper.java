@@ -45,7 +45,7 @@ public class ExpressionHelper {
 					return jsonObject;
 			}
 		}
-		return null;
+		return jsonObject;
 	}
 	
 	public static JSONArray parse() throws JSONException, IOException {
