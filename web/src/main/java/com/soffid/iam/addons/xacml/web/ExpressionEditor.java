@@ -579,8 +579,9 @@ public class ExpressionEditor extends Div implements XPathSubscriber, AfterCompo
 				DataType cqt = dataTypeFromText(cq);
 				if (cqt != null && isValidType (cqt.toString(), validQualifiers))
 					q = cqt.toString();
-				else
+				else {
 					q = validQualifiers.getString(0);
+				}
 				LinkedList<String> values = new LinkedList<>();
 				List<String> names = DataType.names();
 				List<String> literals = DataType.literals();

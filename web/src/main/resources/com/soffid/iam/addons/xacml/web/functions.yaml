@@ -37,7 +37,7 @@
      min: 2
      max: 2
      operator: ~
-     qualifiers: ["X509NAME", "R"]
+     qualifiers: ["X", "R"]
 # Arithmetic
 - name: Arithmetic
   functions:
