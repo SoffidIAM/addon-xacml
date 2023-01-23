@@ -76,7 +76,10 @@ public abstract class PolicyEntity {
 		java.lang.String policyId) {
 	 return null;
 	}
-	@DaoFinder("select pe\nfrom com.soffid.iam.addons.xacml.model.PolicyEntity as pe\njoin pe.policySet as policySet\nwhere policySet.policySetId = :policySet")
+	@DaoFinder("select pe\n"
+			+ "from com.soffid.iam.addons.xacml.model.PolicyEntity as pe\n"
+			+ "join pe.policySet as policySet\n"
+			+ "where policySet.policySetId = :policySet and policySet.tenant.id=:tenantId")
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicyEntity> findPolicyByPolicySetId(
 		java.lang.String policySet) {
 	 return null;
@@ -97,7 +100,10 @@ public abstract class PolicyEntity {
 		com.soffid.iam.addons.xacml.common.Policy policy)
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	}
-	@DaoFinder("select pe\nfrom com.soffid.iam.addons.xacml.model.PolicyEntity as pe\njoin pe.policySet as policySet\nwhere policySet.id = :id")
+	@DaoFinder("select pe\n"
+			+ "from com.soffid.iam.addons.xacml.model.PolicyEntity as pe\n"
+			+ "join pe.policySet as policySet\n"
+			+ "where policySet.id = :id and policySet.tenant.id=:tenantId")
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicyEntity> findPolicyByPolicySetId(
 		java.lang.Long id) {
 	 return null;

@@ -78,23 +78,27 @@ public abstract class PolicySetEntity {
 
 	@ForeignKey (foreignColumn="PRE_POLICY")
 	public java.util.Collection<com.soffid.iam.addons.xacml.model.PolicyIdReferenceEntity> policyIdReference;
-
+	
 	@DaoFinder
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicySetEntity> findPolicySetByCriteria(
 		com.soffid.iam.addons.xacml.common.PolicySetCriteria criteria) {
 	 return null;
 	}
-	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity \nas pse\nwhere pse.id = :id")
+	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\n"
+			+ "where pse.id = :id and pse.tenant.id=:tenantId")
 	public com.soffid.iam.addons.xacml.model.PolicySetEntity findByPolicySetId(
 		java.lang.Long id) {
 	 return null;
 	}
-	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\njoin pse.parentPolicySet as policySet\nwhere policySet.policySetId = :policySet")
+	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\n"
+			+ "join pse.parentPolicySet as policySet\n"
+			+ "where policySet.policySetId = :policySet and policySet.tenant.id=:tenantId")
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicySetEntity> findPolicySetByPolicySet(
 		java.lang.String policySet) {
 	 return null;
 	}
-	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\nwhere pse.parentPolicySet is null")
+	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\n"
+			+ "where pse.parentPolicySet is null and pse.tenant.id=:tenantId")
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicySetEntity> findMasterPolicySet() {
 	 return null;
 	}
@@ -114,7 +118,9 @@ public abstract class PolicySetEntity {
 		com.soffid.iam.addons.xacml.common.PolicySet policySet)
 		throws es.caib.seycon.ng.exception.InternalErrorException {
 	}
-	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\njoin pse.parentPolicySet as policySet\nwhere policySet.id = :id")
+	@DaoFinder("Select pse from com.soffid.iam.addons.xacml.model.PolicySetEntity as pse\n"
+			+ "join pse.parentPolicySet as policySet\n"
+			+ "where policySet.id = :id and policySet.tenant.id=:tenantId")
 	public java.util.List<com.soffid.iam.addons.xacml.model.PolicySetEntity> findPolicySetById(
 		java.lang.Long id) {
 	 return null;

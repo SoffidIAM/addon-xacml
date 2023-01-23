@@ -39,49 +39,6 @@ public class XACMLBootServiceImpl extends XACMLBootServiceBase {
 	
 	@Override
 	protected void handleConsoleBoot() throws Exception {
-		updateFromVersion1();
-	}
-
-	private void updateFromVersion1() throws IOException, Exception 
-	{
-		DataSource ds = (DataSource) ServiceLocator.instance().getService("dataSource"); //$NON-NLS-1$
-		final Connection conn = ds.getConnection();
-		
-		try
-		{
-			Long tenantId = getTenantService().getMasterTenant().getId();
-			
-	    	Database db = new Database();
-	    	XmlReader reader = new XmlReader();
-	    	PathMatchingResourcePatternResolver rpr = new PathMatchingResourcePatternResolver(getClass().getClassLoader());
-	    	parseResources(rpr, db, reader, "plugin-ddl.xml");
-
-	    	for (ForeignKey fk: db.foreignKeys)
-	    	{
-	    		if (fk.foreignTable.equals("SC_TENANT"))
-	    		{
-	    			log.info("Assigning tenant on table "+fk.tableName);
-					executeSentence(conn, "UPDATE "+fk.tableName+" SET "+fk.columns.get(0)+"=? WHERE "+fk.columns.get(0)+" IS NULL",
-							new Object[] {tenantId});
-	    			
-					executeSentence(conn, "UPDATE "+fk.tableName+" SET "+fk.columns.get(0)+"=? WHERE "+fk.columns.get(0)+" = 0",
-							new Object[] {tenantId});
-	    		}
-	    	}
-		}
-		finally
-		{
-			conn.close();
-		}
-	}
-
-	private void parseResources(ResourcePatternResolver rpr, Database db,
-			XmlReader reader, String path) throws IOException, Exception {
-		Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources(path);
-    	while (resources.hasMoreElements())
-    	{
-    		reader.parse(db, resources.nextElement().openStream());
-    	}
 	}
 
 
@@ -99,63 +56,4 @@ public class XACMLBootServiceImpl extends XACMLBootServiceBase {
 		
 	}
 	
-
-	private void executeSentence(Connection conn, String sql, Object... objects)
-			throws SQLException {
-		PreparedStatement stmt = conn.prepareStatement(sql);
-		try {
-			parseParameters(stmt, objects);
-			stmt.execute();
-		} finally {
-			stmt.close();
-		}
-	}
-
-	private List<Object[]> executeQuery(Connection conn, String sql,
-			Object... objects) throws SQLException {
-		PreparedStatement stmt = conn.prepareStatement(sql);
-		try {
-			parseParameters(stmt, objects);
-			ResultSet rset = stmt.executeQuery();
-			try {
-				List<Object[]> result = new LinkedList<Object[]>();
-				int cols = rset.getMetaData().getColumnCount();
-				while (rset.next()) {
-					Object[] row = new Object[cols];
-					for (int i = 0; i < cols; i++) {
-						row[i] = rset.getObject(i + 1);
-					}
-					result.add(row);
-				}
-				return result;
-			} finally {
-				rset.close();
-			}
-		} finally {
-			stmt.close();
-		}
-	}
-
-
-	protected void parseParameters(PreparedStatement stmt, Object... objects)
-			throws SQLException {
-		int id = 1;
-		for (Object p : objects) {
-			if (p == null)
-				stmt.setString(id++, null);
-			else if (p instanceof String)
-				stmt.setString(id++, (String) p);
-			else if (p instanceof Integer)
-				stmt.setInt(id++, ((Integer) p).intValue());
-			else if (p instanceof Long)
-				stmt.setLong(id++, ((Long) p).longValue());
-			else if (p instanceof Date)
-				stmt.setDate(id++, (Date) p);
-			else if (p instanceof java.util.Date)
-				stmt.setDate(id++, new Date(((java.util.Date) p).getTime()));
-			else
-				stmt.setObject(id++, p);
-		}
-	}
-
 }
