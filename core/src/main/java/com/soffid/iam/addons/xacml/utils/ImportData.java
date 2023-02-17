@@ -476,6 +476,13 @@ public class ImportData {
 		String[] possibilities = {"urn:oasis:names:tc:xacml:1.0:resource:resource-location", 
 				"urn:com:soffid:xacml:subject:account",   //$NON-NLS-1$ //$NON-NLS-2$
 				"urn:com:soffid:xacml:subject:system",
+				"urn:com:soffid:xacml:resource:vault",
+				"urn:com:soffid:xacml:resource:login",
+				"urn:com:soffid:xacml:resource:access-level",
+				"urn:oasis:names:tc:xacml:2.0:subject:role",
+				"urn:com:soffid:xacml:subject:groups",
+				"urn:com:soffid:xacml:subject:primaryGroup",
+				"urn:com:soffid:xacml:resource:server-url",
 				"com:soffid:iam:xacml:1.0:resource:soffid-object"}; 
 		boolean found = false;
 		for(int i = 0; i < possibilities.length; i++){
@@ -484,6 +491,8 @@ public class ImportData {
 				break;
 			}
 		}
+		if (attributeId.getValue().startsWith("urn:com:soffid:xacml:subject:user:att:"))
+			found = true;
 		if(!found) //$NON-NLS-1$
 			throw new InternalErrorException(String.format(Messages.getString("ImportData.NoResource"), 
 					new Object[] {attributeId.getValue()}));
@@ -901,7 +910,10 @@ public class ImportData {
 		}else{
 			String tag = searchTag(dt);
 			String elementValue = attributeValue.elementText(tag);
-			expression.setAttributeValue(elementValue);
+			if (elementValue == null)
+				expression.setAttributeValue(attributeValue.getText());
+			else
+				expression.setAttributeValue(elementValue);
 		}
 		expression.setExpressionType("attributeValue"); //$NON-NLS-1$
 		expression.setName(FunctionEnumeration.STRING_EQUAL);
