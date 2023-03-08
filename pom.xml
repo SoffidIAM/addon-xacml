@@ -5,7 +5,7 @@
 	<artifactId>root</artifactId>
 	<packaging>pom</packaging>
 	<name>xacml</name>
-	<version>3.0.6-SNAPSHOT</version>
+	<version>3.0.7-SNAPSHOT</version>
 	<description>SOFFID IAM xacml addon</description>
 	<prerequisites>
 		<maven>2.0.1</maven>
