@@ -1,6 +1,7 @@
 package com.soffid.addons.xacml.pep;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Random;
 
 import javax.ejb.CreateException;
@@ -17,6 +18,7 @@ import es.caib.seycon.ng.comu.Configuracio;
 import es.caib.seycon.ng.exception.InternalErrorException;
 import es.caib.seycon.ng.servei.ejb.ConfiguracioService;
 import es.caib.seycon.ng.servei.ejb.ConfiguracioServiceHome;
+import es.caib.seycon.ng.utils.Security;
 
 public class PolicyManager {
 	private static final String CONFIG_XACML_WEB_POLICY_SET_VERSION = "soffid.xacml.web.policySetVersion"; //$NON-NLS-1$
@@ -42,11 +44,12 @@ public class PolicyManager {
 	public final String COOKIE_NAME = "Soffid-XACML-PolicySet-Test"; //$NON-NLS-1$
 	private static String random = null;
 
-	private static PepConfiguration currentPolicy = null;
+	private static Map<String,PepConfiguration> currentPolicies = null;
 	private static ThreadLocal<PepConfiguration> testPolicies = new ThreadLocal<PepConfiguration>();
 	
 	public PepConfiguration getCurrentPolicy() throws NamingException,
 			CreateException, InternalErrorException {
+		PepConfiguration currentPolicy = currentPolicies.get(Security.getCurrentTenantName());
 		
 		if (currentPolicy != null)
 			return currentPolicy;
@@ -64,6 +67,7 @@ public class PolicyManager {
 		configure(pm.getExternalPolicy(), CONFIG_XACML_EXTERNAL_ENABLE, CONFIG_XACML_EXTERNAL_POLICY_SET_ID, CONFIG_XACML_EXTERNAL_POLICY_SET_VERSION);
 		configure(pm.getVaultPolicy(), CONFIG_XACML_VAULT_ENABLE, CONFIG_XACML_VAULT_POLICY_SET_ID, CONFIG_XACML_VAULT_POLICY_SET_VERSION);
 
+		currentPolicies.put(Security.getCurrentTenantName(), currentPolicy);
 		currentPolicy = pm;
 		
 		return currentPolicy;
@@ -148,7 +152,7 @@ public class PolicyManager {
 			applyPolicyStatus(pc.getVaultPolicy(), configuracioService, policySetService, 
 					CONFIG_XACML_VAULT_ENABLE, CONFIG_XACML_VAULT_POLICY_SET_ID, CONFIG_XACML_VAULT_POLICY_SET_VERSION);
 
-			currentPolicy = null;
+			currentPolicies.remove(Security.getCurrentTenantName());
 		}
 	}
 	
