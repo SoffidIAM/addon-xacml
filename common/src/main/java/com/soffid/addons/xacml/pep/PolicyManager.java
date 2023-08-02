@@ -1,6 +1,8 @@
 package com.soffid.addons.xacml.pep;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 
@@ -44,7 +46,7 @@ public class PolicyManager {
 	public final String COOKIE_NAME = "Soffid-XACML-PolicySet-Test"; //$NON-NLS-1$
 	private static String random = null;
 
-	private static Map<String,PepConfiguration> currentPolicies = null;
+	private static Map<String,PepConfiguration> currentPolicies = new Hashtable<String, PepConfiguration>();
 	private static ThreadLocal<PepConfiguration> testPolicies = new ThreadLocal<PepConfiguration>();
 	
 	public PepConfiguration getCurrentPolicy() throws NamingException,
@@ -67,8 +69,8 @@ public class PolicyManager {
 		configure(pm.getExternalPolicy(), CONFIG_XACML_EXTERNAL_ENABLE, CONFIG_XACML_EXTERNAL_POLICY_SET_ID, CONFIG_XACML_EXTERNAL_POLICY_SET_VERSION);
 		configure(pm.getVaultPolicy(), CONFIG_XACML_VAULT_ENABLE, CONFIG_XACML_VAULT_POLICY_SET_ID, CONFIG_XACML_VAULT_POLICY_SET_VERSION);
 
-		currentPolicies.put(Security.getCurrentTenantName(), currentPolicy);
 		currentPolicy = pm;
+		currentPolicies.put(Security.getCurrentTenantName(), currentPolicy);
 		
 		return currentPolicy;
 	}

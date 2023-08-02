@@ -21,6 +21,7 @@
  */
 package com.soffid.iam.addons.xacml.service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.jboss.security.xacml.interfaces.XACMLConstants;
 import org.jboss.security.xacml.locators.AttributeLocator;
 import org.jboss.security.xacml.sunxacml.EvaluationCtx;
@@ -87,6 +89,8 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 	public static final String ACCOUNT_IDENTIFIER = "urn:com:soffid:xacml:subject:account";
 	public static final String SYSTEM_IDENTIFIER = "urn:com:soffid:xacml:subject:system";
 	public static final String VAULT_IDENTIFIER = "urn:com:soffid:xacml:resource:vault";
+	public static final String ACCOUNT_RES_IDENTIFIER = "urn:com:soffid:xacml:resource:account";
+	public static final String SYSTEM_RES_IDENTIFIER = "urn:com:soffid:xacml:resource:system";
 	public static final String LOGIN_IDENTIFIER = "urn:com:soffid:xacml:resource:login";
 	public static final String ACCESS_LEVEL_IDENTIFIER = "urn:com:soffid:xacml:resource:access-level";
 	public static final String ROLE_IDENTIFIER = "urn:oasis:names:tc:xacml:2.0:subject:role";
@@ -317,8 +321,13 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 				Object v = atts.get(metaData);
 				if (userName != null && v == null)
 				{
-					atts = usuariService.findUserAttributes(userName);
-					v = atts.get(metaData);
+					User usuari = usuariService.findUserByUserName(userName);
+					try {
+						v = PropertyUtils.getProperty(usuari, metaData);
+					} catch (IllegalAccessException e) {
+					} catch (InvocationTargetException e) {
+					} catch (NoSuchMethodException e) {
+					}
 				}
 				if (v != null)
 				{

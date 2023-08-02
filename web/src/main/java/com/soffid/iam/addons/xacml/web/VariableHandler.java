@@ -185,9 +185,9 @@ public class VariableHandler extends Div {
 		List<String> values = new LinkedList<>();
 		values.add( URLEncoder.encode("urn:oasis:names:tc:xacml:1.0:resource:resource-location", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.Url") );
 		values.add( URLEncoder.encode("com:soffid:iam:xacml:1.0:resource:soffid-object", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SoffidObject") );
-		values.add( URLEncoder.encode("urn:com:soffid:xacml:subject:account", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
-		values.add( URLEncoder.encode("urn:com:soffid:xacml:subject:system", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SystemName") );
-		values.add( URLEncoder.encode("urn:com:soffid:xacml:subject:loginName", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
+		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:account", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
+		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:system", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SystemName") );
+		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:loginName", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
 		field.setListOfValues(values.toArray(new String[values.size()]));
 		field.updateMetadata();
 	}

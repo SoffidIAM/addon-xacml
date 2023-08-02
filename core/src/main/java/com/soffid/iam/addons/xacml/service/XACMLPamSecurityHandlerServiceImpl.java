@@ -36,6 +36,7 @@ import org.jboss.security.xacml.sunxacml.ctx.Subject;
 import com.soffid.addons.xacml.pep.PepConfiguration;
 import com.soffid.addons.xacml.pep.PolicyManager;
 import com.soffid.addons.xacml.pep.PolicyStatus;
+import com.soffid.iam.ServiceLocator;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyDocument;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidDummyElement;
 import com.soffid.iam.addons.xacml.service.xpath.SoffidXPathBean;
@@ -132,8 +133,8 @@ public class XACMLPamSecurityHandlerServiceImpl extends XACMLPamSecurityHandlerS
 			subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
 					new StringAttribute(addr.getHostAddress())));
 		}
-		
 		// Split authorization
+		
 		// Action
 		actionAttributes.add(new Attribute (new URI("urn:com:soffid:xacml:action:method"), (String) null, null, 
 				new StringAttribute( action)));
@@ -151,6 +152,10 @@ public class XACMLPamSecurityHandlerServiceImpl extends XACMLPamSecurityHandlerS
 		// Resources
 		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.ACCESS_LEVEL_IDENTIFIER), (String) null, null, 
 				new StringAttribute(account.getAccessLevel().getValue())));
+		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.ACCOUNT_RES_IDENTIFIER), (String) null, null, 
+				new StringAttribute(account.getName())));
+		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.SYSTEM_RES_IDENTIFIER), (String) null, null, 
+				new StringAttribute(account.getSystem())));
 		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.ACCOUNT_IDENTIFIER), (String) null, null, 
 				new StringAttribute(account.getName())));
 		resourceAttributes.add(new Attribute (new URI(SoffidAttributeFinderModule.SYSTEM_IDENTIFIER), (String) null, null, 

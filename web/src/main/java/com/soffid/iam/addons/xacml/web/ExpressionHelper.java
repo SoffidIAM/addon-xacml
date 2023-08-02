@@ -135,6 +135,10 @@ public class ExpressionHelper {
 				return Labels.getLabel("xacml_policySet.AccountName");
 			if (e.getAttributeDesignator().equals("urn:com:soffid:xacml:subject:system"))
 				return Labels.getLabel("xacml_policySet.SystemName");
+			if (e.getAttributeDesignator().equals("urn:com:soffid:xacml:resource:account"))
+				return Labels.getLabel("xacml_policySet.AccountName");
+			if (e.getAttributeDesignator().equals("urn:com:soffid:xacml:resource:system"))
+				return Labels.getLabel("xacml_policySet.SystemName");
 			if (e.getAttributeDesignator().equals("urn:com:soffid:xacml:resource:loginName"))
 				return Labels.getLabel("xacml_policySet.LoginName");
 			if (e.getAttributeDesignator().equals("urn:com:soffid:xacml:resource:vault"))
@@ -288,8 +292,8 @@ public class ExpressionHelper {
 		List<String> values = new LinkedList<>();
 		values.add( URLEncoder.encode("urn:oasis:names:tc:xacml:1.0:resource:resource-location", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.Url") );
 		values.add( URLEncoder.encode("com:soffid:iam:xacml:1.0:resource:soffid-object", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SoffidObject") );
-		values.add( URLEncoder.encode("urn:com:soffid:xacml:subject:account", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
-		values.add( URLEncoder.encode("urn:com:soffid:xacml:subject:system", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SystemName") );
+		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:account", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.AccountName") );
+		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:system", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.SystemName") );
 		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:loginName", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.LoginName") );
 		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:vault", "UTF-8")+ ":" + Labels.getLabel("com.soffid.iam.api.Account.vaultFolder") );
 		values.add( URLEncoder.encode("urn:com:soffid:xacml:resource:access-level", "UTF-8")+ ":" + Labels.getLabel("xacml_policySet.accessLevel") );
