@@ -200,4 +200,13 @@ public class FunctionEnumeration {
 
 	public java.lang.String xpath_node_match="XPATH_NODE_MATCH";
 
+	public java.lang.String integer_day_of_week="INTEGER_DAY_OF_WEEK";
+
+	public java.lang.String integer_day_of_month="INTEGER_DAY_OF_MONTH";
+
+	public java.lang.String integer_month="INTEGER_MONTH";
+
+	public java.lang.String integer_year="INTEGER_YEAR";
+
+	public java.lang.String date_to_integer="DATE_TO_INTEGER";
 }

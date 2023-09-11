@@ -82,6 +82,7 @@ public class XACMLGenerator {
 	final static String DATATYPEX500NAME = "urn:oasis:names:tc:xacml:1.0:data-type:x500Name";
 	final static String function10 = "urn:oasis:names:tc:xacml:1.0:function:";
 	final static String function20 = "urn:oasis:names:tc:xacml:2.0:function:";
+	final static String functionSoffid = "urn:com.soffid:xacml:2.0:function:";
 
 	public XACMLGenerator(PolicySetService pss) {
 		super();
@@ -583,7 +584,9 @@ public class XACMLGenerator {
 	}
 
 	private String selectFunctionVersion(String nom) {
-		if (nom.startsWith("time-in-range") || nom.startsWith("string-concatenate")
+		if (nom.equals("integer-day-of-week") || nom.startsWith("date-to-integer"))
+			nom = functionSoffid + nom;
+		else if (nom.startsWith("time-in-range") || nom.startsWith("string-concatenate")
 				|| nom.startsWith("anyURI-regexp-match") || nom.startsWith("ipAddress-regexp-match")
 				|| nom.startsWith("dnsName-regexp-match") || nom.startsWith("uri-string-concatenate")
 				|| nom.startsWith("rfc822Name-regexp-match") || nom.startsWith("x500Name-regexp-match"))
@@ -771,19 +774,15 @@ public class XACMLGenerator {
 		else if (nom.startsWith("dnsname"))
 			nom = "dnsName" + nom.substring(7);
 
-		if (nom.startsWith("time-in-range") || nom.startsWith("string-concatenate")
-				|| nom.startsWith("anyURI-regexp-match") || nom.startsWith("ipAddress-regexp-match")
-				|| nom.startsWith("dnsName-regexp-match") || nom.startsWith("uri-string-concatenate")
-				|| nom.startsWith("rfc822Name-regexp-match") || nom.startsWith("x500Name-regexp-match"))
-			nom = function20 + nom;
-		else
-			nom = function10 + nom;
-
-		return nom;
+		return selectFunctionVersion(nom);
 	}
 
 	private String tipusFunction(String nom) {
 		String tipus = new String();
+		if (nom.endsWith("-to-integer"))
+			return DATATYPEINTEGER;
+		else if (nom.endsWith("-to-double"))
+			return DATATYPEDOUBLE;
 		int i = nom.indexOf('-');
 		if (i > 0)
 			nom = nom.substring(0, i);

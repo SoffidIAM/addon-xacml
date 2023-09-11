@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PolicySet
+	xmlns="urn:oasis:names:tc:xacml:2.0:policy:schema:os"
+	PolicySetId="TEST"
+	PolicyCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:deny-overrides"
+	Version="1">
+	<Policy xmlns="urn:oasis:names:tc:xacml:2.0:policy:schema:os"
+		PolicyId="SolicitudDeAccesoACuentaPAM"
+		RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:deny-overrides"
+		Version="1">
+		<Description>Política de solicitud de acceso a cuenta PAM
+		</Description>
+		<PolicyDefaults>
+			<XPathVersion>http://www.w3.org/TR/1999/Rec-xpath-19991116
+			</XPathVersion>
+		</PolicyDefaults>
+		<Target />
+		<VariableDefinition VariableId="diasemana"
+			DataType="http://www.w3.org/2001/XMLSchema#integer">
+			<Apply
+				FunctionId="urn:com.soffid:xacml:function:integer-day-of-week">
+				<EnvironmentAttributeDesignator
+					AttributeId="urn:oasis:names:tc:xacml:1.0:environment:current-date"
+					DataType="http://www.w3.org/2001/XMLSchema#date" />
+			</Apply>
+		</VariableDefinition>
+		<VariableDefinition VariableId="horadia"
+			DataType="http://www.w3.org/2001/XMLSchema#integer">
+			<Apply
+				FunctionId="urn:oasis:names:tc:xacml:1.0:function:integer-mod">
+				<EnvironmentAttributeDesignator
+					AttributeId="urn:oasis:names:tc:xacml:1.0:environment:current-time"
+					DataType="http://www.w3.org/2001/XMLSchema#integer" />
+				<AttributeValue
+					DataType="http://www.w3.org/2001/XMLSchema#integer">86400000</AttributeValue>
+			</Apply>
+		</VariableDefinition>
+		<Rule Effect="Permit" RuleId="Aprobaracceso">
+			<Description>Regla para aprobar acceso al usuario vigilante
+			</Description>
+			<Target>
+				<Subjects>
+					<Subject>
+						<SubjectMatch
+							MatchId="urn:oasis:names:tc:xacml:1.0:function:string-regexp-match">
+							<AttributeValue
+								DataType="http://www.w3.org/2001/XMLSchema#string">SOFFID_VIGILANTE</AttributeValue>
+							<SubjectAttributeDesignator
+								AttributeId="urn:oasis:names:tc:xacml:2.0:subject:role"
+								DataType="http://www.w3.org/2001/XMLSchema#string" />
+						</SubjectMatch>
+					</Subject>
+				</Subjects>
+			</Target>
+			<Condition>
+				<Apply
+					FunctionId="urn:oasis:names:tc:xacml:1.0:function:integer-equal">
+					<VariableReference VariableId="diasemana" 
+						DataType="http://www.w3.org/2001/XMLSchema#integer"/>
+					<AttributeValue
+						DataType="http://www.w3.org/2001/XMLSchema#integer">0</AttributeValue>
+				</Apply>
+			</Condition>
+		</Rule>
+		<Obligations>
+			<Obligation FulfillOn="Permit"
+				ObligationId="urn:soffid:obligation:bpm">
+				<AttributeAssignment AttributeId="process"
+					DataType="http://www.w3.org/2001/XMLSchema#string">Solicitar cuenta PAM</AttributeAssignment>
+			</Obligation>
+		</Obligations>
+	</Policy>
+</PolicySet>

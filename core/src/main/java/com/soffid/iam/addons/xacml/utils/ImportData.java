@@ -115,7 +115,7 @@ public class ImportData {
 		try {
 			create = policySetService.create(newPolicySet);
 		} catch (InternalErrorException e) {
-			throw new InternalErrorException(String.format(Messages.getString("ImportData.ErrorCreatingPolicySet"),new Object [] {e.getMessage()}));  
+			throw new InternalErrorException(String.format(Messages.getString("ImportData.ErrorCreatingPolicySet"),new Object [] {e.getMessage()}), e);  
 		}
 		
 		Element description = rootNode.element("Description"); //$NON-NLS-1$
@@ -1168,7 +1168,8 @@ public class ImportData {
 				name.contains("MATCH")) //$NON-NLS-1$
 			type = "function_Comparison"; //$NON-NLS-1$
 		else if(name.contains("NORMALIZE") || name.contains("DOUBLE_TO_INTEGER") ||  //$NON-NLS-1$ //$NON-NLS-2$
-				name.contains("INTEGER_TO_DOUBLE")) //$NON-NLS-1$
+				name.contains("INTEGER_TO_DOUBLE") || name.contains("DATE_TO_INTEGER") ||
+				name.contains("INTEGER_DAY_OF_WEEK")) //$NON-NLS-1$
 			type = "function_Conversions"; //$NON-NLS-1$
 		else if(name.contains("ANY_OF") || name.contains("ALL_OF") || name.contains("ANY_OF_ANY") ||  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				name.contains("ALL_OF_ANY") || name.contains("ANY_OF_ALL") || name.contains("ALL_OF_ALL") || //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

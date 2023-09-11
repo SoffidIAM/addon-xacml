@@ -110,7 +110,29 @@
    - name: INTEGER_TO_DOUBLE
      min: 1
      max: 1
+
+- name: Date conversions
+  functions:
+   - name: INTEGER_DAY_OF_WEEK
+     min: 1
+     max: 1
      
+   - name: INTEGER_DAY_OF_MONTH
+     min: 1
+     max: 1
+     
+   - name: INTEGER_MONTH
+     min: 1
+     max: 1
+     
+   - name: INTEGER_YEAR
+     min: 1
+     max: 1
+     
+   - name: DATE_TO_INTEGER
+     min: 1
+     max: 1
+
 # Boolean
 - name: BooleanOperators
   functions:

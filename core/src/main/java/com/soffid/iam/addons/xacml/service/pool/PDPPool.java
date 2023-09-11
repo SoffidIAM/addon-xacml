@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.security.xacml.core.JBossPDP;
+import org.jboss.security.xacml.sunxacml.cond.FunctionFactory;
 
 import com.soffid.iam.addons.xacml.common.PDPConfiguration;
 import com.soffid.iam.addons.xacml.common.PDPPolicySetReference;
@@ -83,6 +84,7 @@ public class PDPPool extends AbstractPool<SoffidPDP> {
 			log.warn("Error setting xacml pool size to "+s,
 					e);
 		}
+		
 	}
 
 	@Override
