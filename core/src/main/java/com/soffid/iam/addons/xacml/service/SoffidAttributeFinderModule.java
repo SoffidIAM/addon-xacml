@@ -316,7 +316,8 @@ public class SoffidAttributeFinderModule extends AttributeLocator {
 				set.add (new StringAttribute(userName));
 			} else if (attributeId.toString().startsWith(CUSTOM_ATTRIBUTE_PREFIX) && userName != null)
 			{
-				String metaData = attributeId.toString().substring(CUSTOM_ATTRIBUTE_PREFIX.length()+1);
+				String metaData = attributeId.toString().substring(CUSTOM_ATTRIBUTE_PREFIX.length());
+				
 				Map<String, Object> atts = usuariService.findUserAttributes(userName);
 				Object v = atts.get(metaData);
 				if (userName != null && v == null)
