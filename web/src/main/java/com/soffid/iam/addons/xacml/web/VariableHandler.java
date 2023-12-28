@@ -73,7 +73,7 @@ public class VariableHandler extends Div {
 	}
 	
 	public void wizardBack(Event event) throws Exception {
-		Window add = (Window) getFellow("rule");
+		Window add = (Window) getFellow("var");
 		if (newObject)
 			currentTable.delete();
 		else {
