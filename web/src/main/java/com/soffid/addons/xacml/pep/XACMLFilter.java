@@ -68,128 +68,130 @@ public class XACMLFilter implements Filter {
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
 		try {
-			PepConfiguration pc  = policyManager.getCurrentPolicy(httpRequest);
-			PolicyStatus ps = pc.getWebPolicy();
-			String account = Security.getCurrentAccount();
-			if (account != null && ps != null && ps.isEnabled())
-			{
-				
-				URL originalUrl;
-				String originalUri= (String) request.getAttribute("org.apache.catalina.core.DISPATCHER_REQUEST_PATH");
-				if (originalUri == null)
+			if (Security.getCurrentTenantName() != null) {
+				PepConfiguration pc  = policyManager.getCurrentPolicy(httpRequest);
+				PolicyStatus ps = pc.getWebPolicy();
+				String account = Security.getCurrentAccount();
+				if (account != null && ps != null && ps.isEnabled())
 				{
-					originalUri = httpRequest.getRequestURI();
-					originalUrl = new URL (httpRequest.getRequestURL().toString());
-				}
-				else
-				{
-					originalUrl = new URL (httpRequest.getScheme()+"://"+httpRequest.getServerName()+":"+httpRequest.getServerPort()+
-							originalUri);
-				}
 					
-				RequestContext req = RequestResponseContextFactory.createRequestCtx();
-				
-				
-				LinkedList<Attribute> subjectAttributes = new LinkedList<Attribute>();
-				LinkedList<Attribute> resourceAttributes = new LinkedList<Attribute>();
-				LinkedList<Attribute> actionAttributes = new LinkedList<Attribute>();
-				LinkedList<Attribute> environmentAttributes = new LinkedList<Attribute>();
-
-				// Subject
-				InetAddress addr = InetAddress.getByName(httpRequest.getRemoteAddr());
-				if (addr instanceof Inet4Address)
-				{
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-						new IPv4AddressAttribute(addr)));
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new StringAttribute(addr.getHostAddress())));
-				}
-				if (addr instanceof Inet6Address)
-				{
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new IPv6AddressAttribute(addr)));
-					subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
-							new StringAttribute(addr.getHostAddress())));
-				}
-				
-				// Resource
-				resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_ID), (String) null, null, 
-						new StringAttribute( originalUri)));
-				resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_LOCATION), (String) null, null, 
-						new StringAttribute( originalUri)));
-				resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_LOCATION), (String) null, null, 
-						new AnyURIAttribute( new URI(originalUri))));
-				
-				
-				// Action
-				actionAttributes.add(new Attribute (new URI("urn:com:soffid:xacml:action:method"), (String) null, null, 
-						new StringAttribute( httpRequest.getMethod())));
-				
-				
-				// Enviromment
-				environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_TIME), (String) null, null, 
-						new TimeAttribute( new Date())));
-
-				environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE_TIME), (String) null, null, 
-						new DateTimeAttribute( new Date())));
-				
-				environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE), (String) null, null, 
-						new DateAttribute( new Date())));
-
-				RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
-						resourceAttributes, actionAttributes, environmentAttributes);
-				req.set(XACMLConstants.REQUEST_CTX, ctx);
-				
-				ResponseContext resp = policySetService.evaluate(ps.getPDPConfig(), req);
-				ResponseCtx responseCtx = resp.get(XACMLConstants.RESPONSE_CTX);
-				@SuppressWarnings("unchecked")
-				Set<Result> results = responseCtx.getResults();
-				for (Result result: results)
-				{
-					if (result.getDecision() == XACMLConstants.DECISION_DENY)
+					URL originalUrl;
+					String originalUri= (String) request.getAttribute("org.apache.catalina.core.DISPATCHER_REQUEST_PATH");
+					if (originalUri == null)
 					{
-						ServletOutputStream out = httpResponse.getOutputStream();
-						httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-						httpResponse.setContentType("text/html");
-						httpResponse.setCharacterEncoding("utf-8");
-						out.println("<html><body><p>Access is forbidden due to XACML restrictions</p>");
-						if (result.getResource() != null)
-						{
-							out.print("<p>Resource: ");
-							out.print(originalUri);
-							out.println("</p>");
-						}
-						if (result.getStatus().getMessage() != null)
-						{
-							out.print("<p>Status: ");
-							out.print(result.getStatus().getMessage());
-							out.println("</p>");
-						}
-						out.println("</body></html>");
-						out.close();
-						return;
+						originalUri = httpRequest.getRequestURI();
+						originalUrl = new URL (httpRequest.getRequestURL().toString());
 					}
-					if (result.getDecision() == XACMLConstants.DECISION_INDETERMINATE)
+					else
 					{
-						ServletOutputStream out = httpResponse.getOutputStream();
-						httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-						httpResponse.setContentType("text/html");
-						httpResponse.setCharacterEncoding("utf-8");
-						out.println("<html><body><p>Access is forbidden due to an internal error produced checking XACML restrictions</p>");
-						if (result.getResource() != null)
+						originalUrl = new URL (httpRequest.getScheme()+"://"+httpRequest.getServerName()+":"+httpRequest.getServerPort()+
+								originalUri);
+					}
+						
+					RequestContext req = RequestResponseContextFactory.createRequestCtx();
+					
+					
+					LinkedList<Attribute> subjectAttributes = new LinkedList<Attribute>();
+					LinkedList<Attribute> resourceAttributes = new LinkedList<Attribute>();
+					LinkedList<Attribute> actionAttributes = new LinkedList<Attribute>();
+					LinkedList<Attribute> environmentAttributes = new LinkedList<Attribute>();
+	
+					// Subject
+					InetAddress addr = InetAddress.getByName(httpRequest.getRemoteAddr());
+					if (addr instanceof Inet4Address)
+					{
+						subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
+							new IPv4AddressAttribute(addr)));
+						subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
+								new StringAttribute(addr.getHostAddress())));
+					}
+					if (addr instanceof Inet6Address)
+					{
+						subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
+								new IPv6AddressAttribute(addr)));
+						subjectAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_IP_ADDRESS), (String) null, null, 
+								new StringAttribute(addr.getHostAddress())));
+					}
+					
+					// Resource
+					resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_ID), (String) null, null, 
+							new StringAttribute( originalUri)));
+					resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_LOCATION), (String) null, null, 
+							new StringAttribute( originalUri)));
+					resourceAttributes.add(new Attribute(new URI(XACMLConstants.ATTRIBUTEID_RESOURCE_LOCATION), (String) null, null, 
+							new AnyURIAttribute( new URI(originalUri))));
+					
+					
+					// Action
+					actionAttributes.add(new Attribute (new URI("urn:com:soffid:xacml:action:method"), (String) null, null, 
+							new StringAttribute( httpRequest.getMethod())));
+					
+					
+					// Enviromment
+					environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_TIME), (String) null, null, 
+							new TimeAttribute( new Date())));
+	
+					environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE_TIME), (String) null, null, 
+							new DateTimeAttribute( new Date())));
+					
+					environmentAttributes.add(new Attribute (new URI(XACMLConstants.ATTRIBUTEID_CURRENT_DATE), (String) null, null, 
+							new DateAttribute( new Date())));
+	
+					RequestCtx ctx = new RequestCtx(Collections.singletonList(new Subject (subjectAttributes)), 
+							resourceAttributes, actionAttributes, environmentAttributes);
+					req.set(XACMLConstants.REQUEST_CTX, ctx);
+					
+					ResponseContext resp = policySetService.evaluate(ps.getPDPConfig(), req);
+					ResponseCtx responseCtx = resp.get(XACMLConstants.RESPONSE_CTX);
+					@SuppressWarnings("unchecked")
+					Set<Result> results = responseCtx.getResults();
+					for (Result result: results)
+					{
+						if (result.getDecision() == XACMLConstants.DECISION_DENY)
 						{
-							out.print("<p>Resource: " + originalUrl);
-							out.println("</p>");
+							ServletOutputStream out = httpResponse.getOutputStream();
+							httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+							httpResponse.setContentType("text/html");
+							httpResponse.setCharacterEncoding("utf-8");
+							out.println("<html><body><p>Access is forbidden due to XACML restrictions</p>");
+							if (result.getResource() != null)
+							{
+								out.print("<p>Resource: ");
+								out.print(originalUri);
+								out.println("</p>");
+							}
+							if (result.getStatus().getMessage() != null)
+							{
+								out.print("<p>Status: ");
+								out.print(result.getStatus().getMessage());
+								out.println("</p>");
+							}
+							out.println("</body></html>");
+							out.close();
+							return;
 						}
-						if (result.getStatus().getMessage() != null)
+						if (result.getDecision() == XACMLConstants.DECISION_INDETERMINATE)
 						{
-							out.print("<p>Status: ");
-							out.print(result.getStatus().getMessage());
-							out.println("</p>");
+							ServletOutputStream out = httpResponse.getOutputStream();
+							httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+							httpResponse.setContentType("text/html");
+							httpResponse.setCharacterEncoding("utf-8");
+							out.println("<html><body><p>Access is forbidden due to an internal error produced checking XACML restrictions</p>");
+							if (result.getResource() != null)
+							{
+								out.print("<p>Resource: " + originalUrl);
+								out.println("</p>");
+							}
+							if (result.getStatus().getMessage() != null)
+							{
+								out.print("<p>Status: ");
+								out.print(result.getStatus().getMessage());
+								out.println("</p>");
+							}
+							out.println("</body></html>");
+							out.close();
+							return;
 						}
-						out.println("</body></html>");
-						out.close();
-						return;
 					}
 				}
 			}
@@ -206,7 +208,6 @@ public class XACMLFilter implements Filter {
 			out.close();
 			return;
 		}
-
 		chain.doFilter(request, response);
 	}
 

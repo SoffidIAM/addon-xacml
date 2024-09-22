@@ -133,7 +133,7 @@ public class AuthorizationServiceInterceptor implements MethodInterceptor
 	}
 
 	public Object invoke(MethodInvocation mi) throws Throwable {
-		if (Security.isSyncServer())
+		if (Security.isSyncServer() || Security.getCurrentTenantName() == null)
 			return mi.proceed();
 		
 		PepConfiguration cfg = new PolicyManager().getCurrentPolicy();
